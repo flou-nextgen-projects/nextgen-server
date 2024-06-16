@@ -1,0 +1,32 @@
+{
+    "compileOnSave": true,
+    "compilerOptions": {
+        "module": "CommonJS",
+        "esModuleInterop": true,
+        "target": "ES6",
+        "noImplicitAny": true,
+        "moduleResolution": "node",
+        "declaration": false,
+        "emitDeclarationOnly": false,
+        "isolatedModules": false,
+        "sourceMap": true,
+        "outDir": "dist",
+        "baseUrl": ".",
+        "skipLibCheck": true,
+        "types": ["mocha", "jest"],
+        "lib": [            
+            "ES6",
+            "DOM",
+            "DOM.Iterable",
+            "ES2015.Generator",
+            "ES2015.Symbol"
+        ]
+    },
+    "include": [
+        "src/**/*"
+    ],
+    "exclude": [
+        "src/**/*.test.ts",
+        "node_modules"
+    ]
+}

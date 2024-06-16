@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    compose.cmd: docker-compose-nginx
+    compose.version: 1.31.2
+  labels:
+    io.compose.service: nginx-proxy
+  name: nginx-proxy
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.compose.service: nginx-proxy
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        compose.cmd: docker-compose-nginx
+        compose.version: 1.31.2
+      labels:
+        io.compose.network/kafka-network: "true"
+        io.compose.service: nginx-proxy
+    spec:
+      containers:
+        - image: nginx-proxy:latest
+          name: nginx-proxy
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 443
+              hostPort: 443
+              protocol: TCP
+          resources:
+            limits:
+              cpu: "0.5"
+              memory: "256Mi"
+            requests:
+              cpu: "0.1"
+              memory: "64Mi"
+          volumeMounts:
+            - mountPath: /usr/app/ssl
+              name: shared-volume
+      restartPolicy: Always
+      volumes:
+        - name: shared-volume
+          persistentVolumeClaim:
+            claimName: shared-volume
+status: {}

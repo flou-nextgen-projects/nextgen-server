@@ -1,0 +1,304 @@
+[
+    {
+        "collection": "baseCommandMaster",
+        "documents": [
+            {
+                "shortName": "ne",
+                "description": "namespace end indicator",
+                "id": 2
+            },
+            {
+                "shortName": "ns",
+                "description": "namespace start indicator",
+                "id": 1
+            },
+            {
+                "shortName": "ms",
+                "description": "method start indicator",
+                "id": 5
+            },
+            {
+                "shortName": "me",
+                "description": "method end indicator",
+                "id": 6
+            },
+            {
+                "shortName": "is",
+                "description": "if block start indicator",
+                "id": 7
+            },
+            {
+                "shortName": "else",
+                "description": "else block start indicator",
+                "id": 8
+            },
+            {
+                "shortName": "cs",
+                "description": "class start indicator",
+                "id": 3
+            },
+            {
+                "shortName": "ce",
+                "description": "class end indicator",
+                "id": 4
+            },
+            {
+                "shortName": "le",
+                "description": "loop end indicator",
+                "id": 11
+            },
+            {
+                "shortName": "ss",
+                "description": "switch block start indicator",
+                "id": 12
+            },
+            {
+                "shortName": "call-int",
+                "description": "calling to method (call internal)",
+                "id": 15
+            },
+            {
+                "shortName": "sc",
+                "description": "switch case indicator",
+                "id": 13
+            },
+            {
+                "shortName": "se",
+                "description": "switch block end indicator",
+                "id": 14
+            },
+            {
+                "shortName": "call-ext",
+                "description": "calling to method (call external)",
+                "id": 16
+            },
+            {
+                "shortName": "ls",
+                "description": "loop start indicator",
+                "id": 10
+            },
+            {
+                "shortName": "ie",
+                "description": "if block end indicator",
+                "id": 9
+            }
+        ]
+    },
+    {
+        "collection": "fileTypeMaster",
+        "documents": [
+            {
+                "fileTypeName": "PROC",
+                "fileTypeExtension": ".proc",
+                "delimiter": ".",
+                "color": "#f84f9a",
+                "folderNames": [
+                    "proc"
+                ],
+                "lid": "66014c9c91051b7bc74fadbf"
+            },
+            {
+                "fileTypeName": "COPYBOOK",
+                "fileTypeExtension": ".copy",
+                "delimiter": ".",
+                "color": "#A6C600",
+                "folderNames": [
+                    "copy",
+                    "copybook"
+                ],
+                "lid": "66014c9c91051b7bc74fadbf"
+            },
+            {
+                "fileTypeName": "BMS",
+                "fileTypeExtension": ".bms",
+                "delimiter": ".",
+                "color": "#c242cc",
+                "folderNames": [
+                    "bms"
+                ],
+                "lid": "66014c9c91051b7bc74fadbf"
+            },
+            {
+                "fileTypeName": "SQL",
+                "fileTypeExtension": ".sql",
+                "delimiter": ".",
+                "color": "#ff9999",
+                "folderNames": [
+                    "sql"
+                ],
+                "lid": "66014c9c91051b7bc74fadbf"
+            },
+            {
+                "fileTypeName": "INCLUDE",
+                "fileTypeExtension": ".icd",
+                "delimiter": ".",
+                "color": "#7d5ba6",
+                "folderNames": [
+                    "include",
+                    "includes"
+                ],
+                "lid": "66014c9c91051b7bc74fadbf"
+            },
+            {
+                "fileTypeName": "INPUTLIB",
+                "fileTypeExtension": ".lib",
+                "delimiter": ".",
+                "color": "#d04444",
+                "folderNames": [
+                    "inputlib",
+                    "lib"
+                ],
+                "lid": "66014c9c91051b7bc74fadbf"
+            },
+            {
+                "fileTypeName": "COBOL",
+                "fileTypeExtension": ".cbl",
+                "delimiter": ".",
+                "color": "#43CCA7",
+                "folderNames": [
+                    "source",
+                    "cobol",
+                    "cbl"
+                ],
+                "lid": "66014c9c91051b7bc74fadbf"
+            },
+            {
+                "fileTypeName": "JCL",
+                "fileTypeExtension": ".jcl",
+                "delimiter": ".",
+                "color": "#5E7C96",
+                "folderNames": [
+                    "proto",
+                    "jcl"
+                ],
+                "lid": "66014c9c91051b7bc74fadbf"
+            }
+        ]
+    },
+    {
+        "collection": "indicators",
+        "documents": [
+            {
+                "id": 2,
+                "description": "namespace end indicator"
+            },
+            {
+                "id": 1,
+                "description": "namespace start indicator"
+            },
+            {
+                "id": 3,
+                "description": "class start indicator"
+            },
+            {
+                "id": 4,
+                "description": "class end indicator"
+            },
+            {
+                "id": 7,
+                "description": "if block start indicator"
+            },
+            {
+                "id": 8,
+                "description": "else block start indicator"
+            },
+            {
+                "id": 9,
+                "description": "if block end indicator"
+            },
+            {
+                "id": 10,
+                "description": "loop start indicator"
+            },
+            {
+                "id": 11,
+                "description": "loop end indicator"
+            },
+            {
+                "id": 12,
+                "description": "switch block start indicator"
+            },
+            {
+                "id": 13,
+                "description": "switch case indicator"
+            },
+            {
+                "id": 14,
+                "description": "switch block end indicator"
+            },
+            {
+                "id": 15,
+                "description": "calling to method (call external)"
+            },
+            {
+                "id": 6,
+                "description": "method end indicator"
+            },
+            {
+                "id": 5,
+                "description": "method start indicator"
+            },
+            {
+                "id": 16,
+                "description": "calling to method from same class or file (call internal)"
+            }
+        ]
+    },
+    {
+        "collection": "languageMaster",
+        "documents": [
+            {
+                "_id": "66014c6c91051b7bc74fadb9",
+                "name": "UniVerse Basic",
+                "description": "This is UniVerse Basic Language"
+            },
+            {
+                "_id": "66014c8c91051b7bc74fadbc",
+                "name": "C#",
+                "description": "This is Microsoft C-Sharp (C# .NET) Language"
+            },
+            {
+                "_id": "66014c9c91051b7bc74fadbf",
+                "name": "COBOL",
+                "description": "This is COBOL Language"
+            }
+        ]
+    },
+    {
+        "collection": "roleMaster",
+        "documents": [
+            {
+                "_id": "65d09dde2b488f3930d90264",
+                "roleName": "admin",
+                "screens": [],
+                "menus": []
+            }
+        ]
+    },
+    {
+        "collection": "userMaster",
+        "documents": [
+            {
+                "userName": "admin",
+                "password": "$2a$10$kO1Y6ZjIUb3RT63Vy2HKv.W4ylWHWbWRjWW1z03QJ6.CwGBKSI9Nm",
+                "firstName": "Yogesh",
+                "lastName": "Sonawane",
+                "email": "sonawaneyogeshb@gmail.com",
+                "contact": "+918149497650",
+                "roleId": "65d09dde2b488f3930d90264",
+                "isActive": true
+            }
+        ]
+    },
+    {
+        "collection": "workspaceMaster",
+        "documents": [
+            {
+                "_id": "6645983c36daeb8a36510e02",
+                "lid": "66014c9c91051b7bc74fadbf",
+                "name": "COBOL Workspace",
+                "description": "This is COBOL Workspace"
+            }
+        ]
+    }
+]

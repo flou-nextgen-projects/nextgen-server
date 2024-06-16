@@ -1,0 +1,45 @@
+name: flou-job-api
+
+networks:
+  kafka-network:
+    external: true
+    driver: "bridge"
+    
+volumes:
+  shared-volume:
+    external: true
+
+services:
+  flou-job-api:
+    image: flou-job-api:latest
+    container_name: flou-job-api
+    hostname: flou-job-api
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    environment:
+      NODE_ENV: development
+      KAFKA_BROKER_HOST: kafka
+      KAFKA_BROKER_PORT: 9092
+    env_file:
+      - .env  
+    ports:
+      - 3800:3800
+      - 9229:9229
+    develop:
+      watch:
+        - path: /src
+          target: /app/src
+          action: sync
+        - path: package.json
+          action: rebuild  
+          ignore:
+            - "node_modules/"
+            - "Jenkinsfile"
+            - "Jenkins.Dockerfile"
+            - "*.md"
+            - "*.dockerfile"  
+    networks:
+      - kafka-network
+    volumes:
+      - shared-volume:/usr/app/ssl:rw  

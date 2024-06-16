@@ -1,0 +1,24 @@
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    compose.cmd: docker-compose-services
+    compose.version: 1.31.2
+  labels:
+    app: "kafka"
+  name: "kafka"
+spec:
+  ports:
+    - name: "kafka"
+      port: 9092
+      targetPort: 9092
+    - name: "9099"
+      port: 9099
+      targetPort: 9099
+    - name: "9094"
+      port: 9094
+      targetPort: 9094
+  selector:
+    app: "kafka"
+status:
+  loadBalancer: {}

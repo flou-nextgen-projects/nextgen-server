@@ -1,0 +1,72 @@
+name: flou-application-services
+
+networks:
+  kafka-network:
+    external: true
+
+services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    container_name: flou-zookeeper
+    ports:
+      - 2181:2181
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    networks:
+      - kafka-network
+
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    container_name: flou-kafka
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      ALLOW_PLAINTEXT_LISTENER: 'yes'
+      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INSIDE:PLAINTEXT,OUTSIDE:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,INSIDE://127.0.0.1:9099,OUTSIDE://127.0.0.1:9094
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,INSIDE://127.0.0.1:9099,OUTSIDE://127.0.0.1:9094
+      KAFKA_JMX_PORT: 9101
+      KAFKA_JMX_HOSTNAME: localhost
+      KAFKA_CONFLUENT_SCHEMA_REGISTRY_URL: http://schema-registry:8081
+      CONFLUENT_METRICS_REPORTER_BOOTSTRAP_SERVERS: kafka:9092
+      METRIC_REPORTERS: io.confluent.metrics.reporter.ConfluentMetricsReporter
+      LOG4J_LOGGER_IO_CONFLUENT_METRICS_REPORTER_CONFLUENT_METRICS_REPORTER: DEBUG
+      CONFLUENT_METRICS_REPORTER_TOPIC_REPLICAS: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      AUTO_CREATE_TOPICS_ENABLE: 'true'
+      CONFLUENT_METRICS_ENABLE: 'true'
+      CONFLUENT_SUPPORT_CUSTOMER_ID: 'anonymous'
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_CONFLUENT_LICENSE_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_CONFLUENT_BALANCER_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_ID: kafka
+    ports:
+      - 9092:9092
+      - 9099:9099
+      - 9094:9094
+    networks:
+      - kafka-network
+
+  control-center:
+    image: confluentinc/cp-enterprise-control-center:latest
+    hostname: flou-control-center
+    container_name: flou-control-center
+    depends_on:
+      - kafka
+    ports:
+      - 9021:9021
+    environment:
+      CONTROL_CENTER_BOOTSTRAP_SERVERS: PLAINTEXT://kafka:9092
+      CONTROL_CENTER_CONNECT_CLUSTER: http://kafka-connect:8083
+      CONTROL_CENTER_SCHEMA_REGISTRY_URL: "http://schema-registry:8081"
+      CONTROL_CENTER_REPLICATION_FACTOR: 1
+      CONTROL_CENTER_MONITORING_INTERCEPTOR_TOPIC_PARTITIONS: 1
+      CONTROL_CENTER_INTERNAL_TOPICS_PARTITIONS: 1
+      CONTROL_CENTER_STREAMS_NUM_STREAM_THREADS: 2
+      CONTROL_CENTER_PORT: 9021
+      PORT: 9021
+    networks:
+      - kafka-network

@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    compose.cmd: docker-compose-nginx
+    compose.version: 1.31.2
+  labels:
+    io.compose.service: nginx-proxy
+  name: nginx-proxy
+spec:
+  ports:
+    - name: "443"
+      port: 443
+      targetPort: 443
+  selector:
+    io.compose.service: nginx-proxy
+status:
+  loadBalancer: {}

@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    compose.cmd: docker-compose
+    compose.version: 1.31.2
+  labels:
+    io.compose.service: flou-job-api
+  name: flou-job-api
+spec:
+  ports:
+    - name: "3800"
+      port: 3800
+      targetPort: 3800
+    - name: "9229"
+      port: 9229
+      targetPort: 9229
+  selector:
+    io.compose.service: flou-job-api
+status:
+  loadBalancer: {}
