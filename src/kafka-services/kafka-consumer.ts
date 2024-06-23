@@ -6,6 +6,7 @@ const logger: Logger = new Logger(__filename);
 const kafkaBrokers = [config.kafkaUrl];
 const kafka = new Kafka({ logLevel: logLevel.ERROR, clientId: 'yogeshs-app', brokers: kafkaBrokers, socketFactory: socketFactory({ host: config.kafkaHost, port: config.kafkaPort }) });
 const consumer = kafka.consumer({ groupId: 'yogeshs-kafka', heartbeatInterval: 10000, rebalanceTimeout: 90000, sessionTimeout: 60000 });
+
 consumer.on("consumer.crash", () => {
     console.log("There is error in Kafka Broker.");
 });
@@ -28,8 +29,6 @@ const runConsumer = async () => {
     consumer.run({
         eachMessage: async ({ topic, partition, message }) => {
             const msgBody = JSON.parse(message.value.toString());
-            // from here, process message for
-            // 1. file processing steps - process file in parts
             console.log({ value: msgBody, headers: message.headers, topic, partition, offset: message.offset });
             await consumer.commitOffsets([{ topic, partition, offset: (message.offset + 1) }]);
         },
@@ -52,4 +51,4 @@ const runConsumer = async () => {
         }
     });
 };
-// runConsumer();
+runConsumer();

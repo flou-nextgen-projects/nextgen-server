@@ -20,7 +20,7 @@ cp $CERTROOT/device.crt $APP/device.crt
 cp $CERTROOT/device.key $APP/device.key
 
 echo "==================================================================================="
-echo "Start typescript server (watch mode), babel (watch mode) and nodemon(watch mode)."
+echo "Start typescript server (watch mode), babel (watch mode) and nodemon (watch mode)."
 echo "==================================================================================="
 
 npm install nodemon;

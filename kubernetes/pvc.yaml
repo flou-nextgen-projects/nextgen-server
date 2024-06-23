@@ -27,7 +27,7 @@ spec:
     spec:
       containers:
         - name: shared-volume
-          image: your-image
+          image: flokapture-job-api
           resources:
             limits:
               cpu: "1"

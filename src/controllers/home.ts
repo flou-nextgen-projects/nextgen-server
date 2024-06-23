@@ -14,6 +14,5 @@ homeRouter.use("/", (request: Request, response: Response, next: NextFunction) =
     // newrelic.noticeError(new Error("custom message from yogeshs"), {expected: false, msg: "not sure why this error come"});
     response.status(200).json({ message: "API is up and ready to receive requests", status: "OK" });
 });
-// Make the request and capture the response.
 
 module.exports = homeRouter;
