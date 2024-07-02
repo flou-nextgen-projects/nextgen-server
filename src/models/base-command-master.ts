@@ -13,7 +13,6 @@ const BaseCommandMasterSchema: Mongoose.Schema<BaseCommandMaster> = new Mongoose
 
 
 class BaseCommandMaster extends EntityBase {
-    public id: number;
     public description: string;
     public shortName: string;
 }

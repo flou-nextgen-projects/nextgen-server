@@ -1,7 +1,7 @@
 import Mongoose from "mongoose";
 
 export default class EntityBase extends Mongoose.Document {  
-    public _id: Mongoose.Types.ObjectId | string;
+    public declare _id: Mongoose.Types.ObjectId | string;
     private _createdOn: Date;
     private _updatedOn: Date;
     public createdBy: string | Mongoose.Types.ObjectId;

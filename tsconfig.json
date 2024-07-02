@@ -3,7 +3,7 @@
     "compilerOptions": {
         "module": "CommonJS",
         "esModuleInterop": true,
-        "target": "ES6",
+        "target": "ES2022",
         "noImplicitAny": true,
         "moduleResolution": "node",
         "declaration": false,

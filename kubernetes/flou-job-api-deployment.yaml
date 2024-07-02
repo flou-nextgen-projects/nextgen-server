@@ -1,12 +1,12 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
+  name: flou-job-api
   annotations:
     compose.cmd: docker-compose
     compose.version: 1.31.2
   labels:
     io.compose.service: flou-job-api
-  name: flou-job-api
 spec:
   replicas: 1
   selector:
@@ -24,7 +24,10 @@ spec:
         io.compose.service: flou-job-api
     spec:
       containers:
-        - env:
+        - name: flou-job-api
+          image: sonawaneyogeshb/flou-job-api:1.0.0
+          imagePullPolicy: IfNotPresent
+          env:
             - name: EMAIL
               value: noreply2abc@gmail.com
             - name: EMAIL_PASSWORD
@@ -47,15 +50,8 @@ spec:
               value: Analyzer@7081#
             - name: USE_HTTPS
               value: "false"
-          image: flou-job-api:latest
-          name: flou-job-api
-          imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 3800
-              hostPort: 3800
-              protocol: TCP
-            - containerPort: 9229
-              hostPort: 9229
               protocol: TCP
           resources:
             limits:
@@ -65,14 +61,10 @@ spec:
               cpu: "0.5"
               memory: "256Mi"
           volumeMounts:
-            - mountPath: /usr/app/dist/certificates
-              name: shared-volume
-              readOnly: true
-      hostname: flou-job-api
+            - name: certs
+              mountPath: /app/dist/certificates
       restartPolicy: Always
       volumes:
-        - name: shared-volume
+        - name: certs
           persistentVolumeClaim:
-            claimName: shared-volume
-            readOnly: true
-status: {}
+            claimName: certs-pvc

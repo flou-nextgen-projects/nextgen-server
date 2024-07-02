@@ -16,10 +16,8 @@ app.use(Cors());
 app.use(Cors({
     allowedHeaders: ["x-token", "Authorization"]
 }));
-
-const ctrlPath = resolve(join(__dirname, "controllers"));
-const jobPath = resolve(join(__dirname, "jobs"));
-
+// const ctrlPath = resolve(join(__dirname, "controllers"));
+// const jobPath = resolve(join(__dirname, "jobs"));
 export default app;
 export const setAppRoutes = function (app: express.Application) {
     app.get('/', function (request: Request, response: Response) {
@@ -83,7 +81,7 @@ export const setAppRoutes = function (app: express.Application) {
                 version: "1.0.0"
             },
             basePath: "/",
-            servers: [{ url: "/" }],
+            servers: [{ url: "/" }, { url: "flou-job-api" }],
             components: {
                 securitySchemes: {
                     bearerAuth: {

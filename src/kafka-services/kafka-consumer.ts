@@ -51,4 +51,4 @@ const runConsumer = async () => {
         }
     });
 };
-runConsumer();
+// runConsumer();
