@@ -5,7 +5,9 @@
         "./public/*",
         ".test.js",
         "fixtures/",
-        "*.bat"
+        "*.bat",
+        "logs",
+        "./logs/*"
     ],
     "execMap": {
         "rb": "ruby",

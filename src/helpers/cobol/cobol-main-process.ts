@@ -1,21 +1,24 @@
 import { appService } from "../../services/app-service";
 import { DataDependency, FileMaster, MissingObjects, ProjectMaster, StatementMaster } from "../../models";
 import { FileExtensions, Logger, CobolHelpers, StatementProcessor } from "yogeshs-utilities";
-import Mongoose, { HydratedDocument } from "mongoose";
+import Mongoose from "mongoose";
 import ProgressBar from "progress";
 import { basename } from "path";
 import { readFileSync } from "fs";
 import CobolProcessHelpers from "./main-process-helpers";
 import { CobolConstants } from "../../constants";
 import { forIn, isEmpty } from "lodash";
-import { LineDetails } from "../models";
 
 const logger: Logger = new Logger(__filename);
 const fileExtensions: FileExtensions = new FileExtensions();
 export default class CobolMainProcessUtils extends CobolProcessHelpers {
     constructor() { super(); }
-    changeExtensions = (project: HydratedDocument<ProjectMaster>) => new Promise(async (resolve: Function, reject: Function) => {
+    public getProject = async function (_id: string | Mongoose.Types.ObjectId): Promise<ProjectMaster> {
+        return await appService.projectMaster.findById(_id);
+    }
+    changeExtensions = (_id: string | Mongoose.Types.ObjectId) => new Promise(async (resolve: Function, reject: Function) => {
         try {
+            const project = await this.getProject(_id);
             logger.info(`Executing change extensions process for project: ${project.name}`, { directory: project.extractedPath });
             const fileTypes = await appService.fileTypeMaster.getDocuments({ lid: project.lid });
             fileTypes.forEach((fileType) => {
@@ -27,8 +30,9 @@ export default class CobolMainProcessUtils extends CobolProcessHelpers {
             reject({ status: "error", code: 'cobol-10011', error: error?.message, where: 'Change extensions function of cobol main process utils' });
         }
     });
-    processFileMasterData = (project: HydratedDocument<ProjectMaster>) => new Promise(async (resolve: Function, reject: Function) => {
+    processFileMasterData = (_id: string | Mongoose.Types.ObjectId) => new Promise(async (resolve: Function, reject: Function) => {
         try {
+            const project = await this.getProject(_id);
             const extensions = await appService.fileTypeMaster.getDocuments({ lid: project.lid });
             const files: string[] = fileExtensions.getAllFilesFromPath(project.extractedPath, [], true);
             const bar: ProgressBar = logger.showProgress(files.length);
@@ -55,8 +59,9 @@ export default class CobolMainProcessUtils extends CobolProcessHelpers {
             reject({ status: "error", code: 'cobol-10012', error: error?.message, where: 'Process file master data function of cobol main process utils' });
         }
     });
-    processJCLFiles = (project: HydratedDocument<ProjectMaster>) => new Promise(async (resolve: Function, reject: Function) => {
+    processJCLFiles = (_id: string | Mongoose.Types.ObjectId) => new Promise(async (resolve: Function, reject: Function) => {
         try {
+            const project = await this.getProject(_id);
             // get all files for project            
             let allFiles = await appService.fileMaster.getDocuments({ pid: project._id });
             let jclFiles = allFiles.filter((d) => d.fileTypeId.toString() === "65e2fbc8470cfe5989af0545")
@@ -111,8 +116,9 @@ export default class CobolMainProcessUtils extends CobolProcessHelpers {
             reject({ status: "error", code: 'cobol-10013', error: error?.message, where: 'Process JCL files function of cobol main process utils' });
         }
     });
-    processCopyBookFiles = (project: HydratedDocument<ProjectMaster>) => new Promise(async (resolve: Function, reject: Function) => {
+    processCopyBookFiles = (_id: string | Mongoose.Types.ObjectId) => new Promise(async (resolve: Function, reject: Function) => {
         try {
+            const project = await this.getProject(_id);
             let allFiles = await appService.fileMaster.getDocuments({ pid: project._id, fileTypeId: new Mongoose.Types.ObjectId("65e2fbc8470cfe5989af0545") });
             let indicators = await appService.baseCommandReference.getAllDocuments();
             let index = 0;
@@ -136,8 +142,9 @@ export default class CobolMainProcessUtils extends CobolProcessHelpers {
             reject({ status: "error", code: 'cobol-10014', error: error?.message, where: 'Process CopyBook files function of cobol main process utils' });
         }
     });
-    processProcFiles = (project: HydratedDocument<ProjectMaster>) => new Promise(async (resolve: Function, reject: Function) => {
+    processProcFiles = (_id: string | Mongoose.Types.ObjectId) => new Promise(async (resolve: Function, reject: Function) => {
         try {
+            const project = await this.getProject(_id);
             let allFiles = await appService.fileMaster.getDocuments({ pid: project._id });
             let procFiles = await appService.fileMaster.getDocuments({ pid: project._id, fileTypeId: new Mongoose.Types.ObjectId("65e2fbc8470cfe5989af0545") });
             let bcReferences = await appService.baseCommandReference.getAllDocuments();
@@ -191,8 +198,9 @@ export default class CobolMainProcessUtils extends CobolProcessHelpers {
             reject({ status: "error", code: 'cobol-10014', error: error?.message, where: 'Process CopyBook files function of cobol main process utils' });
         }
     });
-    processBMSFiles = (project: HydratedDocument<ProjectMaster>) => new Promise(async (resolve: Function, reject: Function) => {
+    processBMSFiles = (_id: string | Mongoose.Types.ObjectId) => new Promise(async (resolve: Function, reject: Function) => {
         try {
+            const project = await this.getProject(_id);
             // get all files for project            
             let allFiles = await appService.fileMaster.getDocuments({ pid: project._id });
             let allBmsFiles = await appService.fileMaster.getDocuments({ pid: project._id, fileTypeId: new Mongoose.Types.ObjectId("65e2fbc8470cfe5989af0545") });
@@ -228,7 +236,7 @@ export default class CobolMainProcessUtils extends CobolProcessHelpers {
                     modifiedLine: fileInfo.name
                 });
                 await appService.statementMaster.addItem(methodStartSm);
-                lineDetails.forEach((ld:any) => { if (ld.indicators.length <= 0) delete ld.indicators; });
+                lineDetails.forEach((ld: any) => { if (ld.indicators.length <= 0) delete ld.indicators; });
                 for (const lineDetail of lineDetails) {
                     let statementMaster: StatementMaster;
                     let sm: StatementMaster = Object.assign(lineDetail, statementMaster);
@@ -244,8 +252,9 @@ export default class CobolMainProcessUtils extends CobolProcessHelpers {
             reject({ status: "error", code: 'cobol-10014', error: error?.message, where: 'Process CopyBook files function of cobol main process utils' });
         }
     });
-    processInputLibFiles = (project: HydratedDocument<ProjectMaster>) => new Promise(async (resolve: Function, reject: Function) => {
+    processInputLibFiles = (_id: string | Mongoose.Types.ObjectId) => new Promise(async (resolve: Function, reject: Function) => {
         try {
+            const project = await this.getProject(_id);
             let allFiles = await appService.fileMaster.getDocuments({ pid: project._id, fileTypeId: new Mongoose.Types.ObjectId("65e2fbc8470cfe5989af0545") });
             let indicators = await appService.baseCommandReference.getAllDocuments();
             let index = 0;
@@ -269,8 +278,9 @@ export default class CobolMainProcessUtils extends CobolProcessHelpers {
             reject({ status: "error", code: 'cobol-10014', error: error?.message, where: 'Process CopyBook files function of cobol main process utils' });
         }
     });
-    processSqlFiles = (project: HydratedDocument<ProjectMaster>) => new Promise(async (resolve: Function, reject: Function) => {
+    processSqlFiles = (_id: string | Mongoose.Types.ObjectId) => new Promise(async (resolve: Function, reject: Function) => {
         try {
+            const project = await this.getProject(_id);
             let allFiles = await appService.fileMaster.getDocuments({ pid: project._id, fileTypeId: new Mongoose.Types.ObjectId("65e2fbc8470cfe5989af0545") });
             let indicators = await appService.baseCommandReference.getAllDocuments();
             let index = 0;
@@ -284,8 +294,9 @@ export default class CobolMainProcessUtils extends CobolProcessHelpers {
             reject({ status: "error", code: 'cobol-10014', error: error?.message, where: 'Process CopyBook files function of cobol main process utils' });
         }
     });
-    processCobolFiles = (project: HydratedDocument<ProjectMaster>) => new Promise(async (resolve: Function, reject: Function) => {
+    processCobolFiles = (_id: string | Mongoose.Types.ObjectId) => new Promise(async (resolve: Function, reject: Function) => {
         try {
+            const project = await this.getProject(_id);
             let allFiles = await appService.fileMaster.getDocuments({ pid: project._id });
             let cobolFiles = allFiles.filter((d) => d.fileTypeId.toString() === "65e0bfdfac3abe96d9790fb5");
             let bcReferences = await appService.baseCommandReference.getAllDocuments();
@@ -376,7 +387,7 @@ export default class CobolMainProcessUtils extends CobolProcessHelpers {
                     methodBlock = this.removeExecStatement(methodBlock);
                     methodBlock = this.combineAllNonKeywordLines(methodBlock, cobolKeyWords);
                     methodBlock = StatementProcessor.performVarying(methodBlock, allMethods, cobolVariables) as Array<StatementMaster>;
-                    methodBlock = this.assignBaseCommandIndicators(methodBlock as any, bcReferences);                    
+                    methodBlock = this.assignBaseCommandIndicators(methodBlock as any, bcReferences);
                     // TODO: verify conditions and end conditions count
                     // if it's not matching then make parsing status of file as not processed
                     methodBlock.push({ lineIndex: methodBlock.length + 1, originalLine: "END", modifiedLine: "END", indicators: [], alternateName: '' } as StatementMaster);
@@ -419,8 +430,9 @@ export default class CobolMainProcessUtils extends CobolProcessHelpers {
             reject({ status: "error", code: 'cobol-10014', error: error?.message, where: 'Process COBOL files function of cobol main process utils' });
         }
     });
-    processDataDependency = (project: HydratedDocument<ProjectMaster>) => new Promise(async (resolve: Function, reject: Function) => {
+    processDataDependency = (_id: string | Mongoose.Types.ObjectId) => new Promise(async (resolve: Function, reject: Function) => {
         try {
+            const project = await this.getProject(_id);
             const entities = await appService.entityMaster.getDocuments({ pid: project._id });
             const existingData = await appService.dataDependency.getDocuments({ pid: project._id });
             for (const entity of entities) {

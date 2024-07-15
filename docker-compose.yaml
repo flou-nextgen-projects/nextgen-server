@@ -16,7 +16,7 @@ services:
     hostname: flou-job-api
     build:
       context: .
-      dockerfile: ./Dockerfile
+      dockerfile: ./dockerfile
     environment:
       NODE_ENV: development
       KAFKA_BROKER_HOST: kafka
@@ -42,4 +42,4 @@ services:
     networks:
       - kafka-network
     volumes:
-      - shared-volume:/usr/app/ssl:rw  
+      - shared-volume:/app/dist/certificates:rw  

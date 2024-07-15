@@ -1,10 +1,11 @@
-// we need to use this file for additional const / env variables
 import dotenv from "dotenv";
 dotenv.config();
 
 export default {
-    get port(): number {
-        return parseInt(process.env.PORT) || 3900;
+    get nodeEnv() {
+        return process.env.NODE_ENV;
+    }, get port(): number {
+        return parseInt(process.env.PORT) || 9000;
     }, get secretKey() {
         return process.env.SECRET_KEY;
     }, get tenantSecret() {
@@ -20,10 +21,16 @@ export default {
     }, get kafkaPort() {
         return process.env.KAFKA_BROKER_PORT;
     }, get kafkaUrl() {
-        return `${process.env.KAFKA_BROKER_HOST}:${process.env.KAFKA_BROKER_PORT}`;
+        return this.nodeEnv === "local" ? `127.0.0.1:${process.env.KAFKA_BROKER_PORT}` : `${process.env.KAFKA_BROKER_HOST}:${process.env.KAFKA_BROKER_PORT}`;
     }, get kafkaTopics() {
         return process.env.KAFKA_TOPICS
     }, get useHttps() {
         return process.env.USE_HTTPS || true;
+    }, get mongoDb() {
+        return process.env.MONGO_DB;
+    }, get mongoUser() {
+        return process.env.MONGO_USER;
+    }, get mongoPass() {
+        return process.env.MONGO_PASS;
     }
 }

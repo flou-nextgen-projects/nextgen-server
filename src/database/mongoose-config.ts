@@ -1,17 +1,14 @@
 const globalAny: any = global;
 import Mongoose from 'mongoose';
-import { resolve, join } from 'path';
 import { config } from './connection-config';
 
-// var crtPath = resolve(__dirname, '../', 'certificates');
 const mongoDbOpt: Mongoose.ConnectOptions = {
   dbName: config.databaseName,
   connectTimeoutMS: 10000,
   socketTimeoutMS: 45000,
-  // tlsCertificateKeyFile: join(crtPath, 'mongo-client.pem'),
-  // tlsCAFile: join(crtPath, 'root-ca.pem'),
   family: 4,
-  readPreference: 'secondary',    
+  readPreference: 'secondary',
+  readConcern: 'majority',
   auth: config.auth
 };
 

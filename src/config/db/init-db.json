@@ -298,6 +298,12 @@
                 "lid": "66014c9c91051b7bc74fadbf",
                 "name": "COBOL Workspace",
                 "description": "This is COBOL Workspace"
+            },
+            {
+                "_id": "669141dd5f125b063754a66e",
+                "lid": "66014c6c91051b7bc74fadb9",
+                "name": "UniVerse Basic Workspace",
+                "description": "This is UniVerse Basic language workspace only"
             }
         ]
     }

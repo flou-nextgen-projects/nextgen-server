@@ -16,9 +16,9 @@ app.use(Cors());
 app.use(Cors({
     allowedHeaders: ["x-token", "Authorization"]
 }));
-// const ctrlPath = resolve(join(__dirname, "controllers"));
-// const jobPath = resolve(join(__dirname, "jobs"));
+
 export default app;
+
 export const setAppRoutes = function (app: express.Application) {
     app.get('/', function (request: Request, response: Response) {
         response.status(200).json({ msg: 'Server app is up and running!.' }).end();
@@ -43,10 +43,7 @@ export const setAppRoutes = function (app: express.Application) {
     });
     app.get("/user/:id(\\d+)", (request: Request, response: Response) => {
         response.status(200).json({ msg: "OK", data: { id: request.params } }).end();
-    });
-    app.use(/backend\/(main|jobs)\/.*/, clientAuth);
-    const router = require("./routes/default.routes");
-    app.use(/backend\/main\/api\/defaults\/.*/, router);
+    });    
     var homeRouter = require('./controllers/home');
     var userRouter = require("./controllers/user-master");
     var roleMasterRouter = require("./controllers/role-master");
@@ -68,10 +65,18 @@ export const setAppRoutes = function (app: express.Application) {
     app.use("/backend/main/api/base-command-master", bcRouter);
     app.use("/backend/main/api/base-command-reference", bcRefRouter);
     app.use("/backend/main/api/topics", topicRouter);
+    // db status router
+    var dbStatusRouter = require("./config/check-status");
+    app.use("/backend/main/api/db", dbStatusRouter); 
     // job processing routers
     var cobolProcessRouter = require("./jobs/process-cobol-project");
     app.use("/backend/jobs/api/cobol-process", cobolProcessRouter);
-
+    // app.use(/backend\/(main|jobs)\/.*/g, clientAuth);
+    const router = require("./routes/default.routes");
+    app.use(/backend\/main\/api\/defaults\/.*/g, router);
+    const routeMiddle: RegExp = /\/backend\/(main|jobs)\/.*/ig;
+    app.all(routeMiddle, clientAuth);
+    
     const swaggerApi = resolve(join(__dirname, "swagger"));
     const options = {
         definition: {
@@ -81,7 +86,7 @@ export const setAppRoutes = function (app: express.Application) {
                 version: "1.0.0"
             },
             basePath: "/",
-            servers: [{ url: "/" }, { url: "flou-job-api" }],
+            servers: [{ url: "/flou-job-api" }, { url: "/" }],
             components: {
                 securitySchemes: {
                     bearerAuth: {

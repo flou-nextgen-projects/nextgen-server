@@ -25,7 +25,7 @@ spec:
     spec:
       containers:
         - name: flou-job-api
-          image: sonawaneyogeshb/flou-job-api:1.0.0
+          image: sonawaneyogeshb/flou-job-api:2.0.0
           imagePullPolicy: IfNotPresent
           env:
             - name: EMAIL
