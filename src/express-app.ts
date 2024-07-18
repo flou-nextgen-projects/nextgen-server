@@ -2,7 +2,7 @@ import express, { NextFunction, Request, Response } from "express";
 import Cors from 'cors';
 import { json, urlencoded } from 'body-parser';
 var morgan = require('morgan');
-import clientAuth from './middleware/client-auth';
+import { clientAuth } from './middleware/client-auth';
 import http2Express from 'http2-express-bridge';
 const swaggerJsdoc = require('swagger-jsdoc');
 const swaggerUi = require('swagger-ui-express');
@@ -43,7 +43,11 @@ export const setAppRoutes = function (app: express.Application) {
     });
     app.get("/user/:id(\\d+)", (request: Request, response: Response) => {
         response.status(200).json({ msg: "OK", data: { id: request.params } }).end();
-    });    
+    });
+    // app.use(/backend\/(main|jobs)\/.*/g, clientAuth);
+    const router = require("./routes/default.routes");
+    app.use(/backend\/main\/api\/defaults\/.*/g, router);
+    app.use("/backend/main/api/*", clientAuth);
     var homeRouter = require('./controllers/home');
     var userRouter = require("./controllers/user-master");
     var roleMasterRouter = require("./controllers/role-master");
@@ -67,15 +71,10 @@ export const setAppRoutes = function (app: express.Application) {
     app.use("/backend/main/api/topics", topicRouter);
     // db status router
     var dbStatusRouter = require("./config/check-status");
-    app.use("/backend/main/api/db", dbStatusRouter); 
+    app.use("/backend/main/api/db", dbStatusRouter);
     // job processing routers
     var cobolProcessRouter = require("./jobs/process-cobol-project");
     app.use("/backend/jobs/api/cobol-process", cobolProcessRouter);
-    // app.use(/backend\/(main|jobs)\/.*/g, clientAuth);
-    const router = require("./routes/default.routes");
-    app.use(/backend\/main\/api\/defaults\/.*/g, router);
-    const routeMiddle: RegExp = /\/backend\/(main|jobs)\/.*/ig;
-    app.all(routeMiddle, clientAuth);
     
     const swaggerApi = resolve(join(__dirname, "swagger"));
     const options = {

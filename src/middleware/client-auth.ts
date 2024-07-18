@@ -14,4 +14,4 @@ const clientAuth = function (request: Request | any, response: Response, next: F
     }
 }
 
-export default clientAuth;
+export { clientAuth };
