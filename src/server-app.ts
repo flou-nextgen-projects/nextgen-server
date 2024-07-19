@@ -10,19 +10,7 @@ import mongoDbServer from './database/mongodb-config';
 import { existsSync, mkdirSync, readFileSync } from 'fs';
 import app, { setAppRoutes } from "./express-app";
 import config from './configurations';
-import { Logger, WinstonLogger } from "yogeshs-utilities";
-const winstonLogger: WinstonLogger = new WinstonLogger(__filename);
-
-winstonLogger.info("Completed changing file type extensions", { code: "0001", name: "processing", numVal: 7081, strVal: "fileType: COBOL" });
-winstonLogger.info("Another message", { code: "0002", name: "filtering", numVal: 3422, strVal: "{name: 'yogeshs', age: 38}" });
-winstonLogger.info("This is loggers info", { name: "yogeshs", code: "log-1001", extras: { name: "yogesh", age: 40, birthPlace: "Undirwadi" } });
-winstonLogger.info("This is sayali sonawane", { name: "sayalis", code: "log-1002", extras: { name: "sayali", age: 34 } });
-winstonLogger.error(new Error("Unknown error"), { name: 'error', code: "err-5001" });
-winstonLogger.info('This is an informational message', { code: 'value1', name: 'value2' });
-winstonLogger.error(new Error('This is an error message'), { code: "123", name: "error" });
-winstonLogger.debug('This is a debug message', { name: 'some debug info', code: "1234-34" });
-winstonLogger.warn('This is a warn');
-winstonLogger.warn('This is a warning', { name: 'some debug info', code: "no-code" });
+import { Logger } from "yogeshs-utilities";
 
 async function mongoConnection() {
     globalAny.mongoDbConnection = await mongoDbServer();

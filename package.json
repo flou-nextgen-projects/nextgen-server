@@ -10,7 +10,7 @@
     "serve": "node --inspect dist/server-app.js",
     "test": "cross-env NODE_ENV=unitTest nyc --reporter=lcov --reporter=text mocha --require ts-node/register --file ./tests/init-token.ts --timeout 99999 --recursive 'tests/**/*.spec.ts' --exit",
     "coverage": "nyc report --reporter=lcov",
-    "watch-node": "nodemon --ignore public/ --inspect-brk --inspect=127.0.0.1:9229 dist/server-app.js",
+    "watch-node": "nodemon --ignore public/ --inspect=127.0.0.1:9229 dist/server-app.js",
     "watch-ts": "tsc --watch",
     "watch-babel": "babel src --out-dir dist --extensions \".ts\" --source-maps --watch",
     "bash-tsc": "tsc --watch"
@@ -54,7 +54,7 @@
     "progress": "^2.0.3",
     "supertest": "^6.3.3",
     "unzipper": "^0.10.14",
-    "yogeshs-utilities": "^4.0.16"
+    "yogeshs-utilities": "^5.0.0"
   },
   "devDependencies": {
     "@babel/cli": "^7.23.0",

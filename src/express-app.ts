@@ -44,7 +44,6 @@ export const setAppRoutes = function (app: express.Application) {
     app.get("/user/:id(\\d+)", (request: Request, response: Response) => {
         response.status(200).json({ msg: "OK", data: { id: request.params } }).end();
     });
-    // app.use(/backend\/(main|jobs)\/.*/g, clientAuth);
     const router = require("./routes/default.routes");
     app.use(/backend\/main\/api\/defaults\/.*/g, router);
     app.use("/backend/main/api/*", clientAuth);
