@@ -1,15 +1,15 @@
 import { appService } from "../../services/app-service";
 import { DataDependency, FileMaster, MissingObjects, ProjectMaster, StatementMaster } from "../../models";
-import { FileExtensions, Logger, CobolHelpers, StatementProcessor } from "yogeshs-utilities";
+import { FileExtensions, CobolHelpers, StatementProcessor, ConsoleLogger } from "yogeshs-utilities";
 import Mongoose from "mongoose";
 import ProgressBar from "progress";
 import { basename } from "path";
 import { readFileSync } from "fs";
 import CobolProcessHelpers from "./main-process-helpers";
-import { CobolConstants } from "../../constants";
+import CobolConstants from "../../constants";
 import { forIn, isEmpty } from "lodash";
 
-const logger: Logger = new Logger(__filename);
+const logger: ConsoleLogger = new ConsoleLogger(__filename);
 const fileExtensions: FileExtensions = new FileExtensions();
 export default class CobolMainProcessUtils extends CobolProcessHelpers {
     constructor() { super(); }
@@ -18,12 +18,17 @@ export default class CobolMainProcessUtils extends CobolProcessHelpers {
     }
     changeExtensions = (_id: string | Mongoose.Types.ObjectId) => new Promise(async (resolve: Function, reject: Function) => {
         try {
+            let startTimeStamp = new Date();
             const project = await this.getProject(_id);
+            let stage = await appService.processingStages.getItem({ pid: _id, stepName: "change file extensions" });
+            if (stage.completedOn) return resolve({ status: "OK", message: "This stage is already processed!" });
             logger.info(`Executing change extensions process for project: ${project.name}`, { directory: project.extractedPath });
             const fileTypes = await appService.fileTypeMaster.getDocuments({ lid: project.lid });
             fileTypes.forEach((fileType) => {
                 fileExtensions.changeExtensions(project.extractedPath, fileType.fileTypeExtension, fileType.folderNames);
             });
+            // update change extensions stage against this project
+            await appService.processingStages.updateDocument({ _id: stage._id }, { $set: { startedOn: startTimeStamp, completedOn: new Date() } });
             logger.info(`Completed change extensions process for project: ${project.name}`);
             resolve({ status: "OK" });
         } catch (error) {
@@ -32,7 +37,10 @@ export default class CobolMainProcessUtils extends CobolProcessHelpers {
     });
     processFileMasterData = (_id: string | Mongoose.Types.ObjectId) => new Promise(async (resolve: Function, reject: Function) => {
         try {
+            let startTimeStamp = new Date();
             const project = await this.getProject(_id);
+            let stage = await appService.processingStages.getItem({ pid: _id, stepName: "extract file details" });
+            if (stage.completedOn) return resolve({ status: "OK", message: "This stage is already processed!" });
             const extensions = await appService.fileTypeMaster.getDocuments({ lid: project.lid });
             const files: string[] = fileExtensions.getAllFilesFromPath(project.extractedPath, [], true);
             const bar: ProgressBar = logger.showProgress(files.length);
@@ -54,6 +62,8 @@ export default class CobolMainProcessUtils extends CobolProcessHelpers {
                 await appService.fileMaster.addItem(fileMaster);
             }
             bar.terminate();
+            // update change extensions stage against this project
+            await appService.processingStages.updateDocument({ _id: stage._id }, { $set: { startedOn: startTimeStamp, completedOn: new Date() } });
             resolve({ status: "OK" })
         } catch (error) {
             reject({ status: "error", code: 'cobol-10012', error: error?.message, where: 'Process file master data function of cobol main process utils' });
@@ -61,16 +71,19 @@ export default class CobolMainProcessUtils extends CobolProcessHelpers {
     });
     processJCLFiles = (_id: string | Mongoose.Types.ObjectId) => new Promise(async (resolve: Function, reject: Function) => {
         try {
+            let startTimeStamp = new Date();
             const project = await this.getProject(_id);
+            let stage = await appService.processingStages.getItem({ pid: _id, stepName: "process JCL files" });
+            if (stage.completedOn) return resolve({ status: "OK", message: "This stage is already processed!" });
             // get all files for project            
-            let allFiles = await appService.fileMaster.getDocuments({ pid: project._id });
+            let allFiles = await appService.fileMaster.getDocuments({ pid: project._id, processed: false });
             let jclFiles = allFiles.filter((d) => d.fileTypeId.toString() === "65e2fbc8470cfe5989af0545")
             let bcReferences = await appService.baseCommandReference.getAllDocuments();
             let index = 0;
             logger.log("Current status");
             logger.warning(`There are total: ${jclFiles.length} JCL files to process.`);
             let bar = logger.showProgress(jclFiles.length);
-            for (const fileMaster of jclFiles) {
+            for (const fileMaster of jclFiles.filter((d) => !d.processed)) {
                 bar.tick({ done: ++index, length: jclFiles.length });
                 let allLines = readFileSync(fileMaster.filePath).toString().split(/\n/i);
                 let lineDetails = CobolHelpers.prepareCobolLineDetails(allLines); // utilities check -- done!
@@ -108,9 +121,12 @@ export default class CobolMainProcessUtils extends CobolProcessHelpers {
                     await appService.statementMaster.addItem(sm);
                 }
 
+                await appService.fileMaster.updateDocument({ _id: fileMaster._id }, { $set: { linesCount: allLines.length, fileStatics: { lineCount: allLines.length, processedLineCount: lineDetails.length, parsed: true }, processed: true } });
                 await this.sleep(500);
             }
             bar.terminate();
+            // update change extensions stage against this project
+            await appService.processingStages.updateDocument({ _id: stage._id }, { $set: { startedOn: startTimeStamp, completedOn: new Date() } });
             resolve({ status: "OK" });
         } catch (error) {
             reject({ status: "error", code: 'cobol-10013', error: error?.message, where: 'Process JCL files function of cobol main process utils' });
@@ -118,7 +134,10 @@ export default class CobolMainProcessUtils extends CobolProcessHelpers {
     });
     processCopyBookFiles = (_id: string | Mongoose.Types.ObjectId) => new Promise(async (resolve: Function, reject: Function) => {
         try {
+            let startTimeStamp = new Date();
             const project = await this.getProject(_id);
+            let stage = await appService.processingStages.getItem({ pid: _id, stepName: "process CopyBook files" });
+            if (stage.completedOn) return resolve({ status: "OK", message: "This stage is already processed!" });
             let allFiles = await appService.fileMaster.getDocuments({ pid: project._id, fileTypeId: new Mongoose.Types.ObjectId("65e2fbc8470cfe5989af0545") });
             let indicators = await appService.baseCommandReference.getAllDocuments();
             let index = 0;
@@ -135,8 +154,11 @@ export default class CobolMainProcessUtils extends CobolProcessHelpers {
                 lineDetails = CobolHelpers.removeSpacesBetweenWords(lineDetails);
                 lineDetails = CobolHelpers.combineAllBrokenLines(lineDetails, ",", true);
                 lineDetails = this.assignBaseCommandIndicators(lineDetails as any, indicators);
+                await appService.fileMaster.updateDocument({ _id: fileMaster._id }, { $set: { linesCount: allLines.length, fileStatics: { lineCount: allLines.length, processedLineCount: lineDetails.length, parsed: true }, processed: true } });
             }
             bar.terminate();
+            // update change extensions stage against this project
+            await appService.processingStages.updateDocument({ _id: stage._id }, { $set: { startedOn: startTimeStamp, completedOn: new Date() } });
             resolve({ status: "OK" });
         } catch (error) {
             reject({ status: "error", code: 'cobol-10014', error: error?.message, where: 'Process CopyBook files function of cobol main process utils' });
@@ -144,7 +166,9 @@ export default class CobolMainProcessUtils extends CobolProcessHelpers {
     });
     processProcFiles = (_id: string | Mongoose.Types.ObjectId) => new Promise(async (resolve: Function, reject: Function) => {
         try {
+            let startTimeStamp = new Date();
             const project = await this.getProject(_id);
+            let stage = await appService.processingStages.getItem({ pid: _id, stepName: "process PROC files" });
             let allFiles = await appService.fileMaster.getDocuments({ pid: project._id });
             let procFiles = await appService.fileMaster.getDocuments({ pid: project._id, fileTypeId: new Mongoose.Types.ObjectId("65e2fbc8470cfe5989af0545") });
             let bcReferences = await appService.baseCommandReference.getAllDocuments();
@@ -189,10 +213,13 @@ export default class CobolMainProcessUtils extends CobolProcessHelpers {
                     sm.fid = fileMaster._id; sm.pid = fileMaster.pid;
                     await appService.statementMaster.addItem(sm);
                 }
-
+                // update fileStatics for fileMaster and linesCount
+                await appService.fileMaster.updateDocument({ _id: fileMaster._id }, { $set: { linesCount: allLines.length, fileStatics: { lineCount: allLines.length, processedLineCount: lineDetails.length, parsed: true }, processed: true } });
                 await this.sleep(500);
             }
             bar.terminate();
+            // update change extensions stage against this project
+            await appService.processingStages.updateDocument({ _id: stage._id }, { $set: { startedOn: startTimeStamp, completedOn: new Date() } });
             resolve({ status: "OK" });
         } catch (error) {
             reject({ status: "error", code: 'cobol-10014', error: error?.message, where: 'Process CopyBook files function of cobol main process utils' });
@@ -200,7 +227,9 @@ export default class CobolMainProcessUtils extends CobolProcessHelpers {
     });
     processBMSFiles = (_id: string | Mongoose.Types.ObjectId) => new Promise(async (resolve: Function, reject: Function) => {
         try {
+            let startTimeStamp = new Date();
             const project = await this.getProject(_id);
+            let stage = await appService.processingStages.getItem({ pid: _id, stepName: "process BMS files" });
             // get all files for project            
             let allFiles = await appService.fileMaster.getDocuments({ pid: project._id });
             let allBmsFiles = await appService.fileMaster.getDocuments({ pid: project._id, fileTypeId: new Mongoose.Types.ObjectId("65e2fbc8470cfe5989af0545") });
@@ -243,10 +272,13 @@ export default class CobolMainProcessUtils extends CobolProcessHelpers {
                     sm.fid = fileMaster._id; sm.pid = fileMaster.pid;
                     await appService.statementMaster.addItem(sm);
                 }
-
+                // update fileStatics for fileMaster and linesCount
+                await appService.fileMaster.updateDocument({ _id: fileMaster._id }, { $set: { linesCount: allLines.length, fileStatics: { lineCount: allLines.length, processedLineCount: lineDetails.length, parsed: true }, processed: true } });
                 await this.sleep(500);
             }
             bar.terminate();
+            // update change extensions stage against this project
+            await appService.processingStages.updateDocument({ _id: stage._id }, { $set: { startedOn: startTimeStamp, completedOn: new Date() } });
             resolve({ status: "OK" });
         } catch (error) {
             reject({ status: "error", code: 'cobol-10014', error: error?.message, where: 'Process CopyBook files function of cobol main process utils' });
@@ -351,11 +383,7 @@ export default class CobolMainProcessUtils extends CobolProcessHelpers {
                 let methodLines = this.collectAllMethodsData(lineDetails as any, allMethods); // need to verify -- done!
                 // TODO: need to get and store data into following variable
                 let cobolKeyWords: [] = [];
-                // const regexCrud = new RegExp(/^SELECT\s+|^UPDATE\s+|^DELETE\s+|^INSERT\s+/i);
-                // const regexEntityCrud = new RegExp(/^READ\s+(.*?\s+)|^WRITE\s+(.*)|^REWRITE\s+(.*?\s+)/i);
-                const rex = new RegExp(/^PROCEDURE DIVISION(.*)/i);
-                const endRegex = /^END-PERFORM.$|^END-PERFORM$/i;
-                const regexCall = /^CALL\s+(.+?\s+)/i;
+                const rex = CobolConstants.cobolSections.find((d) => d.sectionName === "PROCEDURE DIVISION.").regEx;
 
                 let cobolVariables = await appService.cobolVariables.getDocuments({ fid: fileMaster._id, pid: fileMaster.pid });
                 forIn(methodLines, async (methodBlock, method) => {
@@ -364,7 +392,7 @@ export default class CobolMainProcessUtils extends CobolProcessHelpers {
                     if (methodBlock.length < 0) return;
                     var finalBlock: StatementMaster[] = [];
                     if (rex.test(mainKey)) {
-                        let prev = allMethods.shift();
+                        allMethods.shift();
                         let afterPd = mainKey.replace(rex, "").trim();
                         if (isEmpty(afterPd)) return;
                         methodBlock[0].modifiedLine = afterPd;
@@ -394,12 +422,12 @@ export default class CobolMainProcessUtils extends CobolProcessHelpers {
 
                     for (const lineDetail of methodBlock) {
                         let line = lineDetail.originalLine.trim();
-                        if (!line || endRegex.test(line)) continue;
-                        if (regexCall.test(line)) {
+                        if (!line || CobolConstants.RegularExpressions.regexEndPerform.test(line)) continue;
+                        if (CobolConstants.RegularExpressions.regExCall.test(line)) {
                             const cStatement = CobolHelpers.extractKeyword(line);
                             const isCallVariable = CobolHelpers.isInSingleQuotes(cStatement);
                             if (!isEmpty(isCallVariable)) {
-                                const callMatch = line.match(regexCall);
+                                const callMatch = line.match(CobolConstants.RegularExpressions.regExCall);
                                 if (!callMatch) continue;
                                 const pgmName = callMatch[1];
                                 if (!pgmName) return null;

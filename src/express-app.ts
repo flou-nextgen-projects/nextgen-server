@@ -58,7 +58,7 @@ export const setAppRoutes = function (app: express.Application) {
     var workspaceRouter = require("./controllers/workspace-master");
     var topicRouter = require("./kafka-services/kafka-topics");
     require("./kafka-services/kafka-consumer"); // no need to have routes
-    app.use("/backend/main/api/home", homeRouter);
+    app.use("/check/api/home", homeRouter);
     app.use("/backend/api/user-master", userRouter);
     app.use("/backend/main/api/role-master", roleMasterRouter);
     app.use("/backend/main/api/language-master", langRouter);

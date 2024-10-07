@@ -21,7 +21,7 @@ const startProcessing = async function (request: Request, response: Response) {
                 message: "Project directory structure is not valid. Please make sure you have Menu, I-Descriptors and DataDictionary folders in it."
             }).end();
             var completedOn = new Date();
-            var stepDoc = await appService.processingSteps.findByIdAndUpdate(processStep._id, { startedOn, completedOn });
+            var stepDoc = await appService.processingStages.findByIdAndUpdate(processStep._id, { startedOn, completedOn });
             console.log(stepDoc);
         } catch (error) {
             return response.status(500).send({ message: "Error occurred while changing the extensions of files", error }).end();
@@ -36,7 +36,7 @@ const startProcessing = async function (request: Request, response: Response) {
         try {
             await universeMainProcessUtils.changeExtensionStep(projectMaster);
             var completedOn = new Date();
-            var stepDoc = await appService.processingSteps.findByIdAndUpdate(processStep._id, { startedOn, completedOn });
+            var stepDoc = await appService.processingStages.findByIdAndUpdate(processStep._id, { startedOn, completedOn });
             console.log(stepDoc);
         } catch (error) {
             return response.status(500).send({ message: "Error occurred while changing the extensions of files", error }).end();
@@ -51,7 +51,7 @@ const startProcessing = async function (request: Request, response: Response) {
         try {
             await universeMainProcessUtils.fileMasterImportStep(projectMaster);
             var completedOn = new Date();
-            var stepDoc = await appService.processingSteps.findByIdAndUpdate(processStep._id, { startedOn, completedOn });
+            var stepDoc = await appService.processingStages.findByIdAndUpdate(processStep._id, { startedOn, completedOn });
             console.log(stepDoc);
         } catch (error) {
             return response.status(500).send({ message: "Error occurred while extracting file details information", error }).end();
@@ -66,7 +66,7 @@ const startProcessing = async function (request: Request, response: Response) {
             var startedOn = new Date();
             await universeMainProcessUtils.processFileMenuStep(projectMaster);
             var completedOn = new Date();
-            var stepDoc = await appService.processingSteps.findByIdAndUpdate(processStep._id, { startedOn, completedOn });
+            var stepDoc = await appService.processingStages.findByIdAndUpdate(processStep._id, { startedOn, completedOn });
             console.log(stepDoc);
         } catch (error) {
             return response.status(500).send({ message: "Error occurred while processing menu file", error }).end();
@@ -81,7 +81,7 @@ const startProcessing = async function (request: Request, response: Response) {
             var startedOn = new Date();
             await universeMainProcessUtils.processDataDictionaryStep(projectMaster);
             var completedOn = new Date();
-            var stepDoc = await appService.processingSteps.findByIdAndUpdate(processStep._id, { startedOn, completedOn });
+            var stepDoc = await appService.processingStages.findByIdAndUpdate(processStep._id, { startedOn, completedOn });
             console.log(stepDoc);
         } catch (error) {
             return response.status(500).send({ message: "Error occurred while processing data dictionary files", error }).end();
@@ -96,7 +96,7 @@ const startProcessing = async function (request: Request, response: Response) {
             var startedOn = new Date();
             await universeMainProcessUtils.processUniverseDescriptorsStep(projectMaster);
             var completedOn = new Date();
-            var stepDoc = await appService.processingSteps.findByIdAndUpdate(processStep._id, { startedOn, completedOn });
+            var stepDoc = await appService.processingStages.findByIdAndUpdate(processStep._id, { startedOn, completedOn });
             console.log(stepDoc);
         } catch (error) {
             return response.status(500).send({ message: "Error occurred while processing I-Descriptor files", error }).end();
@@ -111,7 +111,7 @@ const startProcessing = async function (request: Request, response: Response) {
             var startedOn = new Date();
             await universeMainProcessUtils.processUniVerseFilesStep("Programs", ".pgm", projectMaster);
             var completedOn = new Date();
-            var stepDoc = await appService.processingSteps.findByIdAndUpdate(processStep._id, { startedOn, completedOn });
+            var stepDoc = await appService.processingStages.findByIdAndUpdate(processStep._id, { startedOn, completedOn });
             console.log(stepDoc);
         } catch (error) {
             return response.status(500).send({ message: "Error occurred while processing Universe files", error }).end();
@@ -126,7 +126,7 @@ const startProcessing = async function (request: Request, response: Response) {
             var startedOn = new Date();
             await universeMainProcessUtils.processUniVerseFilesStep("Jcl", ".jcl", projectMaster);
             var completedOn = new Date();
-            var stepDoc = await appService.processingSteps.findByIdAndUpdate(processStep._id, { startedOn, completedOn });
+            var stepDoc = await appService.processingStages.findByIdAndUpdate(processStep._id, { startedOn, completedOn });
             console.log(stepDoc);
         } catch (error) {
             return response.status(500).send({ message: "Error occurred while processing Universe files", error }).end();
@@ -145,7 +145,7 @@ const startProcessing = async function (request: Request, response: Response) {
             await universeMainProcessUtils.processUniVerseFilesStep("SubRoutines", ".sbr", projectMaster);
             console.log("UniVerse Basic SubRoutine files are processed!.");
             var completedOn = new Date();
-            var stepDoc = await appService.processingSteps.findByIdAndUpdate(processStep._id, { startedOn, completedOn });
+            var stepDoc = await appService.processingStages.findByIdAndUpdate(processStep._id, { startedOn, completedOn });
             console.log(stepDoc);
         } catch (error) {
             return response.status(500).send({ message: "Error occurred while processing Universe files", error }).end();
@@ -160,7 +160,7 @@ const startProcessing = async function (request: Request, response: Response) {
             var startedOn = new Date();
             await universeMainProcessUtils.processFileContentsStep(projectMaster);
             var completedOn = new Date();
-            var stepDoc = await appService.processingSteps.findByIdAndUpdate(processStep._id, { startedOn, completedOn });
+            var stepDoc = await appService.processingStages.findByIdAndUpdate(processStep._id, { startedOn, completedOn });
             console.log(stepDoc);
         } catch (error) {
             return response.status(500).send({ message: "Error occurred while processing UniVerse File Contents", error }).end();

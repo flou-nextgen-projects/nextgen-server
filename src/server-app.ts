@@ -10,13 +10,13 @@ import mongoDbServer from './database/mongodb-config';
 import { existsSync, mkdirSync, readFileSync } from 'fs';
 import app, { setAppRoutes } from "./express-app";
 import config from './configurations';
-import { Logger } from "yogeshs-utilities";
+import { ConsoleLogger } from "yogeshs-utilities";
 
 async function mongoConnection() {
     globalAny.mongoDbConnection = await mongoDbServer();
 }
 
-const logger: Logger = new Logger(__filename);
+const logger: ConsoleLogger = new ConsoleLogger(__filename);
 process.on('unhandledRejection', (reason, _) => {
     logger.error('Unhandled Rejection at:', { reason });
 });
@@ -28,7 +28,7 @@ Promise.resolve(mongoConnection()).then(() => {
         mkdirSync(uploadPath);
     }
     app.use(Express.static(uploadPath));
-    app.use(Express.static(join(__dirname, 'public')));
+    app.use(Express.static(join(__dirname, '')));
     const crtPath = resolve(__dirname, 'certificates');
     const httpsOptions: http2.SecureServerOptions = {
         cert: readFileSync(join(crtPath, 'device.crt')),

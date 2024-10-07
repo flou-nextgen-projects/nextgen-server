@@ -1,5 +1,6 @@
 import Express, { Request, Response, Router, NextFunction } from "express";
 import { appService } from "../services/app-service";
+import Mongoose from "mongoose";
 import { CobolProcessToExecute } from "../helpers/cobol/cobol-process-stages";
 
 const cobolProcessRouter: Router = Express.Router();
@@ -22,17 +23,45 @@ cobolProcessRouter.use("/", (_: Request, __: Response, next: NextFunction) => {
     // all processing steps will be executed by Kafka messages
     // we'll use topic for this is - cobol-processing and event-type will be process-step
     // we'll pass all necessary and required arguments into Kafka message and utilize them.
+
+    // commented following block on 05/10/2024
+    /*
     const processToExecute = new CobolProcessToExecute(project._id);
     const executeStage: Function = processToExecute.get('changeExtensions');
     executeStage(_id);
+    */
+    executeProcessActionsOnyByOne(project._id);
 }).get("/execute-stage/:pid/:stageName", async function (request: Request, response: Response) {
     const stageName = <string>request.params.stageName;
     const _id = <string>request.params.pid;
-    const processToExecute = new CobolProcessToExecute(_id);
-    const executeStage: Function = processToExecute.get(stageName);
-    executeStage(_id);
-    response.status(200).json({ message: `Started executing stage: ${stageName}`, pid: _id }).end();
+    try {
+        const processToExecute = new CobolProcessToExecute(_id);
+        const executeStage: Function = processToExecute.get(stageName);
+        executeStage(_id);
+        response.status(200).json({ message: `Started executing stage: ${stageName}`, pid: _id }).end();
+    } catch (error) {
+        response.status(500).json({ message: `There was an error executing stage: ${stageName}`, pid: _id }).end();
+    }
 });
 
+let executeProcessActionsOnyByOne = async (pid: string | Mongoose.Types.ObjectId) => new Promise(async (resolve: Function, reject: Function) => {
+    try {
+        const processToExecute = new CobolProcessToExecute(pid);
+        await processToExecute.changeExtensions(pid);
+        await processToExecute.processFileMasterData(pid);
+        await processToExecute.processJCLFiles(pid);
+        await processToExecute.processCopyBookFiles(pid);
+        await processToExecute.processProcFiles(pid);
+        await processToExecute.processBMSFiles(pid);
+        await processToExecute.processInputLibFiles(pid);
+        await processToExecute.processSqlFiles(pid);
+        await processToExecute.processCobolFiles(pid);
+        await processToExecute.cobolProcessUtils.processDataDependency(pid);
+    } catch (error) {
+        console.log(error);
+    } finally {
+
+    }
+});
 
 module.exports = cobolProcessRouter;

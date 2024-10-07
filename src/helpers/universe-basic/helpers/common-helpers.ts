@@ -2,7 +2,7 @@ import fs from "fs";
 import path from "path";
 import Mongoose from "mongoose";
 import { appService } from "../../../services/app-service";
-import { ProjectMaster, FileMaster, FileTypeMaster, ProcessingSteps } from "../../../models";
+import { ProjectMaster, FileMaster, FileTypeMaster, ProcessingStages } from "../../../models";
 import { universeStringExtensions } from "../extensions/universe-string-extensions";
 
 class CommonHelper {
@@ -55,8 +55,8 @@ class CommonHelper {
             fileTypeMasterId: fileType._id
         } as any as FileMaster; 
     };
-    fetchProcessStep = async function (projectId: string, stepName: string): Promise<ProcessingSteps> {
-        var step: ProcessingSteps = await appService.processingSteps.getItem({ projectId: new Mongoose.Types.ObjectId(projectId), stepName });
+    fetchProcessStep = async function (projectId: string, stepName: string): Promise<ProcessingStages> {
+        var step: ProcessingStages = await appService.processingStages.getItem({ projectId: new Mongoose.Types.ObjectId(projectId), stepName });
         return !step ? null : step;
     };
     protected changeExtension = function (dirPath: string, ext: string): void {

@@ -2,7 +2,7 @@ import Mongoose from "mongoose";
 import EntityBase from "./entity-base";
 var moment: any = require("moment");
 
-const ProcessingStepSchema: Mongoose.Schema<ProcessingSteps> = new Mongoose.Schema({
+const ProcessingStagesSchema: Mongoose.Schema<ProcessingStages> = new Mongoose.Schema({
     stepId: {
         auto: true,
         type: Mongoose.Schema.Types.ObjectId
@@ -10,6 +10,10 @@ const ProcessingStepSchema: Mongoose.Schema<ProcessingSteps> = new Mongoose.Sche
         type: Mongoose.Schema.Types.ObjectId,
         required: true
     }, stepName: {
+        type: String,
+        required: true,
+        default: ""
+    }, stage: {
         type: String,
         required: true,
         default: ""
@@ -39,7 +43,7 @@ const ProcessingStepSchema: Mongoose.Schema<ProcessingSteps> = new Mongoose.Sche
         type: Boolean,
         default: false
     }, processDetails: {
-        TableName: {
+        tableName: {
             type: String,
             required: false,
             default: ""
@@ -47,9 +51,10 @@ const ProcessingStepSchema: Mongoose.Schema<ProcessingSteps> = new Mongoose.Sche
     }
 });
 
-class ProcessingSteps extends EntityBase {
+class ProcessingStages extends EntityBase {
     public stepId: Mongoose.Types.ObjectId | string;
     public pid: Mongoose.Types.ObjectId | string;
+    public stage: string;
     public stepName: string;
     public description: string;
     public startedOn: Date;
@@ -60,4 +65,4 @@ class ProcessingSteps extends EntityBase {
     }
 };
 
-export { ProcessingStepSchema, ProcessingSteps };
+export { ProcessingStagesSchema, ProcessingStages };

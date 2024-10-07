@@ -1,8 +1,8 @@
 import { Kafka, logLevel } from 'kafkajs';
 import config from "../configurations";
 import socketFactory from '../middleware/socket-factory';
-import { Logger } from 'yogeshs-utilities';
-const logger: Logger = new Logger(__filename);
+import { ConsoleLogger } from 'yogeshs-utilities';
+const logger: ConsoleLogger = new ConsoleLogger(__filename);
 const kafkaBrokers = [config.kafkaUrl];
 const kafka = new Kafka({ logLevel: logLevel.ERROR, clientId: 'yogeshs-app', brokers: kafkaBrokers, socketFactory: socketFactory({ host: config.kafkaHost, port: config.kafkaPort }) });
 const consumer = kafka.consumer({ groupId: 'yogeshs-kafka', heartbeatInterval: 10000, rebalanceTimeout: 90000, sessionTimeout: 60000 });

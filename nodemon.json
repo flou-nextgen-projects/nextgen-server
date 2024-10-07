@@ -7,7 +7,9 @@
         "fixtures/",
         "*.bat",
         "logs",
-        "./logs/*"
+        "./logs/*",
+        "dist",
+        "**/dist/*"
     ],
     "execMap": {
         "rb": "ruby",

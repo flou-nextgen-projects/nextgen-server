@@ -13,7 +13,7 @@ import { FileContentMaster, FileContentMasterSchema } from "./file-content-maste
 import { UniVerseFileMenuMaster, UniVerseFileMenuSchema } from "./universe-file-menu";
 import { UniVerseDataDictionary, UniVerseDataDictionarySchema } from "./universe-data-dictionary";
 import { UniVerseDescriptorMaster, UniVerseDescriptorSchema } from "./universe-idescriptor";
-import { ProcessingStepSchema, ProcessingSteps } from "./processing-steps";
+import { ProcessingStages, ProcessingStagesSchema } from "./processing-stages";
 import { ProjectDirInfo, ProjectDirInfoSchema } from "./project-directory-info";
 import { BaseCommandRefSchema, BaseCommandReference } from "./base-command-reference";
 import { BmsMapControl, BmsMapControlSchema, BmsMapMaster, BmsMapMasterSchema, CobolDataSet, CobolDataSetSchema, ExternalCalls, ExternalCallsSchema } from "./cobol-datasets";
@@ -35,7 +35,7 @@ export {
     UniVerseFileMenuMaster, UniVerseFileMenuSchema,
     UniVerseDataDictionary, UniVerseDataDictionarySchema,
     UniVerseDescriptorMaster, UniVerseDescriptorSchema,
-    ProcessingSteps, ProcessingStepSchema,
+    ProcessingStages, ProcessingStagesSchema,
     ProjectDirInfo, ProjectDirInfoSchema,
     BaseCommandReference, BaseCommandRefSchema,
     CobolDataSet, CobolDataSetSchema,

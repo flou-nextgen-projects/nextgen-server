@@ -9,7 +9,7 @@ import {
     ProjectMaster, ProjectMasterSchema, LanguageMaster, WorkspaceMaster, LanguageMasterSchema,
     WorkspaceMasterSchema, FileTypeMasterSchema, FileTypeMaster,
     FileMaster, FileMasterSchema, StatementMaster, StatementSchema, BaseCommandMasterSchema, BaseCommandMaster, FileContentMaster,
-    FileContentMasterSchema, ProcessingSteps, ProcessingStepSchema, ProjectDirInfoSchema, ProjectDirInfo, UniVerseFileMenuSchema,
+    FileContentMasterSchema, ProcessingStages, ProcessingStagesSchema, ProjectDirInfoSchema, ProjectDirInfo, UniVerseFileMenuSchema,
     UniVerseFileMenuMaster, UniVerseDataDictionarySchema, UniVerseDataDictionary, UniVerseDescriptorSchema, UniVerseDescriptorMaster,
     BaseCommandRefSchema, BaseCommandReference, CobolDataSet, CobolDataSetSchema,
     BmsMapControl, BmsMapControlSchema, BmsMapMaster, BmsMapMasterSchema, ExternalCalls, ExternalCallsSchema,
@@ -36,7 +36,7 @@ class AppService {
     public fileTypeMaster = new BaseRepository<FileTypeMaster>({ collectionName: "fileTypeMaster", schema: FileTypeMasterSchema });
     public fileMaster = new BaseRepository<FileMaster>({ collectionName: "fileMaster", schema: FileMasterSchema });
     public fileContentMaster = new BaseRepository<FileContentMaster>({ collectionName: "fileContents", schema: FileContentMasterSchema });
-    public processingSteps = new BaseRepository<ProcessingSteps>({ collectionName: "processingSteps", schema: ProcessingStepSchema });
+    public processingStages = new BaseRepository<ProcessingStages>({ collectionName: "processingStages", schema: ProcessingStagesSchema });
     public projectDirInfo = new BaseRepository<ProjectDirInfo>({ collectionName: "projectDirInfo", schema: ProjectDirInfoSchema });
     public statementMaster = new BaseRepository<StatementMaster>({ collectionName: "statementMaster", schema: StatementSchema });
     public uniVerseFileMenuMaster = new BaseRepository<UniVerseFileMenuMaster>({ collectionName: "universeFileMenuMaster", schema: UniVerseFileMenuSchema });

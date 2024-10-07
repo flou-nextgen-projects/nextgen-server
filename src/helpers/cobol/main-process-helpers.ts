@@ -1,4 +1,4 @@
-import { CobolConstants } from "../../constants";
+import  CobolConstants from "../../constants";
 import { BaseCommandReference, CobolDataSet, StatementMaster, FileMaster, ExternalCalls } from "../../models";
 import StatementMasterBase from "../common/statement-master-base";
 import { appService } from "../../services/app-service";
@@ -6,9 +6,6 @@ import { appService } from "../../services/app-service";
 export default class CobolProcessHelpers extends StatementMasterBase {
     constructor() { super(); }
     assignBaseCommandIndicators = function (lineDetails: Array<StatementMaster>, commandRefs: Array<BaseCommandReference>): Array<StatementMaster> {
-        // logger.log("line details", lineDetails);
-        const crudRegEx = new RegExp(/^SELECT\s+|^UPDATE\s+|^DELETE\s+|^INSERT\s+/i);
-        const entityCrudRegEx = new RegExp(/^READ\s+(.*?\s+)|^WRITE\s+(.*)|^REWRITE\s+(.*?\s+)/i);
         for (const lineDetail of lineDetails) {
             let modifiedLine = lineDetail.modifiedLine.trim();
             for (const bc of commandRefs) {
@@ -30,15 +27,15 @@ export default class CobolProcessHelpers extends StatementMasterBase {
                 if (bc.callInternals.some((d) => modifiedLine.startsWith(d))) {
                     lineDetail.indicators.push(15);
                 }
-                if (crudRegEx.test(modifiedLine) || entityCrudRegEx.test(modifiedLine)) {
+                if (CobolConstants.RegularExpressions.crudRegEx.test(modifiedLine) || CobolConstants.RegularExpressions.entityCrudRegEx.test(modifiedLine)) {
                     lineDetail.indicators.push(45);
                 }
-                if (CobolConstants.callExtRegExProgram.test(modifiedLine) || CobolConstants.callExtRegExScreen.test(modifiedLine) ||
-                    CobolConstants.regExCall.test(modifiedLine) || CobolConstants.regExCopy.test(modifiedLine) ||
-                    CobolConstants.regExInclude.test(modifiedLine) || CobolConstants.regExIncludeMember.test(modifiedLine) ||
-                    CobolConstants.regExInput.test(modifiedLine) || CobolConstants.regExInputPattern.test(modifiedLine) ||
-                    CobolConstants.regExPattern.test(modifiedLine) || CobolConstants.regExPgm.test(modifiedLine) ||
-                    CobolConstants.regExPgmFile.test(modifiedLine) || CobolConstants.regExProc.test(modifiedLine)) {
+                if (CobolConstants.RegularExpressions.callExtRegExProgram.test(modifiedLine) || CobolConstants.RegularExpressions.callExtRegExScreen.test(modifiedLine) ||
+                    CobolConstants.RegularExpressions.regExCall.test(modifiedLine) || CobolConstants.RegularExpressions.regExCopy.test(modifiedLine) ||
+                    CobolConstants.RegularExpressions.regExInclude.test(modifiedLine) || CobolConstants.RegularExpressions.regExIncludeMember.test(modifiedLine) ||
+                    CobolConstants.RegularExpressions.regExInput.test(modifiedLine) || CobolConstants.RegularExpressions.regExInputPattern.test(modifiedLine) ||
+                    CobolConstants.RegularExpressions.regExPattern.test(modifiedLine) || CobolConstants.RegularExpressions.regExPgm.test(modifiedLine) ||
+                    CobolConstants.RegularExpressions.regExPgmFile.test(modifiedLine) || CobolConstants.RegularExpressions.regExProc.test(modifiedLine)) {
                     lineDetail.indicators.push(16);
                 }
             }
@@ -53,7 +50,7 @@ export default class CobolProcessHelpers extends StatementMasterBase {
             const values = [...element.lines, oStatement];
             let dataSetId = 0;
             let referenceFileId = undefined;
-            const matches = oStatement.match(CobolConstants.regExPgmFile);
+            const matches = oStatement.match(CobolConstants.RegularExpressions.regExPgmFile);
             const pgmName = matches?.[2]?.trim() || '';
             const objName = pgmName.trim().toUpperCase().replace(/^&|&$/g, '');
             const programFilePath = allFiles.find((f) => f.fileName.toUpperCase().startsWith(objName) && f.fileTypeId === "65e0bfdfac3abe96d9790fb5");

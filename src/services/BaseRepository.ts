@@ -58,7 +58,7 @@ export default class BaseRepository<TSource extends EntityBase> implements IBase
             }
             // following stage is added in MongoDB 5.x version.
             // @ts-ignore
-            // this._pipeline.push({ $setWindowFields: { sortBy: { _id: 1 }, output: { SrNo: { $documentNumber: {} } } } });
+            this._pipeline.push({ $setWindowFields: { sortBy: { _id: 1 }, output: { seqNo: { $documentNumber: {} } } } });
 
             // @ts-ignore                        
             // this._pipeline.push({ $set: { SrNo: { $function: { body: "function() {try { ++rowNo} catch (e) {rowNo = 1;} return rowNo;}", args: [], lang: "js" } } } });

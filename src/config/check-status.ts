@@ -15,9 +15,9 @@ checkDbStatusRouter.use("/", (_: Request, __: Response, next: NextFunction) => {
         // Read dbStatus table entries from database
         const dbStatus = await appService.mongooseConnection.collection("dbStatus").findOne();
         // Check if field configured value is false
-        if (!dbStatus.configured) {
+        if (!dbStatus?.configured) {
             // Start init process of database configuration
-            initDatabaseConfiguration(dbStatus).then((res) => {
+            _initDatabaseConfiguration(dbStatus).then((res) => {
                 response.status(200).json(res).end();
             }).catch((err) => {
                 response.status(500).json(err).end();
@@ -30,7 +30,7 @@ checkDbStatusRouter.use("/", (_: Request, __: Response, next: NextFunction) => {
     }
 });
 
-const initDatabaseConfiguration = (dbStatus: any): Promise<{ message: string }> => new Promise(async (res, rej) => {
+const _initDatabaseConfiguration = (dbStatus: any): Promise<{ message: string }> => new Promise(async (res, rej) => {
     try {
         const configPath = resolve(join(__dirname, "../", "db", "init-db.json"));
         const configData = readFileSync(configPath, { encoding: 'utf8' }).toString();
@@ -48,7 +48,7 @@ const initDatabaseConfiguration = (dbStatus: any): Promise<{ message: string }> 
         let userMaster = configJson.find((d) => d.collection === "userMaster").documents;
         await appService.userMaster.bulkInsert(userMaster);
         let workspaceMaster = configJson.find((d) => d.collection === "workspaceMaster").documents;
-        await appService.userMaster.bulkInsert(workspaceMaster);
+        await appService.workspaceMaster.bulkInsert(workspaceMaster);
         await appService.mongooseConnection.collection("dbStatus").findOneAndUpdate({ _id: dbStatus._id }, { $set: { configured: true, enabled: true } }, { upsert: true });
         res({ message: "Database initialization process completed successfully" });
     } catch (error) {
