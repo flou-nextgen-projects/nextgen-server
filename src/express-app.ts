@@ -70,7 +70,7 @@ export const setAppRoutes = function (app: express.Application) {
     app.use("/backend/main/api/topics", topicRouter);
     // db status router
     var dbStatusRouter = require("./config/check-status");
-    app.use("/backend/main/api/db", dbStatusRouter);
+    app.use("/backend/db", dbStatusRouter);
     // job processing routers
     var cobolProcessRouter = require("./jobs/process-cobol-project");
     app.use("/backend/jobs/api/cobol-process", cobolProcessRouter);

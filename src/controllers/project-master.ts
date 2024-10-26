@@ -16,6 +16,8 @@ pmRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
     response.status(200).json(projectMaster).end();
 }).post("/", async function (request: Request, response: Response) {
     var pm = request.body;
+    let checkExisting = await appService.projectMaster.getItem({name: pm.name});
+    if (checkExisting) return response.status(202).json({message: `Project with same name already exists: ${pm.name}`}).end();    
     var projectMaster: ProjectMaster = await appService.projectMaster.addItem(pm);
     await projectProcessingStages(projectMaster._id);
     extractProjectZip(projectMaster).then(async (extractPath: string) => {

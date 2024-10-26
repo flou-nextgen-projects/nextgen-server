@@ -47,7 +47,7 @@ const FileTypeMasterSchema: Mongoose.Schema<FileTypeMaster> = new Mongoose.Schem
     }, createdBy: {
         type: Mongoose.Schema.Types.ObjectId,
         auto: false,
-        required: true
+        required: false
     }, createdOn: {
         type: Date,
         required: false,

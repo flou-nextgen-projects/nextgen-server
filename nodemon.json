@@ -1,15 +1,9 @@
 {
     "verbose": true,
-    "ignore": [
-        "public",
-        "./public/*",
-        ".test.js",
-        "fixtures/",
-        "*.bat",
-        "logs",
-        "./logs/*",
-        "dist",
-        "**/dist/*"
+    "ignore": [        
+        "dist/extracted-projects/*",
+        "dist/uploaded-projects/*",
+        "dist/file-uploads/*"
     ],
     "execMap": {
         "rb": "ruby",

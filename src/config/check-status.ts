@@ -32,7 +32,7 @@ checkDbStatusRouter.use("/", (_: Request, __: Response, next: NextFunction) => {
 
 const _initDatabaseConfiguration = (dbStatus: any): Promise<{ message: string }> => new Promise(async (res, rej) => {
     try {
-        const configPath = resolve(join(__dirname, "../", "db", "init-db.json"));
+        const configPath = resolve(join(__dirname, "db", "init-db.json"));
         const configData = readFileSync(configPath, { encoding: 'utf8' }).toString();
         const configJson: Array<{ collection: string, documents: [] }> = JSON.parse(configData) || [];
         let bcmDocs = configJson.find((d) => d.collection === "baseCommandMaster").documents;
@@ -49,11 +49,10 @@ const _initDatabaseConfiguration = (dbStatus: any): Promise<{ message: string }>
         await appService.userMaster.bulkInsert(userMaster);
         let workspaceMaster = configJson.find((d) => d.collection === "workspaceMaster").documents;
         await appService.workspaceMaster.bulkInsert(workspaceMaster);
-        await appService.mongooseConnection.collection("dbStatus").findOneAndUpdate({ _id: dbStatus._id }, { $set: { configured: true, enabled: true } }, { upsert: true });
+        await appService.mongooseConnection.collection("dbStatus").findOneAndUpdate({ _id: dbStatus?._id }, { $set: { configured: true, enabled: true } }, { upsert: true });
         res({ message: "Database initialization process completed successfully" });
     } catch (error) {
         rej(error);
     }
 });
-
 module.exports = checkDbStatusRouter;

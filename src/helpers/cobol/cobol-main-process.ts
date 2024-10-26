@@ -77,7 +77,7 @@ export default class CobolMainProcessUtils extends CobolProcessHelpers {
             if (stage.completedOn) return resolve({ status: "OK", message: "This stage is already processed!" });
             // get all files for project            
             let allFiles = await appService.fileMaster.getDocuments({ pid: project._id, processed: false });
-            let jclFiles = allFiles.filter((d) => d.fileTypeId.toString() === "65e2fbc8470cfe5989af0545")
+            let jclFiles = allFiles.filter((d) => d.fileTypeId.toString() === "67036016f53c182f751ed03c")
             let bcReferences = await appService.baseCommandReference.getAllDocuments();
             let index = 0;
             logger.log("Current status");
@@ -138,11 +138,11 @@ export default class CobolMainProcessUtils extends CobolProcessHelpers {
             const project = await this.getProject(_id);
             let stage = await appService.processingStages.getItem({ pid: _id, stepName: "process CopyBook files" });
             if (stage.completedOn) return resolve({ status: "OK", message: "This stage is already processed!" });
-            let allFiles = await appService.fileMaster.getDocuments({ pid: project._id, fileTypeId: new Mongoose.Types.ObjectId("65e2fbc8470cfe5989af0545") });
+            let allFiles = await appService.fileMaster.getDocuments({ pid: project._id, fileTypeId: new Mongoose.Types.ObjectId("67036016f53c182f751ed036") });
             let indicators = await appService.baseCommandReference.getAllDocuments();
             let index = 0;
             logger.log("Current status");
-            logger.warning(`There are total: ${allFiles.length} JCL files to process.`);
+            logger.warning(`There are total: ${allFiles.length} CopyBook files to process.`);
             let bar = logger.showProgress(allFiles.length);
             for (const fileMaster of allFiles) {
                 bar.tick({ done: ++index, length: allFiles.length });
@@ -170,7 +170,7 @@ export default class CobolMainProcessUtils extends CobolProcessHelpers {
             const project = await this.getProject(_id);
             let stage = await appService.processingStages.getItem({ pid: _id, stepName: "process PROC files" });
             let allFiles = await appService.fileMaster.getDocuments({ pid: project._id });
-            let procFiles = await appService.fileMaster.getDocuments({ pid: project._id, fileTypeId: new Mongoose.Types.ObjectId("65e2fbc8470cfe5989af0545") });
+            let procFiles = await appService.fileMaster.getDocuments({ pid: project._id, fileTypeId: new Mongoose.Types.ObjectId("67036016f53c182f751ed035") });
             let bcReferences = await appService.baseCommandReference.getAllDocuments();
             let index = 0;
             logger.log("Current status");
@@ -232,7 +232,7 @@ export default class CobolMainProcessUtils extends CobolProcessHelpers {
             let stage = await appService.processingStages.getItem({ pid: _id, stepName: "process BMS files" });
             // get all files for project            
             let allFiles = await appService.fileMaster.getDocuments({ pid: project._id });
-            let allBmsFiles = await appService.fileMaster.getDocuments({ pid: project._id, fileTypeId: new Mongoose.Types.ObjectId("65e2fbc8470cfe5989af0545") });
+            let allBmsFiles = await appService.fileMaster.getDocuments({ pid: project._id, fileTypeId: new Mongoose.Types.ObjectId("67036016f53c182f751ed037") });
             let index = 0;
             logger.log("Current status");
             logger.warning(`There are total: ${allFiles.length} BMS files to process.`);
@@ -287,11 +287,11 @@ export default class CobolMainProcessUtils extends CobolProcessHelpers {
     processInputLibFiles = (_id: string | Mongoose.Types.ObjectId) => new Promise(async (resolve: Function, reject: Function) => {
         try {
             const project = await this.getProject(_id);
-            let allFiles = await appService.fileMaster.getDocuments({ pid: project._id, fileTypeId: new Mongoose.Types.ObjectId("65e2fbc8470cfe5989af0545") });
+            let allFiles = await appService.fileMaster.getDocuments({ pid: project._id, fileTypeId: new Mongoose.Types.ObjectId("67036016f53c182f751ed03a") });
             let indicators = await appService.baseCommandReference.getAllDocuments();
             let index = 0;
             logger.log("Current status");
-            logger.warning(`There are total: ${allFiles.length} JCL files to process.`);
+            logger.warning(`There are total: ${allFiles.length} InputLib files to process.`);
             let bar = logger.showProgress(allFiles.length);
             for (const fileMaster of allFiles) {
                 bar.tick({ done: ++index, length: allFiles.length });
@@ -313,7 +313,7 @@ export default class CobolMainProcessUtils extends CobolProcessHelpers {
     processSqlFiles = (_id: string | Mongoose.Types.ObjectId) => new Promise(async (resolve: Function, reject: Function) => {
         try {
             const project = await this.getProject(_id);
-            let allFiles = await appService.fileMaster.getDocuments({ pid: project._id, fileTypeId: new Mongoose.Types.ObjectId("65e2fbc8470cfe5989af0545") });
+            let allFiles = await appService.fileMaster.getDocuments({ pid: project._id, fileTypeId: new Mongoose.Types.ObjectId("67036016f53c182f751ed038") });
             let indicators = await appService.baseCommandReference.getAllDocuments();
             let index = 0;
             logger.log("Current status");
@@ -330,7 +330,7 @@ export default class CobolMainProcessUtils extends CobolProcessHelpers {
         try {
             const project = await this.getProject(_id);
             let allFiles = await appService.fileMaster.getDocuments({ pid: project._id });
-            let cobolFiles = allFiles.filter((d) => d.fileTypeId.toString() === "65e0bfdfac3abe96d9790fb5");
+            let cobolFiles = allFiles.filter((d) => d.fileTypeId.toString() === "67036016f53c182f751ed03b");
             let bcReferences = await appService.baseCommandReference.getAllDocuments();
             let index = 0;
             logger.warning(`There are total: ${cobolFiles.length} COBOL files to process.`);

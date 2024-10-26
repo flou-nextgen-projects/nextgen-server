@@ -1,6 +1,6 @@
 import Mongoose from "mongoose";
 import { languageMasterVirtuals, fileTypeMasterVirtuals } from "../virtuals";
-import { LanguageMaster, FileTypeMaster, EntityBase, BaseCommandMaster } from ".";
+import { LanguageMaster, FileTypeMaster, EntityBase } from ".";
 
 var BaseCommandRefSchema: Mongoose.Schema<BaseCommandReference> = new Mongoose.Schema({
     lid: {
