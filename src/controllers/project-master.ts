@@ -10,6 +10,14 @@ const pmRouter: Router = Express.Router();
 const fileExtensions = new FileExtensions();
 pmRouter.use("/", (request: Request, response: Response, next: NextFunction) => {
     next();
+}).get("/docs", async (request: Request, response: Response, next: NextFunction) => {
+    let pid: string = <string>request.query.pid;
+    let projects = await appService.mongooseConnection.collection("projectMaster").aggregate([
+        { $match: { _id: new Mongoose.Types.ObjectId(pid) } },
+        { $lookup: { from: "fileMaster", localField: "_id", foreignField: "pid", as: "docs" } }
+    ]).toArray();
+    let project = projects.shift(); // need to check
+    response.status(200).json(project).end();
 }).post("/add-project", async function (request: Request, response: Response) {
     var pm = request.body;
     var projectMaster: ProjectMaster = await appService.projectMaster.addItem(pm);

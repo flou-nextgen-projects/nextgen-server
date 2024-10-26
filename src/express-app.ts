@@ -57,6 +57,10 @@ export const setAppRoutes = function (app: express.Application) {
     var bcRefRouter = require("./controllers/base-command-reference");
     var workspaceRouter = require("./controllers/workspace-master");
     var topicRouter = require("./kafka-services/kafka-topics");
+    var solutionRouter = require("./controllers/solutions");
+    var docRouter = require("./controllers/doc-master");
+    var statementRouter = require('./controllers/statement-reference');
+
     require("./kafka-services/kafka-consumer"); // no need to have routes
     app.use("/check/api/home", homeRouter);
     app.use("/backend/api/user-master", userRouter);
@@ -68,6 +72,9 @@ export const setAppRoutes = function (app: express.Application) {
     app.use("/backend/main/api/base-command-master", bcRouter);
     app.use("/backend/main/api/base-command-reference", bcRefRouter);
     app.use("/backend/main/api/topics", topicRouter);
+    app.use("/backend/main/api/solution", solutionRouter);
+    app.use("/backend/main/api/doc", docRouter);
+    app.use("/backend/main/api/statement-reference", statementRouter);
     // db status router
     var dbStatusRouter = require("./config/check-status");
     app.use("/backend/db", dbStatusRouter);
