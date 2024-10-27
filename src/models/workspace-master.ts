@@ -6,6 +6,7 @@ interface WorkspaceMaster extends EntityBase {
     lid: mongoose.Types.ObjectId;
     name: string;
     description?: string;
+    dirPath?: string;
     languageMaster: LanguageMaster;
 }
 
@@ -18,6 +19,9 @@ const WorkspaceMasterSchema: Schema<WorkspaceMaster> = new Schema({
         required: true,
         unique: true
     }, description: {
+        required: false,
+        type: String
+    }, dirPath: {
         required: false,
         type: String
     }

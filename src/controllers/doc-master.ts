@@ -14,7 +14,7 @@ docRouter.use("/", (request: Request, response: Response, next: NextFunction) =>
         { $unwind: { path: "$memberInfo", preserveNullAndEmptyArrays: true } }
     ];
     let statements = await appService.mongooseConnection.collection("statementMaster").aggregate(pipeLine).toArray();
-    response.json(statements).end();
+    response.status(200).json(statements).end();
 });
 
 module.exports = docRouter;
