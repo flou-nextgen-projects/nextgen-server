@@ -14,7 +14,6 @@ statementRouter.use("/", (request: Request, response: Response, next: NextFuncti
         { $match: { fid: new ObjectId(did), methodNo, indicators: { $nin: [1001, 1002] } } },
         { $lookup: { from: "methodDetails", localField: "methodId", foreignField: "_id", as: "methodDetails" } },
         { $unwind: { path: "$methodDetails", preserveNullAndEmptyArrays: true } },
-        // { $lookup: { from: "MemberReferences", localField: "callingTo.methodId", foreignField: "_id", as: "callingTo.memberInfo" } },
         { $lookup: { from: "memberReferences", localField: "memberId", foreignField: "_id", as: "memberInfo" } },
         { $unwind: { path: "$memberInfo", preserveNullAndEmptyArrays: true } }
     ];

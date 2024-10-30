@@ -24,7 +24,7 @@ const aggregateAll = async function (request: Request, response: Response) {
             FullName: { $concat: ["$FirstName", " ", "$LastName"] }
         }
     }];
-    const userMasters = await appService.userMaster.aggregate({ body: pipeLine });
+    const userMasters = await appService.userMaster.aggregate(pipeLine);
     response.status(200).json(userMasters).end();
 };
 

@@ -19,13 +19,11 @@ const test = async function (request: Request, response: Response) {
 };
 
 const aggregate = async function (request: Request, response: Response) {
-    const docs = await appService.projectMaster.aggregate({
-        body: [{
-            $match: {
-                languageId: new Mongoose.Types.ObjectId("5ddbb84faeee6d3bf8aea9c2")
-            }
-        }]
-    });
+    const docs = await appService.projectMaster.aggregate([{
+        $match: {
+            languageId: new Mongoose.Types.ObjectId("5ddbb84faeee6d3bf8aea9c2")
+        }
+    }]);
     response.status(200).json(docs).end();
 };
 

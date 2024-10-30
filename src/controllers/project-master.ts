@@ -29,10 +29,10 @@ pmRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
     var projectMaster: ProjectMaster = await appService.projectMaster.addItem(pm);
     await projectProcessingStages(projectMaster._id);
     extractProjectZip(projectMaster).then(async (extractPath: string) => {
-        const fileName = fileExtensions.getNameWithoutExtension(projectMaster.uploadDetails.fileName);
-        var extractedPath = join(extractPath, fileName);
+        // const fileName = fileExtensions.getNameWithoutExtension(projectMaster.uploadDetails.fileName);
+        // var extractedPath = join(extractPath, fileName);
         let totalFiles = fileExtensions.getAllFilesFromPath(extractPath);
-        var doc = await appService.projectMaster.findByIdAndUpdate(projectMaster._id, { extractedPath, totalObjects: totalFiles.length });
+        var doc = await appService.projectMaster.findByIdAndUpdate(projectMaster._id, { extractedPath: extractPath, totalObjects: totalFiles.length });
         response.status(200).json(doc).end();
     }).catch((err: any) => {
         response.status(500).json(err).end();
@@ -47,7 +47,7 @@ pmRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
     });
     response.status(200).json(processingStages).end();
 }).post("/upload-project", function (request: any, response: Response) {
-    let rootDir = resolve(join(__dirname, "../"));
+    let rootDir = resolve(join(__dirname, "../../"));
     request.rootDir = rootDir;
     Upload(request, response, function (err: any) {
         if (err) {

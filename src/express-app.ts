@@ -80,7 +80,9 @@ export const setAppRoutes = function (app: express.Application) {
     app.use("/backend/db", dbStatusRouter);
     // job processing routers
     var cobolProcessRouter = require("./jobs/process-cobol-project");
+    var startProcessRouter = require("./jobs/start-processing");
     app.use("/backend/jobs/api/cobol-process", cobolProcessRouter);
+    app.use("/backend/jobs/api/project", startProcessRouter);
     
     const swaggerApi = resolve(join(__dirname, "swagger"));
     const options = {

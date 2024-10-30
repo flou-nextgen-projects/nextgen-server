@@ -23,3 +23,5 @@ src/certificates
 debug.log
 dockerfiles
 logs
+uploaded-projects
+extracted-projects
