@@ -10,14 +10,25 @@
     "serve": "node --inspect dist/server-app.js",
     "test": "cross-env NODE_ENV=unitTest nyc --reporter=lcov --reporter=text mocha --require ts-node/register --file ./tests/init-token.ts --timeout 99999 --recursive 'tests/**/*.spec.ts' --exit",
     "coverage": "nyc report --reporter=lcov",
-    "watch-node": "nodemon --ignore ./nodemon.json --inspect=127.0.0.1:9229 dist/server-app.js",
+    "watch-node": "nodemon --inspect=127.0.0.1:9229 dist/server-app.js",
     "watch-ts": "tsc --watch",
     "watch-babel": "babel src --out-dir dist --extensions \".ts\" --source-maps --watch",
     "bash-tsc": "tsc --watch"
   },
   "author": "Yogesh Sonawane",
   "license": "ISC",
+  "nodemonConfig": {
+    "ignore": [
+      "dist/extracted-projects/**",
+      "dist/uploaded-projects/**",
+      "dist/file-uploads/**",
+      "**/extracted-projects/**",
+      "**/uploaded-projects/**"
+    ],
+    "delay": 2000
+  },
   "dependencies": {
+    "@types/axios": "^0.9.36",
     "@types/body-parser": "^1.19.2",
     "@types/cors": "^2.8.13",
     "@types/express": "^4.17.15",
@@ -26,8 +37,10 @@
     "@types/lodash": "^4.14.202",
     "@types/mocha": "^10.0.1",
     "@types/mongodb": "^4.0.7",
+    "@types/node-fetch": "^2.6.11",
     "@types/progress": "^2.0.7",
     "@types/unzipper": "^0.10.9",
+    "axios": "^1.7.7",
     "bcryptjs": "^2.4.3",
     "body-parser": "^1.20.1",
     "chai": "^4.3.7",
@@ -50,11 +63,11 @@
     "mongoose-lean-getters": "^0.3.5",
     "mongoose-lean-virtuals": "^0.9.1",
     "morgan": "^1.10.0",
-    "node-fetch": "^2.6.1",
+    "node-fetch": "^2.7.0",
     "progress": "^2.0.3",
     "supertest": "^6.3.3",
     "unzipper": "^0.10.14",
-    "yogeshs-utilities": "^5.0.1"
+    "yogeshs-utilities": "^6.0.1"
   },
   "devDependencies": {
     "@babel/cli": "^7.23.0",

@@ -215,6 +215,32 @@
                     "JCL"
                 ],
                 "lid": "66014c9c91051b7bc74fadbf"
+            },{
+                "_id":  "60507f342a60e0e6cbefd106",                
+                "lid":  "66014c8c91051b7bc74fadbc",
+                "fileTypeExtension": ".designer.cs",
+                "fileTypeName": "C# Generated Designer File",
+                "color": "#179bd7",
+                "folderNames": [],
+                "delimiter": "."
+            },
+            {
+                "_id": "60507f66591cfa72c53a859e",
+                "lid": "66014c8c91051b7bc74fadbc",
+                "fileTypeExtension": ".cs",
+                "fileTypeName": "C# Code File",
+                "color": "#1acdbc",
+                "folderNames": [],
+                "delimiter": "."
+            },
+            {
+                "_id": "60507f8d591cfa72c53a859f",
+                "lid": "66014c8c91051b7bc74fadbc",
+                "fileTypeExtension": ".xaml",
+                "fileTypeName": "XAML File",
+                "color": "#ff9999",
+                "folderNames": [],
+                "delimiter": "."
             }
         ]
     },

@@ -32,5 +32,7 @@ export default {
         return process.env.MONGO_USER;
     }, get mongoPass() {
         return process.env.MONGO_PASS;
+    }, get dotNetApiUrl(){
+        return process.env.DOTNET_API_URL;
     }
 }

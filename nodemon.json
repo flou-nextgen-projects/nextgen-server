@@ -3,7 +3,9 @@
     "ignore": [        
         "dist/extracted-projects/*",
         "dist/uploaded-projects/*",
-        "dist/file-uploads/*"
+        "dist/file-uploads/*",
+        "**/extracted-projects/**",
+        "**/uploaded-projects/**"
     ],
     "execMap": {
         "rb": "ruby",

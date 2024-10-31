@@ -46,7 +46,7 @@ userRouter.use("/", (request: Request, response: Response, next: NextFunction) =
 
 }).get("/get-all", function (request: Request, response: Response) {
     var pipelineOne: Array<PipelineStage> = [{ $lookup: { from: "roleMaster", localField: "roleId", foreignField: "_id", as: "roleMaster" } }, { $unwind: { path: "$roleMaster", preserveNullAndEmptyArrays: true } }];
-    appService.userMaster.aggregate({ body: pipelineOne }).then((users) => {
+    appService.userMaster.aggregate(pipelineOne).then((users) => {
         users.forEach((d) => delete d.password);
         response.status(200).send({ code: 200, data: users }).end();
     }).catch((err) => {
@@ -63,7 +63,7 @@ userRouter.use("/", (request: Request, response: Response, next: NextFunction) =
     { $lookup: { from: "roleMaster", localField: "roleId", foreignField: "_id", as: "roleMaster" } },
     { $unwind: { path: "$roleMaster", preserveNullAndEmptyArrays: true } }];
     if (keyword == "''") pipeline = pipelineOne;
-    appService.userMaster.aggregate({ body: pipeline }).then((result) => {
+    appService.userMaster.aggregate(pipeline).then((result) => {
         result.forEach((d) => delete d.password);
         response.status(200).json(result).end();
     }).catch(() => {
@@ -110,14 +110,12 @@ userRouter.use("/", (request: Request, response: Response, next: NextFunction) =
         response.status(500).end();
     });
 }).post("/get-profileImg", (request: Request, response: Response) => {
-    var userId = request.body.userId;
-    appService.userMaster.aggregate({
-        body: [
-            { $match: { _id: new ObjectId(userId) } },
-            { $lookup: { from: "imageMaster", localField: "imageId", foreignField: "_id", as: "imageMaster" } },
-            { $unwind: { path: "$imageMaster", preserveNullAndEmptyArrays: true } }
-        ]
-    }).then((result) => {
+    var userId: string = request.body.userId;
+    appService.userMaster.aggregate([
+        { $match: { _id: ObjectId.createFromHexString(userId) } },
+        { $lookup: { from: "imageMaster", localField: "imageId", foreignField: "_id", as: "imageMaster" } },
+        { $unwind: { path: "$imageMaster", preserveNullAndEmptyArrays: true } }
+    ]).then((result) => {
         var res = { code: 200, message: "Image successful.", data: result };
         response.status(200).send(res).end();
     }).catch(() => {

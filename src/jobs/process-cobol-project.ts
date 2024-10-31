@@ -65,3 +65,4 @@ let executeProcessActionsOnyByOne = async (pid: string | Mongoose.Types.ObjectId
 });
 
 module.exports = cobolProcessRouter;
+module.exports.executeProcessActionsOnyByOne = executeProcessActionsOnyByOne;

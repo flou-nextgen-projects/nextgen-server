@@ -137,9 +137,14 @@ export default class BaseRepository<TSource extends EntityBase> implements IBase
     findMethod = function findMethod(methodName: string): Function {
         return this[methodName];
     };
-    async aggregate({ body }: { body?: Array<PipelineStage> } = { body: [] }): Promise<Array<TSource>> {
+    async aggregate(pipeLine?: Array<PipelineStage>): Promise<Array<TSource>> {
+        const pipelines = pipeLine && pipeLine.length > 0 ? pipeLine : [];
+        return await this.mongooseModel.aggregate(pipeLine).exec();
+    };
+    async aggregateOne({ body }: { body?: Array<PipelineStage> } = { body: [] }): Promise<TSource | null> {
         const pipeLines: Array<PipelineStage> = typeof body === "object" && isEmpty(body) ? [] : body;
-        return await this.mongooseModel.aggregate(pipeLines).exec();
+        let docs = await this.mongooseModel.aggregate(pipeLines).exec();
+        return docs && docs.length > 0 ? docs.shift() : null;
     };
     get = async ({ query }: { query: any }): Promise<HydratedDocument<TSource>[]> => {
         try {
