@@ -28,6 +28,13 @@ checkDbStatusRouter.use("/", (_: Request, __: Response, next: NextFunction) => {
     } catch (error) {
         response.status(500).json({ error: 'Internal server error' }).end();
     }
+}).get("/restore-database", async function (_: Request, response: Response) {
+    await appService.mongooseConnection.dropCollection("fieldAndPropertiesDetails");
+    await appService.mongooseConnection.dropCollection("fileMaster");
+    await appService.mongooseConnection.dropCollection("memberReferences");
+    await appService.mongooseConnection.dropCollection("methodDetails");
+    await appService.mongooseConnection.dropCollection("statementMaster");
+    response.status(200).json({message: "OK"}).end();
 });
 
 const _initDatabaseConfiguration = (dbStatus: any): Promise<{ message: string }> => new Promise(async (res, rej) => {
@@ -55,4 +62,5 @@ const _initDatabaseConfiguration = (dbStatus: any): Promise<{ message: string }>
         rej(error);
     }
 });
+
 module.exports = checkDbStatusRouter;

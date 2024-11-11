@@ -67,7 +67,7 @@
     "progress": "^2.0.3",
     "supertest": "^6.3.3",
     "unzipper": "^0.10.14",
-    "yogeshs-utilities": "^6.0.1"
+    "yogeshs-utilities": "^6.0.2"
   },
   "devDependencies": {
     "@babel/cli": "^7.23.0",
