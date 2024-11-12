@@ -34,5 +34,9 @@ export default {
         return process.env.MONGO_PASS;
     }, get dotNetApiUrl(){
         return process.env.DOTNET_API_URL;
+    }, get mongoHost() {
+        return process.env.MONGO_HOST;
+    }, get mongoPort() {
+        return process.env.MONGO_PORT;
     }
 }

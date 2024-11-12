@@ -8,7 +8,7 @@ const mongoDbOpt: Mongoose.ConnectOptions = {
   socketTimeoutMS: 45000,
   family: 4,
   readPreference: 'secondary',
-  auth: config.auth
+  // auth: config.auth
 };
 
 const dbServer = function () {

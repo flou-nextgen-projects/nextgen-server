@@ -2,11 +2,11 @@ import Mongoose from 'mongoose';
 import configs from "../configurations";
 let auth: { username: string, password: string } = { username: configs.mongoUser, password: configs.mongoPass };
 let config: any = {
-    auth: auth,
-    userName: auth.username,
-    password: auth.password,
+    // auth: auth,
+    // user: auth.username,
+    // pass: auth.password,
     databaseName: configs.mongoDb,
-    mongoDbUrl: `mongodb+srv://${auth.username}:${auth.password}@dotnet-cluster.ttt9rr4.mongodb.net/?retryWrites=true&w=majority`,
+    mongoDbUrl: `mongodb://${configs.mongoUser}:${configs.mongoPass}@${configs.mongoHost}:${configs.mongoPort}/?retryWrites=true&loadBalanced=false&serverSelectionTimeoutMS=5000&connectTimeoutMS=10000&authSource=admin&authMechanism=SCRAM-SHA-256`
 };
 const mongoDbOpt: Mongoose.ConnectOptions = {
     dbName: config.databaseName,
@@ -14,6 +14,8 @@ const mongoDbOpt: Mongoose.ConnectOptions = {
     socketTimeoutMS: 45000,
     family: 4,
     readPreference: 'secondary',
-    auth: auth
+    // auth: auth
 };
 export { mongoDbOpt, config };
+
+// mongodb://admin@104.251.208.14:27000/?retryWrites=true&loadBalanced=false&serverSelectionTimeoutMS=5000&connectTimeoutMS=10000&authSource=admin&authMechanism=SCRAM-SHA-256
