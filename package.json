@@ -63,11 +63,11 @@
     "mongoose-lean-getters": "^0.3.5",
     "mongoose-lean-virtuals": "^0.9.1",
     "morgan": "^1.10.0",
+    "nextgen-utilities": "^1.0.1",
     "node-fetch": "^2.7.0",
     "progress": "^2.0.3",
     "supertest": "^6.3.3",
-    "unzipper": "^0.10.14",
-    "yogeshs-utilities": "^6.0.2"
+    "unzipper": "^0.10.14"
   },
   "devDependencies": {
     "@babel/cli": "^7.23.0",

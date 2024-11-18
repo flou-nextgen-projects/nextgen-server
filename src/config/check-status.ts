@@ -13,9 +13,14 @@ checkDbStatusRouter.use("/", (_: Request, __: Response, next: NextFunction) => {
 }).get("/check-status", async function (_: Request, response: Response) {
     try {
         // Read dbStatus table entries from database
-        const dbStatus = await appService.mongooseConnection.collection("dbStatus").findOne();
+        let dbStatus = await appService.mongooseConnection.collection("dbStatus").findOne();
+        if (!dbStatus) {
+            let collection = await appService.mongooseConnection.createCollection("dbStatus");
+            await collection.insertOne({ configured: false, enabled: false });
+            dbStatus = await appService.mongooseConnection.collection("dbStatus").findOne();
+        }
         // Check if field configured value is false
-        if (!dbStatus?.configured) {
+        if (!dbStatus.configured) {
             // Start init process of database configuration
             _initDatabaseConfiguration(dbStatus).then((res) => {
                 response.status(200).json(res).end();
@@ -29,12 +34,14 @@ checkDbStatusRouter.use("/", (_: Request, __: Response, next: NextFunction) => {
         response.status(500).json({ error: 'Internal server error' }).end();
     }
 }).get("/restore-database", async function (_: Request, response: Response) {
+    await appService.mongooseConnection.dropCollection("cobolDataSets");
     await appService.mongooseConnection.dropCollection("fieldAndPropertiesDetails");
     await appService.mongooseConnection.dropCollection("fileMaster");
+    // await appService.mongooseConnection.dropCollection("processingStages");
     await appService.mongooseConnection.dropCollection("memberReferences");
     await appService.mongooseConnection.dropCollection("methodDetails");
-    await appService.mongooseConnection.dropCollection("statementMaster");
-    response.status(200).json({message: "OK"}).end();
+    await appService.mongooseConnection.dropCollection("statementMaster");    
+    response.status(200).json({ message: "OK" }).end();
 });
 
 const _initDatabaseConfiguration = (dbStatus: any): Promise<{ message: string }> => new Promise(async (res, rej) => {

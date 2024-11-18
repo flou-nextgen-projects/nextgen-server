@@ -2,7 +2,7 @@ import Express, { Request, Response, Router, NextFunction } from "express";
 import { ObjectId } from "mongodb";
 const statementRouter: Router = Express.Router();
 import { appService } from "../services/app-service";
-import { WinstonLogger, ConsoleLogger } from "yogeshs-utilities";
+import { WinstonLogger, ConsoleLogger } from "nextgen-utilities";
 import ProgressBar from "progress";
 
 let winstonLogger: WinstonLogger = new WinstonLogger(__filename);

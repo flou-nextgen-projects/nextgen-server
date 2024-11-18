@@ -2,7 +2,7 @@ import { appService } from "../../services/app-service";
 import Mongoose from "mongoose";
 import { CobolMainProcessUtils } from "..";
 import { ProjectMaster } from "../../models";
-import { WinstonLogger, LogData } from "yogeshs-utilities";
+import { WinstonLogger, LogData } from "nextgen-utilities";
 export class CobolProcessToExecute {
     public pid: string | Mongoose.Types.ObjectId;
     public logger: WinstonLogger;
