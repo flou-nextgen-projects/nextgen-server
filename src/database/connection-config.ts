@@ -17,5 +17,3 @@ const mongoDbOpt: Mongoose.ConnectOptions = {
     // auth: auth
 };
 export { mongoDbOpt, config };
-
-// mongodb://admin@104.251.208.14:27000/?retryWrites=true&loadBalanced=false&serverSelectionTimeoutMS=5000&connectTimeoutMS=10000&authSource=admin&authMechanism=SCRAM-SHA-256

@@ -2,7 +2,7 @@ import { FileMaster, StatementMaster, MissingObjects, ProjectMaster, DataDepende
 import { basename, extname } from "path";
 import { readFileSync } from "fs";
 import { isEmpty } from "lodash";
-import { CobolHelpers } from "yogeshs-utilities";
+import { CobolHelpers } from "nextgen-utilities";
 import { appService } from "../../services/app-service";
 import CobolAdditionalHelperTwo from "./helpers-2";
 import { CobolVariables } from "src/models/cobol-models";

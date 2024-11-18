@@ -1,7 +1,7 @@
 import { Kafka, logLevel } from 'kafkajs';
 import config from "../configurations";
 import socketFactory from '../middleware/socket-factory';
-import { ConsoleLogger } from 'yogeshs-utilities';
+import { ConsoleLogger } from 'nextgen-utilities';
 const logger: ConsoleLogger = new ConsoleLogger(__filename);
 const kafkaBrokers = [config.kafkaUrl];
 const kafka = new Kafka({ logLevel: logLevel.ERROR, clientId: 'yogeshs-app', brokers: kafkaBrokers, socketFactory: socketFactory({ host: config.kafkaHost, port: config.kafkaPort }) });

@@ -1,6 +1,6 @@
 const globalAny: any = global;
 import IBaseRepository from "./IBaseRepository";
-import Mongoose, { HydratedDocument, PipelineStage, UpdateQuery } from 'mongoose';
+import Mongoose, { DeleteResult, HydratedDocument, PipelineStage, UpdateQuery } from 'mongoose';
 import { Db, Collection, ObjectId, UpdateResult } from 'mongodb';
 import { PartialObject, isEmpty } from 'lodash';
 import { EntityBase } from "../models";
@@ -82,21 +82,21 @@ export default class BaseRepository<TSource extends EntityBase> implements IBase
         mongoDbConnection = globalAny.mongoDbConnection as Db;
         return mongoDbConnection.collection<TSource>(collName);
     };
-    async getItem(filter: Object | PartialObject<TSource>, projection?: Object | string | null): Promise<HydratedDocument<TSource>> {
-        return await this.mongooseModel.findOne(<any>filter, projection).lean(this.schemaDefaults);
+    async getItem(filter: Object | PartialObject<TSource>, projection?: Object | string | null): Promise<TSource | null> {
+        return await this.mongooseModel.findOne(<any>filter, projection).lean<TSource>(this.schemaDefaults);
     };
     async getAllDocuments(projection?: Object, limit?: number, skip?: number, sort?: HydratedDocument<TSource> | Object): Promise<Array<TSource>> {
         return (await this.mongooseModel.find({}, projection).sort(sort as any).skip(skip).limit(limit)).map((docs: TSource): any => docs.toObject());  //.lean(this.leanDefaults);
     };
-    async getDocuments(filter: PartialObject<TSource>, projection?: Object | string | null, options?: Object, sort?: PartialObject<TSource> | Object): Promise<HydratedDocument<TSource>[]> {
-        return await this.mongooseModel.find(<any>filter, projection, options).sort(sort as any).lean(this.schemaDefaults);
+    async getDocuments(filter: PartialObject<TSource>, projection?: Object | string | null, options?: Object, sort?: PartialObject<TSource> | Object): Promise<Array<TSource>> {
+        return await this.mongooseModel.find(<any>filter, projection, options).sort(sort as any).lean<Array<TSource>>(this.schemaDefaults);
     };
-    async searchDocument(filter: PartialObject<TSource>, projection?: Object | string | null, options?: Object): Promise<HydratedDocument<TSource>[]> {
-        return await this.mongooseModel.find(<any>filter, projection, options).lean(this.schemaDefaults);
+    async searchDocument(filter: PartialObject<TSource>, projection?: Object | string | null, options?: Object): Promise<Array<TSource> | []> {
+        return await this.mongooseModel.find(<any>filter, projection, options).lean<TSource[] | []>(this.schemaDefaults);
     };
-    async findById(id: string | Mongoose.Types.ObjectId, projection?: Object | string | null): Promise<HydratedDocument<TSource>> {
+    async findById(id: string | Mongoose.Types.ObjectId, projection?: Object | string | null): Promise<TSource | null> {
         var _id = id instanceof Mongoose.Types.ObjectId ? id : new Mongoose.Types.ObjectId(id);
-        return await this.mongooseModel.findById(_id, projection).lean(this.schemaDefaults);
+        return await this.mongooseModel.findById(_id, projection).lean<TSource>(this.schemaDefaults);
     };
     async remove(id: string | Mongoose.Types.ObjectId): Promise<Mongoose.Query<TSource, TSource>> {
         var _id = id instanceof Mongoose.Types.ObjectId ? id : new Mongoose.Types.ObjectId(id);
@@ -127,7 +127,7 @@ export default class BaseRepository<TSource extends EntityBase> implements IBase
             throw new Error(JSON.stringify(err));
         }
     };
-    async removeAll(filter: PartialObject<TSource>, options?: any): Promise<TSource[]> {
+    async removeAll(filter: PartialObject<TSource>, options?: any): Promise<Mongoose.Query<DeleteResult, TSource, {}>> {
         return await this.mongooseModel.deleteMany(<any>filter, options).lean(this.schemaDefaults);
     };
     async bulkInsert(items: Array<TSource> | TSource): Promise<Array<TSource>> {
@@ -146,10 +146,10 @@ export default class BaseRepository<TSource extends EntityBase> implements IBase
         let docs = await this.mongooseModel.aggregate(pipeLines).exec();
         return docs && docs.length > 0 ? docs.shift() : null;
     };
-    get = async ({ query }: { query: any }): Promise<HydratedDocument<TSource>[]> => {
+    get = async ({ query }: { query: any }): Promise<Array<TSource> | []> => {
         try {
             const filter: PartialObject<TSource> | null = <any>query;
-            return await this.mongooseModel.find(<any>filter).lean(this.schemaDefaults);
+            return await this.mongooseModel.find(<any>filter).lean<Array<TSource> | []>(this.schemaDefaults);
         } catch (error) {
             console.log("Error in get method of BaseRepository");
             throw new Error(JSON.stringify(error));
@@ -164,9 +164,9 @@ export default class BaseRepository<TSource extends EntityBase> implements IBase
             throw new Error(JSON.stringify(error));
         }
     };
-    findOne = async ({ params }: { params: any }): Promise<HydratedDocument<TSource>> => {
+    findOne = async ({ params }: { params: any }): Promise<TSource | null> => {
         try {
-            return await this.mongooseModel.findOne(<any>params.id).lean(this.schemaDefaults);
+            return await this.mongooseModel.findOne(<any>params.id).lean<TSource | null>(this.schemaDefaults);
         } catch (error) {
             console.log("Error in get method of BaseRepository");
             throw new Error(JSON.stringify(error));

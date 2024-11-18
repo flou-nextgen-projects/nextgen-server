@@ -10,7 +10,7 @@ import mongoDbServer from './database/mongodb-config';
 import { existsSync, mkdirSync, readFileSync } from 'fs';
 import app, { setAppRoutes } from "./express-app";
 import config from './configurations';
-import { ConsoleLogger } from "yogeshs-utilities";
+import { ConsoleLogger } from "nextgen-utilities";
 
 async function mongoConnection() {
     globalAny.mongoDbConnection = await mongoDbServer();
@@ -23,11 +23,11 @@ process.on('unhandledRejection', (reason, _) => {
 
 console.log('=======================================================================');
 Promise.resolve(mongoConnection()).then(() => {
-    const uploadPath = join(__dirname, 'file-uploads');
-    if (!existsSync(uploadPath)) {
-        mkdirSync(uploadPath);
-    }
-    app.use(Express.static(uploadPath));
+    let uploadFolders = ["file-uploads", "uploaded-projects", "extracted-projects"];
+    uploadFolders.forEach((dir) => {
+        const uploadPath = join(__dirname, "../", dir);
+        if (!existsSync(uploadPath)) { mkdirSync(uploadPath); }
+    });
     app.use(Express.static(join(__dirname, '')));
     const crtPath = resolve(__dirname, 'certificates');
     const httpsOptions: http2.SecureServerOptions = {

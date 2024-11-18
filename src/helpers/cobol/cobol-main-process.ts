@@ -1,6 +1,6 @@
 import { appService } from "../../services/app-service";
 import { DataDependency, FileMaster, MissingObjects, ProjectMaster, StatementMaster } from "../../models";
-import { FileExtensions, CobolHelpers, StatementProcessor, ConsoleLogger } from "yogeshs-utilities";
+import { FileExtensions, CobolHelpers, StatementProcessor, ConsoleLogger } from "nextgen-utilities";
 import Mongoose from "mongoose";
 import ProgressBar from "progress";
 import { basename } from "path";
@@ -330,7 +330,7 @@ export default class CobolMainProcessUtils extends CobolProcessHelpers {
         try {
             const project = await this.getProject(_id);
             let allFiles = await appService.fileMaster.getDocuments({ pid: project._id });
-            let cobolFiles = allFiles.filter((d) => d.fileTypeId.toString() === "67036016f53c182f751ed03b");
+            let cobolFiles = allFiles.filter((d) => !d.processed && d.fileTypeId.toString() === "67036016f53c182f751ed03b");
             let bcReferences = await appService.baseCommandReference.getAllDocuments();
             let index = 0;
             logger.warning(`There are total: ${cobolFiles.length} COBOL files to process.`);
@@ -341,13 +341,15 @@ export default class CobolMainProcessUtils extends CobolProcessHelpers {
                 let lineDetails = CobolHelpers.prepareCobolLineDetails(allLines);
                 lineDetails = CobolHelpers.prepareSameLength(lineDetails);
                 lineDetails = CobolHelpers.removeCharacter(lineDetails, 6, 66);
-                let businessName = this.extractBusinessName(lineDetails as any);
-                logger.info("businessName:- ", { businessName });
+
+                // let businessName = this.extractBusinessName(lineDetails as any);
+                // logger.info("businessName:- ", { businessName });
+
                 lineDetails = CobolHelpers.removeAllCommentedLines(lineDetails, ["*", "/"]);
                 lineDetails = this.removeAll(lineDetails as any, "SKIP", "EJECT", "SKIP1", "SKIP2", "SKIP3", "SKIP4");
                 lineDetails = CobolHelpers.splitLinesAfterDotForCobol(lineDetails);
-                var copyCallStatements = CobolHelpers.getCopyStatementsFromWorkingStorageSection(lineDetails as any); // need to verify -- done!
-                let copyStatements = this.removeDot(copyCallStatements as any); // need to verify -- done!
+                // var copyCallStatements = CobolHelpers.getCopyStatementsFromWorkingStorageSection(lineDetails as any); // need to verify -- done!
+                // let copyStatements = this.removeDot(copyCallStatements as any); // need to verify -- done!
                 // TODO: uncomment following line
                 // await this.processCopyStatements(fileMaster, copyStatements as any, allFiles); // need to verify -- done!
                 lineDetails = CobolHelpers.splitCopyAndReplacingStatement(lineDetails); // need to verify -- done!
@@ -355,14 +357,16 @@ export default class CobolMainProcessUtils extends CobolProcessHelpers {
                 lineDetails = await this.addIncludeFileLines(lineDetails as any, fileMaster, allFiles, missingObjects); // need to verify -- done!
                 // TODO: add code for adding missingObjects to database.
                 let cobolSections = CobolConstants.cobolSections.map((d) => d.sectionName); // need to verify
-                let fileSection = this.getAnyGenericSection(lineDetails as any, cobolSections); // need to verify
+                // let fileSection = this.getAnyGenericSection(lineDetails as any, cobolSections); // need to verify
                 // TODO: add code for adding / processing file section
-                let fileControlSection = this.getAnyGenericSection(lineDetails as any, cobolSections, "FILE-CONTROL."); // need to verify
-                let controlStatements = this.combineAllLinesOfWorkingStorageSection(fileControlSection.map((d) => d.modifiedLine)); // need to verify -- done!
-                let dataSetStatements = this.getDataSetStatements(controlStatements); // need to verify
+                
+                // let fileControlSection = this.getAnyGenericSection(lineDetails as any, cobolSections, "FILE-CONTROL."); // need to verify
+                // let controlStatements = this.combineAllLinesOfWorkingStorageSection(fileControlSection.map((d) => d.modifiedLine)); // need to verify -- done!
+                // let dataSetStatements = this.getDataSetStatements(controlStatements); // need to verify
+
                 // TODO: add code for processing and dataSetStatements to database
                 let execSqlStatements = this.combineAllExecSqlStatements(lineDetails as any); // need to verify
-                let lstCursors = CobolHelpers.extractCursorsFromExecSql(execSqlStatements); // need to verify
+                // let lstCursors = CobolHelpers.extractCursorsFromExecSql(execSqlStatements); // need to verify
                 // TODO: do further processing for lstCursors.
                 let sqlStatements = execSqlStatements.map((d) => d.modifiedLine); // need to verify
                 await this.processExecSqlStatements(sqlStatements, fileMaster.projectMaster, fileMaster); // need to verify
@@ -372,25 +376,28 @@ export default class CobolMainProcessUtils extends CobolProcessHelpers {
                 // but there is also a method available in utilities getMethodName from procedureDivisionLines
                 let allMethods = this.getAllMethods(procedureDivisionLines) || []; // need to verify -- done!
                 lineDetails = this.modifyAllMethodsNameLines(lineDetails as any, allMethods); // need to verify -- done!
-                let fileSectionLines = this.getStatementBetweenSection(lineDetails as any, cobolSections, "FILE SECTION."); // need to verify
-                let workingStorageSection = this.getWorkingStorageSection(lineDetails as any, cobolSections); // need to verify -- done!
-                let workingSection = this.combineAllLinesInSection(workingStorageSection); // need to verify -- done!
-                await this.insertWorkingStorageSection(workingSection, fileMaster); // need to verify -- done!
-                let linkSection = this.getLinkageSection(lineDetails as StatementMaster[], cobolSections);
-                let linkageSection = this.combineAllLinesInSection(linkSection);
-                await this.insertWorkingStorageSection(linkageSection, fileMaster);
+                // ** Important **
+                // Following lines were commented on 19 November 2024 by Yogesh Sonawane
+                // TODO: Do not uncomment following 7 lines
+                // let fileSectionLines = this.getStatementBetweenSection(lineDetails as any, cobolSections, "FILE SECTION."); // need to verify
+                // let workingStorageSection = this.getWorkingStorageSection(lineDetails as any, cobolSections); // need to verify -- done!
+                // let workingSection = this.combineAllLinesInSection(workingStorageSection); // need to verify -- done!
+                // await this.insertWorkingStorageSection(workingSection, fileMaster); // need to verify -- done!
+                // let linkSection = this.getLinkageSection(lineDetails as StatementMaster[], cobolSections);
+                // let linkageSection = this.combineAllLinesInSection(linkSection);
+                // await this.insertWorkingStorageSection(linkageSection, fileMaster);
                 allMethods = CobolHelpers.removeDotFromMethodName(allMethods); // need to verify -- done!
                 let methodLines = this.collectAllMethodsData(lineDetails as any, allMethods); // need to verify -- done!
                 // TODO: need to get and store data into following variable
                 let cobolKeyWords: [] = [];
                 const rex = CobolConstants.cobolSections.find((d) => d.sectionName === "PROCEDURE DIVISION.").regEx;
-
                 let cobolVariables = await appService.cobolVariables.getDocuments({ fid: fileMaster._id, pid: fileMaster.pid });
                 forIn(methodLines, async (methodBlock, method) => {
                     var mainKey = method.trim();
                     if (isEmpty(mainKey)) return;
-                    if (methodBlock.length < 0) return;
-                    var finalBlock: StatementMaster[] = [];
+                    if (methodBlock.length <= 0) return;
+                    // var finalBlock: StatementMaster[] = [];
+                    /*
                     if (rex.test(mainKey)) {
                         allMethods.shift();
                         let afterPd = mainKey.replace(rex, "").trim();
@@ -399,26 +406,30 @@ export default class CobolMainProcessUtils extends CobolProcessHelpers {
                         mainKey = "MAINLINE";
                         allMethods.unshift(mainKey);
                     }
-                    if (methodBlock.length === 0) methodBlock.push({ lineIndex: 0, modifiedLine: "EXIT", originalLine: "EXIT", indicators: [], alternateName: '' } as StatementMaster);
-                    finalBlock.push({ modifiedLine: mainKey, originalLine: method.trim(), lineIndex: 0, alternateName: '', indicators: [] } as StatementMaster);
-                    methodBlock = this.splitGoToStatement(methodBlock);
-                    methodBlock = this.replaceStatement(methodBlock, "GO TO ", "PERFORM ");
+                    */
+                    // if (methodBlock.length === 0) methodBlock.push({ lineIndex: 0, modifiedLine: "EXIT", originalLine: "EXIT", indicators: [], alternateName: '' } as StatementMaster);
+                    // finalBlock.push({ modifiedLine: mainKey, originalLine: method.trim(), lineIndex: 0, alternateName: '', indicators: [] } as StatementMaster);
+                    // ** Important **
+                    // Following lines were commented on 19 November 2024 by Yogesh Sonawane
+                    // TODO: Do not uncomment following commented lines, these are commented by purpose
+                    // methodBlock = this.splitGoToStatement(methodBlock);
+                    // methodBlock = this.replaceStatement(methodBlock, "GO TO ", "PERFORM ");
                     methodBlock = this.combineAllExecSqlStatements(methodBlock);
                     methodBlock = this.combineLineForMoveToStatement(methodBlock, cobolKeyWords);
-                    methodBlock = this.convertAllMoveStatement(methodBlock, cobolKeyWords);
+                    // methodBlock = this.convertAllMoveStatement(methodBlock, cobolKeyWords);
                     methodBlock = this.addEndIfStatement(methodBlock);
-                    methodBlock = this.addNewLineForMultipleKeyword(methodBlock, cobolKeyWords);
-                    methodBlock = this.splitAllLinesAfterDot(methodBlock);
-                    methodBlock = this.conversionOfEvaluateStatement(methodBlock);
+                    // methodBlock = this.addNewLineForMultipleKeyword(methodBlock, cobolKeyWords);
+                    // methodBlock = this.splitAllLinesAfterDot(methodBlock);
+                    // methodBlock = this.conversionOfEvaluateStatement(methodBlock);
                     methodBlock = CobolHelpers.removeSpacesBetweenWords(methodBlock) as Array<StatementMaster>;
-                    methodBlock = this.conversionOfCrudActivities(methodBlock);
+                    // methodBlock = this.conversionOfCrudActivities(methodBlock);
                     methodBlock = this.removeExecStatement(methodBlock);
-                    methodBlock = this.combineAllNonKeywordLines(methodBlock, cobolKeyWords);
-                    methodBlock = StatementProcessor.performVarying(methodBlock, allMethods, cobolVariables) as Array<StatementMaster>;
+                    // methodBlock = this.combineAllNonKeywordLines(methodBlock, cobolKeyWords);
+                    // methodBlock = StatementProcessor.performVarying(methodBlock, allMethods, cobolVariables) as Array<StatementMaster>;
                     methodBlock = this.assignBaseCommandIndicators(methodBlock as any, bcReferences);
                     // TODO: verify conditions and end conditions count
                     // if it's not matching then make parsing status of file as not processed
-                    methodBlock.push({ lineIndex: methodBlock.length + 1, originalLine: "END", modifiedLine: "END", indicators: [], alternateName: '' } as StatementMaster);
+                    // methodBlock.push({ lineIndex: methodBlock.length + 1, originalLine: "END", modifiedLine: "END", indicators: [], alternateName: '' } as StatementMaster);
 
                     for (const lineDetail of methodBlock) {
                         let line = lineDetail.originalLine.trim();
@@ -451,6 +462,8 @@ export default class CobolMainProcessUtils extends CobolProcessHelpers {
                         await appService.statementMaster.addItem(sm);
                     }
                 });
+                await appService.fileMaster.updateDocument({ _id: fileMaster._id }, { $set: { linesCount: allLines.length, fileStatics: { lineCount: allLines.length, processedLineCount: lineDetails.length, parsed: true }, processed: true } });
+                await this.sleep(500);
             }
             bar.terminate();
             resolve({ status: "OK" });

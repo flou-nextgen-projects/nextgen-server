@@ -4,7 +4,7 @@ import { join, resolve } from "path";
 import { appService } from "../services/app-service";
 import { ProjectMaster } from "../models";
 import mongoose from "mongoose";
-import { extractProjectZip, Upload, FileExtensions } from "yogeshs-utilities";
+import { extractProjectZip, Upload, FileExtensions } from "nextgen-utilities";
 
 const pmRouter: Router = Express.Router();
 const fileExtensions = new FileExtensions();
@@ -27,12 +27,12 @@ pmRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
     let checkExisting = await appService.projectMaster.getItem({name: pm.name});
     if (checkExisting) return response.status(202).json({message: `Project with same name already exists: ${pm.name}`}).end();    
     var projectMaster: ProjectMaster = await appService.projectMaster.addItem(pm);
-    await projectProcessingStages(projectMaster._id);
     extractProjectZip(projectMaster).then(async (extractPath: string) => {
         // const fileName = fileExtensions.getNameWithoutExtension(projectMaster.uploadDetails.fileName);
         // var extractedPath = join(extractPath, fileName);
         let totalFiles = fileExtensions.getAllFilesFromPath(extractPath);
         var doc = await appService.projectMaster.findByIdAndUpdate(projectMaster._id, { extractedPath: extractPath, totalObjects: totalFiles.length });
+        await projectProcessingStages(projectMaster._id);
         response.status(200).json(doc).end();
     }).catch((err: any) => {
         response.status(500).json(err).end();
