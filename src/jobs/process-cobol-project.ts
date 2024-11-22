@@ -2,6 +2,7 @@ import Express, { Request, Response, Router, NextFunction } from "express";
 import { appService } from "../services/app-service";
 import Mongoose from "mongoose";
 import { CobolProcessToExecute } from "../helpers/cobol/cobol-process-stages";
+import { ProcessingStatus } from "../models"; 
 
 const cobolProcessRouter: Router = Express.Router();
 cobolProcessRouter.use("/", (_: Request, __: Response, next: NextFunction) => {
@@ -57,6 +58,7 @@ let executeProcessActionsOnyByOne = async (pid: string | Mongoose.Types.ObjectId
         await processToExecute.processSqlFiles(pid);
         await processToExecute.processCobolFiles(pid);
         await processToExecute.cobolProcessUtils.processDataDependency(pid);
+        await appService.projectMaster.updateDocument({ _id: pid }, { $set: { processedOn: new Date(), isActive: true, processingStatus: ProcessingStatus.processed } });
     } catch (error) {
         console.log(error);
     } finally {

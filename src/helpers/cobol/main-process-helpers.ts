@@ -1,4 +1,4 @@
-import  CobolConstants from "../../constants";
+import CobolConstants from "../../constants";
 import { BaseCommandReference, CobolDataSet, StatementMaster, FileMaster, ExternalCalls } from "../../models";
 import StatementMasterBase from "../common/statement-master-base";
 import { appService } from "../../services/app-service";
@@ -40,6 +40,17 @@ export default class CobolProcessHelpers extends StatementMasterBase {
                 }
             }
         }
+        return lineDetails;
+    }
+    assignBaseCommandIndicatorsToMethods(lineDetails: Array<StatementMaster>, methods: Array<string>): Array<StatementMaster> {
+        lineDetails.forEach((lineDetail) => {
+            methods.forEach((method) => {
+                if (new RegExp(method, "ig").test(lineDetail.originalLine)) {
+                    lineDetail.indicators.push(5);
+                }
+            });
+        });
+
         return lineDetails;
     }
     processStepsData = async function (stepsData: Array<{ step: string, counter: number, lines: string[] }>, { fileMaster, allFiles }: { fileMaster: FileMaster, allFiles: Array<FileMaster> }): Promise<void> {
