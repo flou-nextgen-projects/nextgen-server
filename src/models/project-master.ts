@@ -106,4 +106,4 @@ ProjectMasterSchema.statics.useVirtuals = {
     workspaceMaster: workspaceMasterVirtuals
 } as any;
 
-export { ProjectMasterSchema, ProjectMaster };
+export { ProjectMasterSchema, ProjectMaster, ProcessingStatus };

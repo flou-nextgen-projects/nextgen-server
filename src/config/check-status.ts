@@ -41,7 +41,7 @@ checkDbStatusRouter.use("/", (_: Request, __: Response, next: NextFunction) => {
     await appService.mongooseConnection.dropCollection("memberReferences");
     await appService.mongooseConnection.dropCollection("methodDetails");
     await appService.mongooseConnection.dropCollection("statementMaster");    
-    response.status(200).json({ message: "OK" }).end();
+    response.status(200).end();
 });
 
 const _initDatabaseConfiguration = (dbStatus: any): Promise<{ message: string }> => new Promise(async (res, rej) => {

@@ -4,7 +4,7 @@ import { UserMaster, UserMasterSchema } from "./user-master";
 import { RoleMaster, RoleMasterSchema } from "./role-master";
 import { WorkspaceMaster, WorkspaceMasterSchema } from "./workspace-master";
 import { LanguageMaster, LanguageMasterSchema } from "./language-master";
-import { ProjectMaster, ProjectMasterSchema } from "./project-master";
+import { ProjectMaster, ProjectMasterSchema, ProcessingStatus } from "./project-master";
 import { FileTypeMaster, FileTypeMasterSchema } from "./file-type-master";
 import { FileMaster, FileMasterSchema } from "./file-master";
 import { StatementMaster, StatementSchema } from "./statement-master";
@@ -26,7 +26,7 @@ export {
     RoleMaster, RoleMasterSchema,
     WorkspaceMaster, WorkspaceMasterSchema,
     LanguageMaster, LanguageMasterSchema,
-    ProjectMaster, ProjectMasterSchema,
+    ProjectMaster, ProjectMasterSchema, ProcessingStatus,
     FileTypeMaster, FileTypeMasterSchema,
     FileMaster, FileMasterSchema,
     StatementMaster, StatementSchema,
