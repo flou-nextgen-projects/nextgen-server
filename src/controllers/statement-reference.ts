@@ -19,7 +19,7 @@ statementRouter.use("/", (request: Request, response: Response, next: NextFuncti
     let methodNo: number = parseInt(request.params.methodNo);
     winstonLogger.info("Started execution of expanding workflow.", { extras: { fid, methodNo }, code: "sr-0002", name: "expand-workflow" });
     let collection = appService.mongooseConnection.collection("statementMaster");
-    let statements = await collection.find({ fid: new ObjectId(fid), methodNo, indicators: { $nin: [1001, 1002] } }).toArray();
+    let statements = await collection.find({ fid: new ObjectId(fid), methodNo, indicators: { $nin: [1001, 1002] } }, { sort: { _id: 1 } }).toArray();
     if (statements.length === 0) {
         response.status(200).json([]).end();
     }
@@ -35,7 +35,7 @@ statementRouter.use("/", (request: Request, response: Response, next: NextFuncti
             expanded.push(statement);
             continue;
         }
-        let sps: string = statement.originalLine.match(/^[\s]+/gi).shift();
+        let sps: string = statement.originalLine.match(/^[\s]+/gi)?.shift() || " ";
         progress.tick({ done: counter, length: 100 });
         await _expandBlock(statement, sps, { progress, counter });
     }
@@ -54,7 +54,7 @@ const _expandBlock = async (callExt: any, sps: string, options: { progress: Prog
         if (!statement.references || statement.references.length === 0) {
             continue;
         }
-        let sps: string = statement.originalLine.match(/^[\s]+/gi).shift();
+        let sps: string = statement.originalLine.match(/^[\s]+/gi)?.shift() || " ";
         options.progress.tick({ done: ++options.counter });
         await _expandBlock(statement, sps, options);
     }
@@ -81,7 +81,8 @@ const _getBlock = (memberId: string): Promise<Document[]> => new Promise(async (
             }
         },
         { $unwind: "$statements" },
-        { $replaceRoot: { newRoot: "$statements" } }
+        { $replaceRoot: { newRoot: "$statements" } },
+        { $sort: { _id: 1 } }
     ];
     let statements: any[] = await collection.aggregate(pipeLine).toArray();
     resolve(statements);
