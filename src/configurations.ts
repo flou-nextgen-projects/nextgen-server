@@ -38,5 +38,7 @@ export default {
         return process.env.MONGO_HOST;
     }, get mongoPort() {
         return process.env.MONGO_PORT;
+    }, get cohereApiKey() {
+        return process.env.COHERE_API_KEY;
     }
 }
