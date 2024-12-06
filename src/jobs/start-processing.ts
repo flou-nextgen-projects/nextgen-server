@@ -2,6 +2,7 @@ import Express, { Request, Response, Router, NextFunction } from "express";
 import { appService } from "../services/app-service";
 const { executeProcessActionsOnyByOne } = require("./process-cobol-project");
 import ProcessCsharpProjects from "./process-csharp-projects";
+import ProcessPlSqlProjects from "./process-pl-sql-project";
 
 const startProcessRouter: Router = Express.Router();
 startProcessRouter.use("/", (_: Request, __: Response, next: NextFunction) => {
@@ -25,7 +26,9 @@ startProcessRouter.use("/", (_: Request, __: Response, next: NextFunction) => {
     } else if (wm.languageMaster.name === "COBOL") {
         executeProcessActionsOnyByOne(project._id);
         response.status(200).json({ message: "Project processing has been started!" }).end();
-    } else {
+    } else if (wm.languageMaster.name === "PLSQL") {
+        const processPlSqlProjects: ProcessPlSqlProjects = new ProcessPlSqlProjects();
+        processPlSqlProjects.executeProcessActionsOnyByOne(project._id);
         return response.status(204).json({ status: "Language not supported yet!" }).end();
     }
 });

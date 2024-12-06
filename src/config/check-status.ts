@@ -37,7 +37,8 @@ checkDbStatusRouter.use("/", (_: Request, __: Response, next: NextFunction) => {
     await appService.mongooseConnection.dropCollection("cobolDataSets");
     await appService.mongooseConnection.dropCollection("fieldAndPropertiesDetails");
     await appService.mongooseConnection.dropCollection("fileMaster");
-    // await appService.mongooseConnection.dropCollection("processingStages");
+    await appService.mongooseConnection.dropCollection("processingStages");
+    await appService.mongooseConnection.dropCollection("projectMaster");
     await appService.mongooseConnection.dropCollection("memberReferences");
     await appService.mongooseConnection.dropCollection("methodDetails");
     await appService.mongooseConnection.dropCollection("statementMaster");    

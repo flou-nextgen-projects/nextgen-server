@@ -23,7 +23,7 @@ class FileContentMaster extends EntityBase {
     public fid: Mongoose.Types.ObjectId | string;
     public fileContent: string;
     public contentWithoutComments: string;
-    public fileMaster: FileMaster;
+    public fileMaster?: FileMaster;
 }
 
 export { FileContentMasterSchema, FileContentMaster };
