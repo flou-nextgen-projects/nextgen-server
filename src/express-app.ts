@@ -74,7 +74,7 @@ export const setAppRoutes = function (app: express.Application) {
     app.use("/backend/main/api/base-command-reference", bcRefRouter);
     app.use("/backend/main/api/topics", topicRouter);
     app.use("/backend/main/api/solution", solutionRouter);
-    app.use("/backend/main/api/doc", docRouter);
+    app.use("/backend/main/api/doc-master", docRouter);
     app.use("/backend/main/api/statement-reference", statementRouter);
     app.use("/gen-ai/chat", aiRouter);
     // db status router
