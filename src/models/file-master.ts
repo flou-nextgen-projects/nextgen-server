@@ -10,6 +10,7 @@ interface FileStatics {
 }
 
 interface FileMaster extends EntityBase {
+    _id: Mongoose.Types.ObjectId | string;
     pid: Mongoose.Types.ObjectId | string;
     fileTypeId: Mongoose.Types.ObjectId | string;
     fileName: string;
@@ -18,8 +19,8 @@ interface FileMaster extends EntityBase {
     processed: boolean;
     linesCount: number;
     workflowStatus: string;
-    fileTypeMaster: FileTypeMaster;
-    projectMaster: ProjectMaster;
+    fileTypeMaster?: FileTypeMaster;
+    projectMaster?: ProjectMaster;
     fileStatics: FileStatics;
 }
 
@@ -31,7 +32,10 @@ const fileStaticsSchema: Schema<FileStatics> = new Schema({
 });
 
 const FileMasterSchema: Schema<FileMaster> = new Schema({
-    pid: {
+    _id: {
+        type: Mongoose.Schema.Types.ObjectId,
+        required: false
+    }, pid: {
         type: Mongoose.Schema.Types.ObjectId,
         required: true
     }, fileTypeId: {

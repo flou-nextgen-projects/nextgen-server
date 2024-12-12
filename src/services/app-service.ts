@@ -25,6 +25,7 @@ class AppService {
         this.mongoDbClient = mongoClient;
         this.mongooseConnection = dbConnection;
     }
+    
     public roleMaster: BaseRepository<RoleMaster> = new BaseRepository<RoleMaster>({ collectionName: "roleMaster", schema: RoleMasterSchema });
     public userMaster: BaseRepository<UserMaster> = new BaseRepository<UserMaster>({ collectionName: "userMaster", schema: UserMasterSchema });
     public schemaDefaults: Object = { autopopulate: true, versionKey: false, virtuals: true, getters: true, defaults: true, flattenMap: false };
