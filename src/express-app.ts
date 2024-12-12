@@ -85,7 +85,12 @@ export const setAppRoutes = function (app: express.Application) {
     var startProcessRouter = require("./jobs/start-processing");
     app.use("/backend/jobs/api/cobol-process", cobolProcessRouter);
     app.use("/backend/jobs/api/project", startProcessRouter);
-    
+
+    // GenAI routes
+    // all routes are added into gen-ai.routes file under routes folder
+    let genAiRoutes = require("./routes/gen-ai.routes");
+    app.use("/backend/main/api", genAiRoutes);
+
     const swaggerApi = resolve(join(__dirname, "swagger"));
     const options = {
         definition: {
