@@ -61,7 +61,7 @@ export const setAppRoutes = function (app: express.Application) {
     var docRouter = require("./controllers/doc-master");
     var statementRouter = require('./controllers/statement-reference');
     var aiRouter = require('./controllers/ai-chats');
-
+    var dashBoardRouter = require('./controllers/dashboard');
     require("./kafka-services/kafka-consumer"); // no need to have routes
     app.use("/check/api/home", homeRouter);
     app.use("/backend/api/user-master", userRouter);
@@ -77,6 +77,7 @@ export const setAppRoutes = function (app: express.Application) {
     app.use("/backend/main/api/doc-master", docRouter);
     app.use("/backend/main/api/statement-reference", statementRouter);
     app.use("/gen-ai/chat", aiRouter);
+    app.use("/backend/main/api/dashboard", dashBoardRouter);
     // db status router
     var dbStatusRouter = require("./config/check-status");
     app.use("/backend/db", dbStatusRouter);
@@ -85,7 +86,7 @@ export const setAppRoutes = function (app: express.Application) {
     var startProcessRouter = require("./jobs/start-processing");
     app.use("/backend/jobs/api/cobol-process", cobolProcessRouter);
     app.use("/backend/jobs/api/project", startProcessRouter);
-    
+
     const swaggerApi = resolve(join(__dirname, "swagger"));
     const options = {
         definition: {
