@@ -43,6 +43,12 @@ dashBoardRouter.use("/", (request: Request, response: Response, next: NextFuncti
     }).catch((e) => {
         response.status(500).json().end();
     })
+}).get("/get-prompts", (request: Request, response: Response) => {
+    appService.mongooseConnection.collection("promptConfig").find().toArray().then((data: any) => {
+        response.status(200).json(data).end();
+    }).catch((err: Error) => {
+        response.status(500).json(err).end();
+    })
 });
 
 module.exports = dashBoardRouter;
