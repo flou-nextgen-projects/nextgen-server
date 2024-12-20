@@ -10,8 +10,8 @@ var mappings: Array<{ name: string, value: string }> = [
 
 router.use(function (request: Request, response: Response, next) {
     let method: string = request.method.toLowerCase();
-    let splitedUrl: string[] = request.baseUrl.split('/');
-    let urlSegments: string[] = splitedUrl.reverse();
+    let splitUrl: string[] = request.baseUrl.split('/');
+    let urlSegments: string[] = splitUrl.reverse();
     if (urlSegments.length === 6) method = urlSegments.shift();
     let controller: string = urlSegments.shift();
     var value = mappings.find((d) => d.name === controller).value;
