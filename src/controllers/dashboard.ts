@@ -27,7 +27,7 @@ dashBoardRouter.use("/", (request: Request, response: Response, next: NextFuncti
         { $group: { _id: "$fileTypeId", totalLineCount: { $sum: "$linesCount" }, fileCount: { $sum: 1 } } },
         { $lookup: { from: "fileTypeMaster", localField: "_id", foreignField: "_id", as: "fileTypeMaster" } },
         { $unwind: { path: "$fileTypeMaster", preserveNullAndEmptyArrays: true } },
-        { $project: { filetypeid: "$_id", totalLineCount: 1, fileCount: 1, fileTypeName: "$fileTypeMaster.fileTypeName" } }
+        { $project: { fileTypeid: "$_id", totalLineCount: 1, fileCount: 1, fileTypeName: "$fileTypeMaster.fileTypeName" } }
     ];
     appService.mongooseConnection.collection("fileMaster").aggregate(pipeLine).toArray().then((data: any) => {
         response.status(200).json(data).end();

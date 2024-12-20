@@ -16,14 +16,12 @@ const getDocuments = function (request: Request, response: Response) {
 };
 const updateDocuments = function (request: Request, response: Response) {
     const filter: any = {
-        ProjectId: new Mongoose.Types.ObjectId("5e70c7160e2e7b7ef06859ca"),
-        FileTypeMasterId: {
-            $in: [
-                new Mongoose.Types.ObjectId("5e05db0b9d1f1a7ff45e2986"),
-                new Mongoose.Types.ObjectId("5e05d6bb9d1f1a7ff45e2982"),
-                new Mongoose.Types.ObjectId("5e05dad99d1f1a7ff45e2984"),
-                new Mongoose.Types.ObjectId("5e05db0b9d1f1a7ff45e2986")
-            ]
+        pid: new Mongoose.Types.ObjectId("5e70c7160e2e7b7ef06859ca"),
+        fileTypeId: {
+            $in: [new Mongoose.Types.ObjectId("5e05db0b9d1f1a7ff45e2986"),
+            new Mongoose.Types.ObjectId("5e05d6bb9d1f1a7ff45e2982"),
+            new Mongoose.Types.ObjectId("5e05dad99d1f1a7ff45e2984"),
+            new Mongoose.Types.ObjectId("5e05db0b9d1f1a7ff45e2986")]
         },
         Processed: true
     };
