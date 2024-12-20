@@ -19,7 +19,7 @@ import { BaseCommandRefSchema, BaseCommandReference } from "./base-command-refer
 import { BmsMapControl, BmsMapControlSchema, BmsMapMaster, BmsMapMasterSchema, CobolDataSet, CobolDataSetSchema, ExternalCalls, ExternalCallsSchema } from "./cobol-datasets";
 import { CobolEntities, CobolEntitiesSchema, CobolVariableSchema, CobolVariables, MissingObjects, MissingObjectsSchema } from "./cobol-models";
 import { EntityMaster, EntityMasterSchema, DataDependency, DataDependencySchema, EntityAttributes, EntityAttributesSchema } from "./entity-master";
-
+import { PromptConfigMaster, PromptConfigMasterSchema } from './prompt-config';
 export {
     EntityBase, MultipleCollectionsConfig,
     UserMaster, UserMasterSchema,
@@ -46,6 +46,7 @@ export {
     EntityMaster, EntityMasterSchema,
     DataDependency, DataDependencySchema,
     EntityAttributes, EntityAttributesSchema,
-    CobolEntities, CobolVariableSchema, 
-    CobolVariables, CobolEntitiesSchema
+    CobolEntities, CobolVariableSchema,
+    CobolVariables, CobolEntitiesSchema,
+    PromptConfigMaster, PromptConfigMasterSchema
 };
