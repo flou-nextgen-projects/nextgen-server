@@ -14,7 +14,9 @@ import {
     BaseCommandRefSchema, BaseCommandReference, CobolDataSet, CobolDataSetSchema,
     BmsMapControl, BmsMapControlSchema, BmsMapMaster, BmsMapMasterSchema, ExternalCalls, ExternalCallsSchema,
     DataDependency, DataDependencySchema, EntityMaster, EntityMasterSchema, EntityAttributes, EntityAttributesSchema,
-    CobolEntities, CobolVariableSchema, CobolVariables, CobolEntitiesSchema
+    CobolEntities, CobolVariableSchema, CobolVariables, CobolEntitiesSchema,
+    PromptConfigMaster,
+    PromptConfigMasterSchema
 } from '../models';
 
 class AppService {
@@ -25,7 +27,7 @@ class AppService {
         this.mongoDbClient = mongoClient;
         this.mongooseConnection = dbConnection;
     }
-    
+
     public roleMaster: BaseRepository<RoleMaster> = new BaseRepository<RoleMaster>({ collectionName: "roleMaster", schema: RoleMasterSchema });
     public userMaster: BaseRepository<UserMaster> = new BaseRepository<UserMaster>({ collectionName: "userMaster", schema: UserMasterSchema });
     public schemaDefaults: Object = { autopopulate: true, versionKey: false, virtuals: true, getters: true, defaults: true, flattenMap: false };
@@ -52,6 +54,7 @@ class AppService {
     public entityAttributes = new BaseRepository<EntityAttributes>({ collectionName: "entityMaster", schema: EntityAttributesSchema });
     public cobolVariables = new BaseRepository<CobolVariables>({ collectionName: "cobolVariables", schema: CobolVariableSchema });
     public cobolEntities = new BaseRepository<CobolEntities>({ collectionName: "cobolEntities", schema: CobolEntitiesSchema });
+    public promptConfig = new BaseRepository<PromptConfigMaster>({ collectionName: "promptConfigMaster", schema: PromptConfigMasterSchema });
 
     get = function <T extends EntityBase>(propertyName: string): BaseRepository<T> { return this[propertyName]; };
     dataSets = async (collections: Array<MultipleCollectionsConfig>): Promise<Array<{ collection: string, documents: any[] }>> => {
