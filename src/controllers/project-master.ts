@@ -48,7 +48,7 @@ pmRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
     });
     response.status(200).json(processingStages).end();
 }).post("/upload-project", function (request: any, response: Response) {
-    let rootDir = resolve(join(__dirname, "../../"));
+    let rootDir = resolve(join(__dirname, "../", "../"));
     request.rootDir = rootDir;
     Upload(request, response, function (err: any) {
         if (err) {
@@ -59,6 +59,36 @@ pmRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
                 uploadDetails: request.uploadDetails
             }));
         }
+    });
+}).get("/upload-project-bundle", async function (request: any, response: Response) {
+    response.writeHead(200, { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', Connection: 'keep-alive', 'X-Accel-Buffering': 'no' });
+    let rootDir = resolve(join(__dirname, "../", "../"));
+    let uploadDetails = {
+        fileName: "AdminLTE-3.2.0.zip",
+        uploadPath: "E:\\nextgen-projects\\nextgen-server\\uploaded-projects",
+        completePath: "E:\\nextgen-projects\\nextgen-server\\uploaded-projects\\AdminLTE-3.2.0.zip"
+    };
+    request.rootDir = rootDir;
+    function checkWrite(err: any) {
+        if (err) {
+            response.json({ message: "Error occurred during extraction", error: err }).end();
+        }
+    }
+    response.write(formatData({ message: "Starting extraction of project .zip" }), "utf-8", checkWrite);
+    await sleep(500);
+    extractProjectZip({ uploadDetails: uploadDetails }).then(async (extractPath: string) => {
+        response.write(formatData({ message: "Zip extracted successfully" }), "utf-8", checkWrite);
+        await sleep(500);
+        let totalFiles = fileExtensions.getAllFilesFromPath(extractPath);
+        response.write(formatData({ message: "Started processing of file details" }), "utf-8", checkWrite);
+        await sleep(500);
+        response.write(formatData({ extra: { totalFiles: totalFiles.length }, message: "Project details are uploaded successfully." }), "utf-8", checkWrite);
+        await sleep(500);
+        response.write(formatData({ message: "You can start loading project now." }), "utf-8", checkWrite);
+        await sleep(500);
+        response.end();
+    }).catch((err: any) => {
+        response.end();
     });
 });
 const processingStages: Array<{ stepName: string, stage?: string, tableName?: string, canReprocess: boolean, description: string }> = [{
@@ -130,5 +160,10 @@ const projectProcessingStages = async function (pid: mongoose.Types.ObjectId | s
         await appService.processingStages.addItem(processingStep);
     }
 };
-
+const formatData = (json: any) => {
+    return `${JSON.stringify({ data: json })}\n`;
+}
+async function sleep(ms: number) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+}
 module.exports = pmRouter;

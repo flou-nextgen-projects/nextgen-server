@@ -14,7 +14,7 @@ aiRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
         response.writeHead(200, { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', 'Connection': 'keep-alive' });
         for await (const chatMessage of chatStream) {
             if (chatMessage.eventType === 'text-generation') {
-                let text = JSON.stringify({ text: chatMessage.text })
+                let text = JSON.stringify({ text: chatMessage.text });
                 let chunk = `data: ${text}\n\n`;
                 response.write(chunk);
             }
