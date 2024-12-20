@@ -1,31 +1,58 @@
-import { Request, Response } from "express";
+import Express, { Request, Response, Router, NextFunction } from "express";
 import { appService } from "../services/app-service";
+import { ObjectId } from "mongodb";
+const fmRouter: Router = Express.Router();
 
-const getAll = async function (request: Request, response: Response) {
-    const fileMaster = await appService.fileMaster.getAllDocuments(30);
-    response.status(200).json(fileMaster);
-};
-
-const getDocuments = function (request: Request, response: Response) {
+fmRouter.use("/", (request: Request, response: Response, next: NextFunction) => {
+    next();
+}).get("/get-all", async (request: Request, response: Response) => {
+    try {
+      const fileMaster = await appService.fileMaster.getAllDocuments(30);
+      response.status(200).json(fileMaster);
+    } catch (error) {   
+        return response.status(500).json(error).end();
+    }
+}).get("/get-documents",(request: Request, response: Response) => {
     const filter: object = {
         FileTypeMasterId: request.body.FileTypeMasterId,
-        FileNameWithoutExt: new RegExp(request.body.FileNameWithoutExt, 'i')
-    };
+        FileNameWithoutExt: new RegExp(request.body.FileNameWithoutExt, 'i')}
     appService.fileMaster.getDocuments(filter).then((res) => {
         response.status(200).json(res);
     }).catch((error: Error) => {
         response.status(500).json(error);
     });
-};
-
-const aggregateAll = async function (request: Request, response: Response) {
-    const pipeLine = [{
-        $addFields: {
-            FullName: { $concat: ["$FirstName", " ", "$LastName"] }
-        }
-    }];
-    const userMasters = await appService.userMaster.aggregate(pipeLine);
-    response.status(200).json(userMasters).end();
-};
-
-export { getAll, getDocuments, aggregateAll }
+  
+}).get("/aggregate-all",async (request: Request, response: Response) => {
+    try {
+        const pipeLine = [{
+            $addFields: {
+                FullName: { $concat: ["$FirstName", " ", "$LastName"] }
+            }
+        }];
+        const userMasters = await appService.userMaster.aggregate(pipeLine);
+        response.status(200).json(userMasters).end();  
+      } catch (error) {   
+          return response.status(500).json(error).end();
+      }
+}).get("/get-file-masters", (request: Request, response: Response) => {
+    var pid = <string>request.query.pid;
+    var pipeLine = [
+        { $match: { pid: new ObjectId(pid) } },        
+        { $lookup: { from: "fileTypeMaster", localField: "fileTypeId", foreignField: "_id", as: "fileTypeMaster" } },
+        { $unwind: { path: "$fileTypeMaster", preserveNullAndEmptyArrays: true } }      
+    ];
+    appService.mongooseConnection.collection("fileMaster").aggregate(pipeLine).toArray().then((data: any) => {
+        response.status(200).json(data).end();
+    }).catch((e) => {
+        response.status(500).json().end();
+    })
+}).get("/get-file-master",(request: Request, response: Response) => {
+    var filter: any = request.query;
+    var filter1: any = JSON.parse(filter.$filter);
+    appService.fileMaster.getItem({ _id: new ObjectId(filter1.fileId), pid: new ObjectId(filter1.pid) }).then((workflows) => {
+        response.status(200).json(workflows).end();
+    }).catch((e) => {
+        response.status(500).json().end();
+    })
+});
+module.exports = fmRouter;
