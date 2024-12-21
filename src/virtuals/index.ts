@@ -24,7 +24,8 @@ const fileTypeMasterVirtuals = {
         autopopulate: true,
         justOne: true
     },
-    unWind: true
+    unWind: true,
+    fields: ["fileTypeName", "fileTypeExtension"]
 };
 
 const workspaceMasterVirtuals = {
@@ -67,8 +68,7 @@ const fileMasterVirtuals = {
         autopopulate: true,
         justOne: true
     },
-    unWind: true,
-    fields: ["_id", "fileId", "projectId", "fileTypeMasterId", "fileName", "fileNameWithoutExt", "workFlowStatus", "projectMaster", "fileTypeExtensionMaster"]
+    unWind: true    
 };
 
 const referenceFileMasterVirtuals = {

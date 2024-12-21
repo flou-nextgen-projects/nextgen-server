@@ -15,21 +15,21 @@ interface UploadDetails {
     completePath: string;
 }
 
-interface ProjectMaster extends EntityBase {
-    name: string;
-    description?: string;
-    wid: Mongoose.Types.ObjectId;
-    lid?: Mongoose.Types.ObjectId | string;
-    uploadedPath?: string;
-    extractedPath?: string;
-    isActive: boolean;
-    uploadDetails: UploadDetails;
-    uploadedOn?: Date;
-    processedOn?: Date | null;
-    totalObjects?: number;
-    processingStatus: ProcessingStatus;
-    languageMaster?: LanguageMaster;
-    workspaceMaster?: WorkspaceMaster;
+class ProjectMaster extends EntityBase {
+    public name: string;
+    public description?: string;
+    public wid: Mongoose.Types.ObjectId;
+    public lid?: Mongoose.Types.ObjectId | string;
+    public uploadedPath?: string;
+    public extractedPath?: string;
+    public isActive: boolean;
+    public uploadDetails: UploadDetails;
+    public uploadedOn?: Date;
+    public processedOn?: Date | null;
+    public totalObjects?: number;
+    public processingStatus: ProcessingStatus;
+    public languageMaster?: LanguageMaster;
+    public workspaceMaster?: WorkspaceMaster;
 }
 
 const ProjectMasterSchema: Schema<ProjectMaster> = new Schema({

@@ -9,19 +9,18 @@ interface FileStatics {
     exceptions: any;
 }
 
-interface FileMaster extends EntityBase {
-    _id: Mongoose.Types.ObjectId | string;
-    pid: Mongoose.Types.ObjectId | string;
-    fileTypeId: Mongoose.Types.ObjectId | string;
-    fileName: string;
-    fileNameWithoutExt: string;
-    filePath: string;
-    processed: boolean;
-    linesCount: number;
-    workflowStatus: string;
-    fileTypeMaster?: FileTypeMaster;
-    projectMaster?: ProjectMaster;
-    fileStatics: FileStatics;
+class FileMaster extends EntityBase {    
+    public pid: Mongoose.Types.ObjectId | string;
+    public fileTypeId: Mongoose.Types.ObjectId | string;
+    public fileName: string;
+    public fileNameWithoutExt: string;
+    public filePath: string;
+    public processed: boolean;
+    public linesCount: number;
+    public workflowStatus: string;
+    public fileTypeMaster?: FileTypeMaster;
+    public projectMaster?: ProjectMaster;
+    public fileStatics: FileStatics;
 }
 
 const fileStaticsSchema: Schema<FileStatics> = new Schema({
@@ -32,10 +31,7 @@ const fileStaticsSchema: Schema<FileStatics> = new Schema({
 });
 
 const FileMasterSchema: Schema<FileMaster> = new Schema({
-    _id: {
-        type: Mongoose.Schema.Types.ObjectId,
-        required: false
-    }, pid: {
+    pid: {
         type: Mongoose.Schema.Types.ObjectId,
         required: true
     }, fileTypeId: {
@@ -65,14 +61,6 @@ const FileMasterSchema: Schema<FileMaster> = new Schema({
         type: String,
         required: false,
         sparse: true
-    }, fileTypeMaster: {
-        type: Mongoose.Types.ObjectId,
-        ref: "fileTypeMaster",
-        autopopulate: true
-    }, projectMaster: {
-        type: Mongoose.Types.ObjectId,
-        ref: "projectMaster",
-        autopopulate: true
     }, fileStatics: fileStaticsSchema
 });
 
