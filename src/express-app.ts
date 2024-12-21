@@ -8,6 +8,8 @@ const swaggerJsdoc = require('swagger-jsdoc');
 const swaggerUi = require('swagger-ui-express');
 import { join, resolve } from "path";
 import chalk from "chalk";
+import { AppError } from './common/app-error';
+
 
 const app = http2Express(express);
 app.use(json({ limit: '60mb' }));
@@ -36,11 +38,7 @@ export const setAppRoutes = function (app: express.Application) {
 
     var combined = morgan("combined");
     app.use(combined);
-    app.use(function (err: Error, req: Request, res: Response, next: NextFunction) {
-        console.log("global error handler!");
-        console.log(err);
-        next(err);
-    });
+
     app.get("/user/:id(\\d+)", (request: Request, response: Response) => {
         response.status(200).json({ msg: "OK", data: { id: request.params } }).end();
     });
@@ -79,7 +77,7 @@ export const setAppRoutes = function (app: express.Application) {
     app.use("/backend/main/api/statement-reference", statementRouter);
     app.use("/gen-ai/chat", aiRouter);
     app.use("/backend/main/api/dashboard", dashBoardRouter);
-    app.use("/backend/main/api/file-master", fmRouter);  
+    app.use("/backend/main/api/file-master", fmRouter);
     // db status router
     var dbStatusRouter = require("./config/check-status");
     app.use("/backend/db", dbStatusRouter);
@@ -93,7 +91,20 @@ export const setAppRoutes = function (app: express.Application) {
     // all routes are added into gen-ai.routes file under routes folder
     let genAiRoutes = require("./routes/gen-ai.routes");
     app.use("/backend/main/api", genAiRoutes);
-
+    app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
+        if (err instanceof AppError) {
+            res.status(err.statusCode).json({
+                status: 'error',
+                message: err.message,
+                additionalInfo: err.additionalInfo
+            }).end();
+        } else {
+            res.status(500).json({
+                status: 'error',
+                message: 'Internal Server Error'
+            }).end();
+        }
+    });
     const swaggerApi = resolve(join(__dirname, "swagger"));
     const options = {
         definition: {

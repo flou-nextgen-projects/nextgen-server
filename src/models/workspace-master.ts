@@ -2,12 +2,12 @@ import mongoose, { Schema } from "mongoose";
 import { languageMasterVirtuals } from "../virtuals";
 import { EntityBase, LanguageMaster } from ".";
 
-interface WorkspaceMaster extends EntityBase {
-    lid: mongoose.Types.ObjectId;
-    name: string;
-    description?: string;
-    dirPath?: string;
-    languageMaster: LanguageMaster;
+class WorkspaceMaster extends EntityBase {
+    public lid: Schema.Types.ObjectId | string;
+    public name: string;
+    public description?: string;
+    public dirPath?: string;
+    public languageMaster: LanguageMaster;
 }
 
 const WorkspaceMasterSchema: Schema<WorkspaceMaster> = new Schema({

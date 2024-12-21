@@ -1,6 +1,5 @@
 import { Schema } from "mongoose";
 import EntityBase from "./entity-base";
-import { number } from "cohere-ai/core/schemas";
 
 interface PromptConfigMaster extends EntityBase {
     promptId: number;
@@ -11,7 +10,6 @@ interface PromptConfigMaster extends EntityBase {
     cohereModel?: string;
     claudeModel?: string;
     mistralModel?: string;
-
 }
 
 const PromptConfigMasterSchema: Schema<PromptConfigMaster> = new Schema({
@@ -19,23 +17,17 @@ const PromptConfigMasterSchema: Schema<PromptConfigMaster> = new Schema({
         required: true, type: Number, unique: true
     }, prompt: {
         required: true, type: String
-    },
-    menuId: {
+    }, menuId: {
         required: true, type: String
-    },
-    menu: {
+    }, menu: {
         required: true, type: String
-    },
-    location: {
+    }, location: {
         required: true, type: String
-    },
-    cohereModel: {
+    }, cohereModel: {
         required: false, type: String
-    },
-    mistralModel: {
+    }, mistralModel: {
         required: false, type: String
-    },
-    claudeModel: {
+    }, claudeModel: {
         required: false, type: String
     }
 });
