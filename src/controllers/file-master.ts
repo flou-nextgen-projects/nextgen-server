@@ -29,7 +29,9 @@ fmRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
           return response.status(500).json(error).end();
       }
 }).get("/get-file-masters", (request: Request, response: Response) => {
-    var pid = <string>request.query.pid;
+    var filter: any = request.query;
+    var filter1: any = JSON.parse(filter.$filter);
+    var pid = filter1.pid;
     var pipeLine = [
         { $match: { pid: new ObjectId(pid) } },        
         { $lookup: { from: "fileTypeMaster", localField: "fileTypeId", foreignField: "_id", as: "fileTypeMaster" } },
