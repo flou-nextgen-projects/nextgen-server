@@ -61,6 +61,7 @@ export const setAppRoutes = function (app: express.Application) {
     var aiRouter = require('./controllers/ai-chats');
     var dashBoardRouter = require('./controllers/dashboard');
     var fmRouter = require('./controllers/file-master');
+    var functionalFlowRouter = require('./controllers/functional-flow');
     require("./kafka-services/kafka-consumer"); // no need to have routes
     app.use("/check/api/home", homeRouter);
     app.use("/backend/api/user-master", userRouter);
@@ -78,6 +79,7 @@ export const setAppRoutes = function (app: express.Application) {
     app.use("/gen-ai/chat", aiRouter);
     app.use("/backend/main/api/dashboard", dashBoardRouter);
     app.use("/backend/main/api/file-master", fmRouter);
+    app.use("/backend/main/api/functional-flow", functionalFlowRouter);
     // db status router
     var dbStatusRouter = require("./config/check-status");
     app.use("/backend/db", dbStatusRouter);

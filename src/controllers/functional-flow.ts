@@ -29,19 +29,20 @@ functionalFlowRouter.use("/", (request: Request, response: Response, next: NextF
         response.status(500).json(jsonData).end();
     }
 }).post("/get-workflows", async (request: Request, response: Response) => {
-    var pid: string = <string>request.query.pid;
-    var json: any = <any>request.body;
-    var lastIndex: number = json.data.length;
-    var j = json.data[lastIndex - 1].id;
-    var level3Ele = json.data.find((d: any) => { return (d.data.level === 3 && d.data.type === `funcNode-${pid}`) });
+    var reqBody = request.body;
+    var json: any = reqBody.jsonData;
+    var pid = reqBody.pid;
+    var lastIndex: number = json.length;
+    var j = json[lastIndex - 1].id;
+    var level3Ele = json.find((d: any) => { return (d.data.level === 3 && d.data.type === `funcNode-${pid}`) });
     level3Ele.state.selected = true;
     try {
         var workflows = await appService.fileMaster.getDocuments({ pid: new ObjectId(pid) });
         for (var workflow of workflows) {
             var wName: string = `${workflow.fileNameWithoutExt}`;
-            json.data.push({ id: ++j, parent: `${level3Ele.id}`, text: `${wName}`, data: { pid: workflow.pid, aid: workflow._id, type: "workflow", level: 4 } });
+            json.push({ id: ++j, parent: `${level3Ele.id}`, text: `${wName}`, data: { pid: workflow.pid, aid: workflow._id, type: "workflow", level: 4 } });
         }
-        response.status(200).json(json.data).end();
+        response.status(200).json(json).end();
     } catch (err) {
         response.status(500).json(err).end();
     }
