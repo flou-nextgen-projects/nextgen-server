@@ -5,7 +5,7 @@ const workspaceRouter: Router = Express.Router();
 workspaceRouter.use("/", (request: Request, response: Response, next: NextFunction) => {
     next();
 }).get("/", async function (request: Request, response: Response) {
-    const workspaces = await appService.workspaceMaster.getAllDocuments();
+    const workspaces = await appService.workspaceMaster.aggregate();
     response.status(200).json(workspaces).end();
 }).post("/", async function (request: Request, response: Response) {
     var wp = request.body;

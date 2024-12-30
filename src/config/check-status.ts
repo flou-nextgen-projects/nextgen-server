@@ -41,29 +41,30 @@ checkDbStatusRouter.use("/", (_: Request, __: Response, next: NextFunction) => {
     await appService.mongooseConnection.dropCollection("projectMaster");
     await appService.mongooseConnection.dropCollection("memberReferences");
     await appService.mongooseConnection.dropCollection("methodDetails");
-    await appService.mongooseConnection.dropCollection("statementMaster");    
+    await appService.mongooseConnection.dropCollection("statementMaster");
+    await appService.mongooseConnection.dropCollection("workspaceMaster");    
     response.status(200).end();
 });
 
 const _initDatabaseConfiguration = (dbStatus: any): Promise<{ message: string }> => new Promise(async (res, rej) => {
     try {
         const configPath = resolve(join(__dirname, "db", "init-db.json"));
-        const configData = readFileSync(configPath, { encoding: 'utf8' }).toString();
-        const configJson: Array<{ collection: string, documents: [] }> = JSON.parse(configData) || [];
-        let bcmDocs = configJson.find((d) => d.collection === "baseCommandMaster").documents;
-        await appService.baseCommandMaster.bulkInsert(bcmDocs);
+        const configData = readFileSync(configPath).toString();
+        const configJson: any[] = JSON.parse(configData) || [];
         let ftMasterDocs = configJson.find((d) => d.collection === "fileTypeMaster").documents;
         await appService.fileTypeMaster.bulkInsert(ftMasterDocs);
-        let indicators = configJson.find((d) => d.collection === "indicators").documents;
-        await appService.mongooseConnection.collection("indicators").insertMany(indicators);
+        let bcmDocs = configJson.find((d) => d.collection === "baseCommandMaster").documents;
+        await appService.baseCommandMaster.bulkInsert(bcmDocs);        
+        let formattingConfig = configJson.find((d) => d.collection === "formattingConfig").documents;
+        await appService.mongooseConnection.collection("formattingConfig").insertMany(formattingConfig);
         let languageMasters = configJson.find((d) => d.collection === "languageMaster").documents;
         await appService.languageMaster.bulkInsert(languageMasters);
         let roleMaster = configJson.find((d) => d.collection === "roleMaster").documents;
         await appService.roleMaster.bulkInsert(roleMaster);
         let userMaster = configJson.find((d) => d.collection === "userMaster").documents;
         await appService.userMaster.bulkInsert(userMaster);
-        let workspaceMaster = configJson.find((d) => d.collection === "workspaceMaster").documents;
-        await appService.workspaceMaster.bulkInsert(workspaceMaster);
+        // let workspaceMaster = configJson.find((d) => d.collection === "workspaceMaster").documents;
+        // await appService.workspaceMaster.bulkInsert(workspaceMaster);
         await appService.mongooseConnection.collection("dbStatus").findOneAndUpdate({ _id: dbStatus?._id }, { $set: { configured: true, enabled: true } }, { upsert: true });
         res({ message: "Database initialization process completed successfully" });
     } catch (error) {

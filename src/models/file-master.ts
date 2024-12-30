@@ -9,8 +9,9 @@ interface FileStatics {
     exceptions: any;
 }
 
-class FileMaster extends EntityBase {    
+class FileMaster extends EntityBase {
     public pid: Mongoose.Types.ObjectId | string;
+    public wid: Mongoose.Types.ObjectId | string;
     public fileTypeId: Mongoose.Types.ObjectId | string;
     public fileName: string;
     public fileNameWithoutExt: string;
@@ -31,10 +32,9 @@ const fileStaticsSchema: Schema<FileStatics> = new Schema({
 });
 
 const FileMasterSchema: Schema<FileMaster> = new Schema({
-    pid: {
-        type: Mongoose.Schema.Types.ObjectId,
-        required: true
-    }, fileTypeId: {
+    wid: { type: Mongoose.Schema.Types.ObjectId, required: true },
+    pid: { type: Mongoose.Schema.Types.ObjectId, required: true },
+    fileTypeId: {
         type: Mongoose.Schema.Types.ObjectId,
         required: true
     }, fileName: {

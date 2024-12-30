@@ -189,8 +189,8 @@ export class StatementReferenceMasterHelper {
             // This part is now added to separate step...            
             const fileContentMaster: FileContentMaster = {
                 fid: fileMaster._id,
-                contentWithoutComments: contentWithoutComments.join("\n"),
-                fileContent: fileContent,
+                formatted: contentWithoutComments.join("\n"),
+                original: fileContent,
             } as FileContentMaster;
             await appService.fileContentMaster.addItem(fileContentMaster as FileContentMaster);
 
@@ -209,8 +209,8 @@ export class StatementReferenceMasterHelper {
             parsedComments.forEach((s) => { contentWithoutComments.push(s.modifiedLine) });
             const fileContentMaster: FileContentMaster = {
                 fid: fileMaster._id,
-                contentWithoutComments: contentWithoutComments.join("\n"),
-                fileContent: fileContent                
+                formatted: contentWithoutComments.join("\n"),
+                original: fileContent                
             } as FileContentMaster ;
             await appService.fileContentMaster.addItem(fileContentMaster);
             resolve({ fileMaster });

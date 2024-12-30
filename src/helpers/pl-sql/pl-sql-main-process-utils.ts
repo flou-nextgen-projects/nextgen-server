@@ -53,8 +53,8 @@ export default class PlSqlMainProcessUtils {
         for (let file of allFiles) {
             bar.tick({ done: ++index, length: allFiles.length });
             let fileContent = fileExtensions.readTextFile(file.filePath);
-            const contentWithoutComments = fileContent.replace(commentRegex, '');
-            let fcm: FileContentMaster = { fid: file._id, fileContent: fileContent, contentWithoutComments } as FileContentMaster;
+            const formatted = fileContent.replace(commentRegex, '');
+            let fcm: FileContentMaster = { fid: file._id, original: fileContent, formatted } as FileContentMaster;
             await appService.fileContentMaster.addItem(fcm);
         }
     });
@@ -66,7 +66,7 @@ export default class PlSqlMainProcessUtils {
         for (let fileMaster of files) {
             bar.tick({ done: ++index, length: files.length });
             let fcm = await appService.fileContentMaster.getItem({ fid: fileMaster._id });
-            const lines = fcm.contentWithoutComments.split("\n").filter((line) => !isEmpty(line.trim()));
+            const lines = fcm.formatted.split("\n").filter((line) => !isEmpty(line.trim()));
             let lineDetails = CobolHelpers.prepareCobolLineDetails(lines);
             lineDetails.forEach((ld: any) => { if (ld.indicators.length <= 0) delete ld.indicators; });
             for (const lineDetail of lineDetails) {

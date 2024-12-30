@@ -1,5 +1,173 @@
 [
     {
+        "collection": "fileTypeMaster",
+        "documents": [
+            {
+                "_id": "67036016f53c182f751ed035",
+                "fileTypeName": "PROC",
+                "fileTypeExtension": ".proc",
+                "delimiter": ".",
+                "color": "#f84f9a",
+                "folderNames": [
+                    "proc",
+                    "PROC"
+                ],
+                "lid": "66014c9c91051b7bc74fadbf",
+                "img": "proc.png"
+            },
+            {
+                "_id": "67036016f53c182f751ed036",
+                "fileTypeName": "COPYBOOK",
+                "fileTypeExtension": ".copy",
+                "delimiter": ".",
+                "color": "#A6C600",
+                "folderNames": [
+                    "copy",
+                    "copybook",
+                    "CopyBook",
+                    "COPYBOOK"
+                ],
+                "lid": "66014c9c91051b7bc74fadbf",
+                "img": "copybook.png"
+            },
+            {
+                "_id": "67036016f53c182f751ed037",
+                "fileTypeName": "BMS",
+                "fileTypeExtension": ".bms",
+                "delimiter": ".",
+                "color": "#c242cc",
+                "folderNames": [
+                    "bms",
+                    "BMS"
+                ],
+                "lid": "66014c9c91051b7bc74fadbf",
+                "img": "bms.png"
+            },
+            {
+                "_id": "67036016f53c182f751ed038",
+                "fileTypeName": "SQL",
+                "fileTypeExtension": ".sql",
+                "delimiter": ".",
+                "color": "#ff9999",
+                "folderNames": [
+                    "sql",
+                    "SQL",
+                    "SCRIPTS",
+                    "SCRIPT"
+                ],
+                "lid": "66014c9c91051b7bc74fadbf",
+                "img": "sql.png"
+            },
+            {
+                "_id": "67036016f53c182f751ed039",
+                "fileTypeName": "INCLUDE",
+                "fileTypeExtension": ".icd",
+                "delimiter": ".",
+                "color": "#7d5ba6",
+                "folderNames": [
+                    "include",
+                    "includes"
+                ],
+                "lid": "66014c9c91051b7bc74fadbf",
+                "img": "include.png"
+            },
+            {
+                "_id": "67036016f53c182f751ed03a",
+                "fileTypeName": "InputLib",
+                "fileTypeExtension": ".lib",
+                "delimiter": ".",
+                "color": "#d04444",
+                "folderNames": [
+                    "inputLib",
+                    "lib"
+                ],
+                "lid": "66014c9c91051b7bc74fadbf",
+                "img": "input-lib.png"
+            },
+            {
+                "_id": "67036016f53c182f751ed03b",
+                "fileTypeName": "COBOL",
+                "fileTypeExtension": ".cbl",
+                "delimiter": ".",
+                "color": "#43CCA7",
+                "folderNames": [
+                    "source",
+                    "cobol",
+                    "cbl",
+                    "COBOL"
+                ],
+                "lid": "66014c9c91051b7bc74fadbf",
+                "img": "cobol.png"
+            },
+            {
+                "_id": "67036016f53c182f751ed03c",
+                "fileTypeName": "JCL",
+                "fileTypeExtension": ".jcl",
+                "delimiter": ".",
+                "color": "#5E7C96",
+                "folderNames": [
+                    "proto",
+                    "jcl",
+                    "JCL"
+                ],
+                "lid": "66014c9c91051b7bc74fadbf",
+                "img": "jcl.png"
+            },
+            {
+                "_id": "60507f342a60e0e6cbefd106",
+                "lid": "66014c8c91051b7bc74fadbc",
+                "fileTypeExtension": ".designer.cs",
+                "fileTypeName": "Tool Generated",
+                "color": "#179bd7",
+                "folderNames": [],
+                "delimiter": ".",
+                "img": "tool-generated.png"
+            },
+            {
+                "_id": "60507f66591cfa72c53a859e",
+                "lid": "66014c8c91051b7bc74fadbc",
+                "fileTypeExtension": ".cs",
+                "fileTypeName": "Code",
+                "color": "#1acdbc",
+                "folderNames": [],
+                "delimiter": ".",
+                "img": "csharp.png"
+            },
+            {
+                "_id": "60507f8d591cfa72c53a859f",
+                "lid": "66014c8c91051b7bc74fadbc",
+                "fileTypeExtension": ".xaml",
+                "fileTypeName": "XAML File",
+                "color": "#ff9999",
+                "folderNames": [],
+                "delimiter": ".",
+                "img": "xaml.png"
+            },
+            {
+                "_id": "677031c8c2c433613cdc5528",
+                "lid": "66014c8c91051b7bc74fadbc",
+                "fileTypeExtension": ".svc.cs",
+                "fileTypeName": "C# SVC Code File",
+                "color": "#1acdbc",
+                "folderNames": [],
+                "delimiter": ".",
+                "img": "csharp.png"
+            },
+            {
+                "_id": "6752e66ddce4503274058d53",
+                "fileTypeName": "SQL",
+                "fileTypeExtension": ".sql",
+                "delimiter": "",
+                "color": "#FFF78C",
+                "folderNames": [
+                    "plsql"
+                ],
+                "lid": "6752e0ee431a344a3add72b9",
+                "img": "sql.png"
+            }
+        ]
+    },
+    {
         "collection": "roleMaster",
         "documents": [
             {
@@ -111,215 +279,19 @@
         ]
     },
     {
-        "collection": "fileTypeMaster",
-        "documents": [
-            {
-                "_id": "67036016f53c182f751ed035",
-                "fileTypeName": "PROC",
-                "fileTypeExtension": ".proc",
-                "delimiter": ".",
-                "color": "#f84f9a",
-                "folderNames": [
-                    "proc",
-                    "PROC"
-                ],
-                "lid": "66014c9c91051b7bc74fadbf"
-            },
-            {
-                "_id": "67036016f53c182f751ed036",
-                "fileTypeName": "COPYBOOK",
-                "fileTypeExtension": ".copy",
-                "delimiter": ".",
-                "color": "#A6C600",
-                "folderNames": [
-                    "copy",
-                    "copybook",
-                    "CopyBook",
-                    "COPYBOOK"
-                ],
-                "lid": "66014c9c91051b7bc74fadbf"
-            },
-            {
-                "_id": "67036016f53c182f751ed037",
-                "fileTypeName": "BMS",
-                "fileTypeExtension": ".bms",
-                "delimiter": ".",
-                "color": "#c242cc",
-                "folderNames": [
-                    "bms",
-                    "BMS"
-                ],
-                "lid": "66014c9c91051b7bc74fadbf"
-            },
-            {
-                "_id": "67036016f53c182f751ed038",
-                "fileTypeName": "SQL",
-                "fileTypeExtension": ".sql",
-                "delimiter": ".",
-                "color": "#ff9999",
-                "folderNames": [
-                    "sql",
-                    "SQL",
-                    "SCRIPTS",
-                    "SCRIPT"
-                ],
-                "lid": "66014c9c91051b7bc74fadbf"
-            },
-            {
-                "_id": "67036016f53c182f751ed039",
-                "fileTypeName": "INCLUDE",
-                "fileTypeExtension": ".icd",
-                "delimiter": ".",
-                "color": "#7d5ba6",
-                "folderNames": [
-                    "include",
-                    "includes"
-                ],
-                "lid": "66014c9c91051b7bc74fadbf"
-            },
-            {
-                "_id": "67036016f53c182f751ed03a",
-                "fileTypeName": "INPUTLIB",
-                "fileTypeExtension": ".lib",
-                "delimiter": ".",
-                "color": "#d04444",
-                "folderNames": [
-                    "inputLib",
-                    "lib"
-                ],
-                "lid": "66014c9c91051b7bc74fadbf"
-            },
-            {
-                "_id":"67036016f53c182f751ed03b",
-                "fileTypeName": "COBOL",
-                "fileTypeExtension": ".cbl",
-                "delimiter": ".",
-                "color": "#43CCA7",
-                "folderNames": [
-                    "source",
-                    "cobol",
-                    "cbl",
-                    "COBOL"
-                ],
-                "lid": "66014c9c91051b7bc74fadbf"
-            },
-            {
-                "_id": "67036016f53c182f751ed03c",
-                "fileTypeName": "JCL",
-                "fileTypeExtension": ".jcl",
-                "delimiter": ".",
-                "color": "#5E7C96",
-                "folderNames": [
-                    "proto",
-                    "jcl",
-                    "JCL"
-                ],
-                "lid": "66014c9c91051b7bc74fadbf"
-            },{
-                "_id":  "60507f342a60e0e6cbefd106",                
-                "lid":  "66014c8c91051b7bc74fadbc",
-                "fileTypeExtension": ".designer.cs",
-                "fileTypeName": "C# Generated Designer File",
-                "color": "#179bd7",
-                "folderNames": [],
-                "delimiter": "."
-            },
-            {
-                "_id": "60507f66591cfa72c53a859e",
-                "lid": "66014c8c91051b7bc74fadbc",
-                "fileTypeExtension": ".cs",
-                "fileTypeName": "C# Code File",
-                "color": "#1acdbc",
-                "folderNames": [],
-                "delimiter": "."
-            },
-            {
-                "_id": "60507f8d591cfa72c53a859f",
-                "lid": "66014c8c91051b7bc74fadbc",
-                "fileTypeExtension": ".xaml",
-                "fileTypeName": "XAML File",
-                "color": "#ff9999",
-                "folderNames": [],
-                "delimiter": "."
-            }
-        ]
-    },
-    {
-        "collection": "indicators",
-        "documents": [
-            {
-                "id": 2,
-                "description": "namespace end indicator"
-            },
-            {
-                "id": 1,
-                "description": "namespace start indicator"
-            },
-            {
-                "id": 3,
-                "description": "class start indicator"
-            },
-            {
-                "id": 4,
-                "description": "class end indicator"
-            },
-            {
-                "id": 7,
-                "description": "if block start indicator"
-            },
-            {
-                "id": 8,
-                "description": "else block start indicator"
-            },
-            {
-                "id": 9,
-                "description": "if block end indicator"
-            },
-            {
-                "id": 10,
-                "description": "loop start indicator"
-            },
-            {
-                "id": 11,
-                "description": "loop end indicator"
-            },
-            {
-                "id": 12,
-                "description": "switch block start indicator"
-            },
-            {
-                "id": 13,
-                "description": "switch case indicator"
-            },
-            {
-                "id": 14,
-                "description": "switch block end indicator"
-            },
-            {
-                "id": 15,
-                "description": "calling to method (call external)"
-            },
-            {
-                "id": 6,
-                "description": "method end indicator"
-            },
-            {
-                "id": 5,
-                "description": "method start indicator"
-            },
-            {
-                "id": 16,
-                "description": "calling to method from same class or file (call internal)"
-            }
-        ]
+        "collection": "dbStatus",
+        "documents": {
+            "configured": false,
+            "enabled": false
+        }
     },
     {
         "collection": "languageMaster",
         "documents": [
             {
-                "_id": "66014c6c91051b7bc74fadb9",
-                "name": "UniVerse Basic",
-                "description": "This is UniVerse Basic Language"
+                "_id": "66014c9c91051b7bc74fadbf",
+                "name": "COBOL",
+                "description": "This is COBOL Language"
             },
             {
                 "_id": "66014c8c91051b7bc74fadbc",
@@ -327,32 +299,34 @@
                 "description": "This is Microsoft C-Sharp (C# .NET) Language"
             },
             {
-                "_id": "66014c9c91051b7bc74fadbf",
-                "name": "COBOL",
-                "description": "This is COBOL Language"
+                "_id": "6752e0ee431a344a3add72b9",
+                "name": "PLSQL",
+                "description": "This is PLSQL Language"
             }
         ]
     },
     {
-        "collection": "workspaceMaster",
+        "collection": "formattingConfig",
         "documents": [
             {
-                "_id": "6645983c36daeb8a36510e02",
-                "lid": "66014c9c91051b7bc74fadbf",
-                "name": "COBOL Workspace",
-                "description": "This is COBOL Workspace"
+                "_id": "63046b8a9937126ae4af6f3f",
+                "lang": "C#",
+                "removeTrailingComments": true,
+                "concatStringLiterals": true,
+                "concatLinQQueries": true,
+                "removeStringConcatenationToken": true,
+                "addBracesToSingleLineConditions": true,
+                "removeEmptyFunctions": true
             },
             {
-                "_id": "669141dd5f125b063754a66e",
-                "lid": "66014c6c91051b7bc74fadb9",
-                "name": "UniVerse Basic Workspace",
-                "description": "This is UniVerse Basic language workspace only"
-            },
-            {
-                "_id": "6701717c90cded0bd77a3a6c",
-                "lid": "66014c8c91051b7bc74fadbc",
-                "name": "C-Sharp Language Workspace",
-                "description": "This C# Language Workspace"
+                "_id": "63046cf29937126ae4af6f5f",
+                "lang": "VisualBasic",
+                "removeTrailingComments": false,
+                "concatStringLiterals": false,
+                "concatLinQQueries": true,
+                "removeStringConcatenationToken": true,
+                "addBracesToSingleLineConditions": true,
+                "removeEmptyFunctions": true
             }
         ]
     }
