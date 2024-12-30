@@ -20,7 +20,7 @@ import { BmsMapControl, BmsMapControlSchema, BmsMapMaster, BmsMapMasterSchema, C
 import { CobolEntities, CobolEntitiesSchema, CobolVariableSchema, CobolVariables, MissingObjects, MissingObjectsSchema } from "./cobol-models";
 import { EntityMaster, EntityMasterSchema, DataDependency, DataDependencySchema, EntityAttributes, EntityAttributesSchema } from "./entity-master";
 import { PromptConfigMaster, PromptConfigMasterSchema } from './prompt-config';
-import { Link, Node, prepareNodes, prepareLinks } from "./nodes-and-links";
+import { Link, Node, prepareNodes, prepareLinks, prepareDotNetLinks, NodeLinkType } from "./nodes-and-links";
 
 export {
     EntityBase, MultipleCollectionsConfig,
@@ -51,5 +51,5 @@ export {
     CobolEntities, CobolVariableSchema,
     CobolVariables, CobolEntitiesSchema,
     PromptConfigMaster, PromptConfigMasterSchema,
-    Link, Node, prepareNodes, prepareLinks
+    Link, Node, prepareNodes, prepareLinks, prepareDotNetLinks, NodeLinkType
 };

@@ -7,6 +7,7 @@ class FileTypeMaster extends EntityBase {
     constructor() { super(); }
     public fileTypeName: string;
     public fileTypeExtension: string;
+    public img: string;
     public delimiter?: string;
     public color: string;
     public folderNames: string[];
@@ -15,27 +16,13 @@ class FileTypeMaster extends EntityBase {
 }
 
 const FileTypeMasterSchema: Mongoose.Schema<FileTypeMaster> = new Mongoose.Schema({
-    fileTypeName: {
-        type: String,
-        required: true,
-        trim: true
-    }, fileTypeExtension: {
-        type: String,
-        required: true,
-        lowercase: true,
-        trim: true
-    }, delimiter: {
-        type: String,
-        required: false,
-        trim: true
-    }, color: {
-        type: String,
-        required: true
-    }, folderNames: {
-        type: [String],
-        required: true,
-        set: (folderNames: string[]) => [...new Set(folderNames.map(folder => folder.toLowerCase()))]
-    }, lid: {
+    fileTypeName: { type: String, required: true, trim: true },
+    fileTypeExtension: { type: String, required: true, lowercase: true, trim: true },
+    img: { type: String, required: true, trim: true, lowercase: true },
+    delimiter: { type: String, required: false, trim: true },
+    color: { type: String, required: true },
+    folderNames: { type: [String], required: true, set: (folderNames: string[]) => [...new Set(folderNames.map(folder => folder.toLowerCase()))] },
+    lid: {
         required: true,
         set: function (value: Mongoose.Types.ObjectId | string) {
             return typeof value === 'string' && Mongoose.Types.ObjectId.isValid(value) ? new Mongoose.Types.ObjectId(value) : value;
