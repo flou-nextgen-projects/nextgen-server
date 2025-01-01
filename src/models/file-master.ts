@@ -34,34 +34,14 @@ const fileStaticsSchema: Schema<FileStatics> = new Schema({
 const FileMasterSchema: Schema<FileMaster> = new Schema({
     wid: { type: Mongoose.Schema.Types.ObjectId, required: true },
     pid: { type: Mongoose.Schema.Types.ObjectId, required: true },
-    fileTypeId: {
-        type: Mongoose.Schema.Types.ObjectId,
-        required: true
-    }, fileName: {
-        type: String,
-        trim: true,
-        required: true
-    }, fileNameWithoutExt: {
-        type: String,
-        trim: true,
-        required: true
-    }, filePath: {
-        type: String,
-        required: true,
-        trim: true
-    }, processed: {
-        type: Boolean,
-        default: false,
-        required: false
-    }, linesCount: {
-        type: Number,
-        default: 0,
-        required: false
-    }, workflowStatus: {
-        type: String,
-        required: false,
-        sparse: true
-    }, fileStatics: fileStaticsSchema
+    fileTypeId: { type: Mongoose.Schema.Types.ObjectId, required: true },
+    fileName: { type: String, trim: true, required: true },
+    fileNameWithoutExt: { type: String, trim: true, required: false },
+    filePath: { type: String, required: true, trim: true },
+    processed: { type: Boolean, default: false, required: false },
+    linesCount: { type: Number, default: 0, required: false },
+    workflowStatus: { type: String, required: false, sparse: true },
+    fileStatics: fileStaticsSchema
 });
 
 FileMasterSchema.statics.useVirtuals = {

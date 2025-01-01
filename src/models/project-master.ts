@@ -18,7 +18,7 @@ interface UploadDetails {
 class ProjectMaster extends EntityBase {
     public name: string;
     public description?: string;
-    public wid: Mongoose.Types.ObjectId;
+    public wid: Mongoose.Types.ObjectId | string;
     public lid?: Mongoose.Types.ObjectId | string;
     public uploadedPath?: string;
     public extractedPath?: string;
@@ -30,42 +30,20 @@ class ProjectMaster extends EntityBase {
     public processingStatus: ProcessingStatus;
     public languageMaster?: LanguageMaster;
     public workspaceMaster?: WorkspaceMaster;
+    public source: string = 'utility'
 }
 
 const ProjectMasterSchema: Schema<ProjectMaster> = new Schema({
-    name: {
-        type: String,
-        required: true,
-        unique: true
-    }, description: {
-        type: String,
-        required: false
-    }, wid: {
-        type: Mongoose.Schema.Types.ObjectId,
-        required: true
-    }, lid: {
-        type: Mongoose.Schema.Types.ObjectId,
-        required: true
-    }, uploadedPath: {
-        type: String,
-        default: ""
-    }, extractedPath: {
-        type: String,
-        default: ""
-    }, isActive: {
-        type: Boolean,
-        default: true
-    }, uploadDetails: {
-        fileName: {
-            type: String
-        },
-        uploadPath: {
-            type: String
-        },
-        completePath: {
-            type: String
-        }
-    }, uploadedOn: {
+    name: { type: String, required: true, unique: true },
+    description: { type: String, required: false },
+    wid: { type: Mongoose.Schema.Types.ObjectId, required: true },
+    lid: { type: Mongoose.Schema.Types.ObjectId, required: true },
+    uploadedPath: { type: String, default: "" },
+    source: { type: String, default: "utility" },
+    extractedPath: { type: String, default: "" },
+    isActive: { type: Boolean, default: true },
+    uploadDetails: { fileName: { type: String }, uploadPath: { type: String }, completePath: { type: String } },
+    uploadedOn: {
         type: Date,
         required: false,
         default: new Date(),
@@ -89,16 +67,8 @@ const ProjectMasterSchema: Schema<ProjectMaster> = new Schema({
             if (typeof v === "undefined" || v === null) return null;
             return new Date(v).toLocaleDateString("en-us");
         }
-    }, totalObjects: {
-        type: Number,
-        required: false,
-        default: 0
-    }, processingStatus: {
-        type: Mongoose.Schema.Types.Mixed,
-        required: false,
-        default: ProcessingStatus.uploaded,
-        enum: Object.values(ProcessingStatus)
-    }
+    }, totalObjects: { type: Number, required: false, default: 0 },
+    processingStatus: { type: Mongoose.Schema.Types.Mixed, required: false, default: ProcessingStatus.uploaded, enum: Object.values(ProcessingStatus) }
 });
 
 ProjectMasterSchema.statics.useVirtuals = {

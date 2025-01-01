@@ -1,6 +1,6 @@
 module.exports = {
     apps: [{
-        name: 'flokapture-job-api',
+        name: 'nextgen server',
         script: 'dist/server-app.js',
         watch: [
             'dist/**/*'
