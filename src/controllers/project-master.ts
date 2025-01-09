@@ -1,6 +1,6 @@
 import Express, { Request, Response, Router, NextFunction } from "express";
 import Mongoose from "mongoose";
-import { join, resolve } from "path";
+import { join, resolve, parse } from "path";
 import { appService } from "../services/app-service";
 import { FileContentMaster, FileMaster, LanguageMaster, ProcessingStatus, ProjectMaster, WorkspaceMaster } from "../models";
 import mongoose from "mongoose";
@@ -132,6 +132,7 @@ pmRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
             response.write(formatData({ message: "You can start loading project now." }), "utf-8", checkWrite);
             response.end();
         }).catch((err: any) => {
+            console.log(err);
             response.end(formatData({ exception: { ...err } }));
         });
     } catch (error) {
@@ -213,18 +214,25 @@ const addFileDetails = async (allFiles: string[], lm: LanguageMaster, fileMaster
         let info = fileExtensions.getFileInfo(file);
         return { ...info, filePath: file }
     });
+
     for (const fm of fileMasterJson) {
-        let fileInfo = fileExtensions.getFileInfo(fm.FilePath);
-        let fileType = fileTypeMaster.find((ftm: any) => ftm.fileTypeName.toLowerCase() === fm.FileTypeName.toLowerCase() && ftm.fileTypeExtension.toLowerCase() === fm.FileTypeExtension.toLowerCase());
-        let file = fileInfos.find((fm: any) => fm.name.toLowerCase() === fileInfo.name.toLowerCase() && fm.ext.toLowerCase() === fileInfo.ext.toLowerCase());
-        let fileDetails = {
-            _id: fm._id, pid: fm.ProjectId, fileTypeId: fileType._id, wid: fm.WorkspaceId,
-            fileName: fm.FileName, filePath: file.filePath,
-            linesCount: fm.LinesCount, processed: true,
-            fileNameWithoutExt: fm.FileNameWithoutExt,
-            fileStatics: { lineCount: fm.LinesCount, parsed: true, processedLineCount: fm.DoneParsing }
-        } as FileMaster;
-        await appService.fileMaster.addItem(fileDetails);
+        try {
+            let fileInfo = fileExtensions.getFileInfo(fm.FilePath);
+            // parse(fm.FilePath);
+            let fileType = fileTypeMaster.find((ftm: any) => ftm.fileTypeName.toLowerCase() === fm.FileTypeName.toLowerCase() && ftm.fileTypeExtension.toLowerCase() === fm.FileTypeExtension.toLowerCase());
+            let file = fileInfos.find((fm: any) => fm.name.toLowerCase() === fileInfo.name.toLowerCase() && fm.ext.toLowerCase() === fileInfo.ext.toLowerCase());
+            let fileDetails = {
+                _id: fm._id, pid: fm.ProjectId, fileTypeId: fileType._id, wid: fm.WorkspaceId,
+                fileName: fm.FileName, filePath: file.filePath,
+                linesCount: fm.LinesCount, processed: true,
+                fileNameWithoutExt: fm.FileNameWithoutExt,
+                fileStatics: { lineCount: fm.LinesCount, parsed: true, processedLineCount: fm.DoneParsing }
+            } as FileMaster;
+            await appService.fileMaster.addItem(fileDetails);
+        } catch (ex) {
+            console.log("Exception In :", fm);
+            console.log("Exception", ex);
+        }
     }
 };
 // add workspace master information
