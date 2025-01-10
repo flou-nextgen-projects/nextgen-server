@@ -30,7 +30,7 @@ ftmRouter.use("/", (request: Request, response: Response, next: NextFunction) =>
     });
 }).get("/:lid", function (request: Request, response: Response) {
     let lid: string = request.params.lid;
-    var promise = appService.fileTypeMaster.getDocuments({ lid: new Mongoose.Types.ObjectId(lid) });
+    var promise = appService.fileTypeMaster.getDocuments({ lid: new Mongoose.Types.ObjectId(lid) }, {}, {}, { fileTypeName: 1 });
     promise.then(docs => {
         response.status(200).json(docs).end();
     }).catch(err => {
