@@ -1,50 +1,65 @@
 import Express, { NextFunction, Request, Response } from "express"
 import { appService } from "../services/app-service";
 import { ObjectId } from "mongodb";
+
 const functionalFlowRouter = Express.Router();
 functionalFlowRouter.use("/", (request: Request, response: Response, next: NextFunction) => {
     next();
-}).get("/get-initial-data", async (request: Request, response: Response, next: NextFunction) => {
-    var pid = request.query.pid;
-    var jsonData: Array<any> = [];
-    var i: number = 0;
-    try {
-        var rootNode = { id: i++, parent: "#", text: "Epics", data: { type: "epicNode", level: 0 } };
-        var epicNameNode = { id: i++, parent: `${i - 2}`, text: "Banking App", data: { type: "epicNodeName", level: 99 } };
-        var featureNode = { id: i++, parent: `${i - 2}`, text: "Features", data: { type: "featureNode", level: 1 } };
-        jsonData.push(rootNode); jsonData.push(epicNameNode); jsonData.push(featureNode);
-        var projects = await appService.projectMaster.getAllDocuments();
-        for (var project of projects) {
-            var prjName = project.name;
-            var prjParentId: number = jsonData.find((d) => { return d.data.type === "featureNode" }).id;
-            var projectNode: any = { id: i++, parent: `${prjParentId}`, text: `${prjName}`, data: { pid: project._id, type: `prjNameNode-${project._id}`, level: 2 } };
-            jsonData.push(projectNode);
-
-            var functionNodeParent: number = jsonData.find((x) => { return x.data.type === `prjNameNode-${project._id}` }).id;
-            var functionNode: any = { id: i++, parent: `${functionNodeParent}`, text: "Functions(User Stories)", state: { selected: false }, data: { pid: project._id, type: `funcNode-${project._id}`, level: 3 } };
-            jsonData.push(functionNode);
-            response.status(200).json(jsonData).end();
-        }
-    } catch (err) {
-        response.status(500).json(jsonData).end();
-    }
 }).post("/get-workflows", async (request: Request, response: Response) => {
     var reqBody = request.body;
     var json: any = reqBody.jsonData;
     var pid = reqBody.pid;
+    var fileTypeId = reqBody.fileTypeId;
     var lastIndex: number = json.length;
     var j = json[lastIndex - 1].id;
-    var level3Ele = json.find((d: any) => { return (d.data.level === 3 && d.data.type === `funcNode-${pid}`) });
+    var fileType = await appService.fileTypeMaster.getItem({ _id: new ObjectId(fileTypeId) });
+    var level3Ele = json.find((d: any) => { return (d.data.level === 3 && d.data.type === `fileTypeNode-${fileType.fileTypeName}-${pid}`) });
     level3Ele.state.selected = true;
     try {
-        var workflows = await appService.fileMaster.getDocuments({ pid: new ObjectId(pid) });
+        var workflows = await appService.fileMaster.getDocuments({ pid: new ObjectId(pid), fileTypeId: new ObjectId(fileTypeId) });
         for (var workflow of workflows) {
-            var wName: string = `${workflow.fileNameWithoutExt}`;
+            var wName: string = `${workflow.fileNameWithoutExt || workflow.fileName}`;
             json.push({ id: ++j, parent: `${level3Ele.id}`, text: `${wName}`, data: { pid: workflow.pid, aid: workflow._id, type: "workflow", level: 4 } });
         }
         response.status(200).json(json).end();
     } catch (err) {
         response.status(500).json(err).end();
+    }
+}).get("/get-initial-data", async (request: Request, response: Response) => {
+    var pid = <string>request.query.pid;
+    var jsonData: Array<any> = [];
+    var i: number = 0;
+    try {
+        var rootNode = { id: i++, parent: "#", text: "Epics", state: { selected: true }, data: { type: "epicNode", level: 0 } };
+        var epicNameNode = { id: i++, parent: `${i - 2}`, text: "Banking App", state: { selected: true }, data: { type: "epicNodeName", level: 99 } };
+        var featureNode = { id: i++, parent: `${i - 2}`, text: "Features", state: { selected: true }, data: { type: "featureNode", level: 1 } };
+        jsonData.push(rootNode); jsonData.push(epicNameNode); jsonData.push(featureNode);
+        var project = await appService.projectMaster.getItem({ _id: new ObjectId(pid) });
+        let pipeLine = [
+            { $match: { lid: project.lid } },
+            { $lookup: { from: "fileMaster", localField: "_id", foreignField: "fileTypeId", as: "fileMaster" } },
+            { $unwind: { path: "$fileMaster", preserveNullAndEmptyArrays: true } },
+            { $group: { _id: "$fileTypeName", fileTypeName: { $first: "$fileTypeName" }, fileTypeId: { $first: "$_id" }, files: { $push: "$fileMaster" } } },
+            { $match: { fileTypeName: { $in: ["COBOL", "JCL", "PROC"] } } }
+        ];
+        let result = await appService.mongooseConnection.collection("fileTypeMaster").aggregate(pipeLine).toArray();
+        var name = project.name;
+        var parentId: number = jsonData.find((d) => { return d.data.type === "featureNode" }).id;
+        var projectNode: any = { id: i++, parent: `${parentId}`, text: `${name}`, state: { selected: true }, data: { pid: project._id, type: `pNameNode-${project._id}`, level: 2 } };
+        jsonData.push(projectNode);
+        for (const res of result) {
+            let parent = jsonData.find((d) => { return d.data.type === `pNameNode-${project._id}` }).id;
+            let fileTypeNode: any = {
+                id: i++, parent: `${parent}`, text: `${res.fileTypeName}`, state: { selected: true }, data: { pid: project._id, fileTypeId: res.fileTypeId, type: `fileTypeNode-${res.fileTypeName}-${project._id}`, level: 3 }
+            };
+            jsonData.push(fileTypeNode);
+            //  var functionNodeParent: number = jsonData.find((x) => { return x.data.type === `fileTypeNode-${res.fileTypeName}-${project._id}` }).id;
+            // var functionNode: any = { id: i++, parent: `${functionNodeParent}`, text: "Functions (User Stories)", state: { selected: false }, data: { pid: project._id, fileTypeId: res.fileTypeId, type: `funcNode-${res.fileTypeName}-${project._id}`, level: 4 } };
+            // jsonData.push(functionNode);
+        }
+        response.status(200).json(jsonData).end();
+    } catch (err) {
+        response.status(500).json(jsonData).end();
     }
 });
 module.exports = functionalFlowRouter;
