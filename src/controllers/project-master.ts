@@ -4,8 +4,8 @@ import { join, resolve, parse } from "path";
 import { appService } from "../services/app-service";
 import { FileContentMaster, FileMaster, LanguageMaster, ProcessingStatus, ProjectMaster, WorkspaceMaster } from "../models";
 import mongoose from "mongoose";
-import { extractProjectZip, Upload, FileExtensions } from "nextgen-utilities";
-import { existsSync, readFileSync } from "fs";
+import { extractProjectZip, Upload, FileExtensions, formatData, readJsonFile, sleep } from "nextgen-utilities";
+import { existsSync } from "fs";
 import { AppError } from "../common/app-error";
 import { prepareNodes, prepareLinks, prepareDotNetLinks } from "../models";
 
@@ -82,7 +82,9 @@ pmRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
             }
         }
         response.write(formatData({ message: "Starting extraction of project .zip" }), "utf-8", checkWrite);
+
         await sleep(500);
+
         extractProjectZip({ uploadDetails: uploadDetails }).then(async (extractPath: string) => {
             response.write(formatData({ message: "Zip extracted successfully" }), "utf-8", checkWrite);
 
@@ -109,16 +111,16 @@ pmRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
             let pJson = await readJsonFile(pmJsonPath);
             await addProject(allFiles.length, extractPath, uploadDetails, pJson, workspace);
 
-            response.write(formatData({ message: "Project and Workspace details added successfully." }), "utf-8", checkWrite);
+            response.write(formatData({ message: "Project and Workspace details added successfully" }), "utf-8", checkWrite);
             await sleep(200);
 
             // get file-master data            
             let fileJson: any[] = await readJsonFile(join(extractPath, "file-master", "file-master.json"));
-            response.write(formatData({ message: "Started adding file master details to DB." }), "utf-8", checkWrite);
+            response.write(formatData({ message: "Started adding file master details to repository" }), "utf-8", checkWrite);
 
             await addFileDetails(allFiles, languageMaster, fileJson);
 
-            response.write(formatData({ extra: { totalFiles: allFiles.length }, message: `File details are added to DB successfully` }), "utf-8", checkWrite);
+            response.write(formatData({ extra: { totalFiles: allFiles.length }, message: `File details are added to repository successfully` }), "utf-8", checkWrite);
 
             // process for network connectivity
             response.write(formatData({ message: "Started processing network connectivity." }), "utf-8", checkWrite);
@@ -133,7 +135,7 @@ pmRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
             response.end();
         }).catch((err: any) => {
             console.log(err);
-            response.end(formatData({ exception: { ...err } }));
+            response.end(formatData(err));
         });
     } catch (error) {
         response.end(formatData(error));
@@ -218,7 +220,6 @@ const addFileDetails = async (allFiles: string[], lm: LanguageMaster, fileMaster
     for (const fm of fileMasterJson) {
         try {
             let fileInfo = fileExtensions.getFileInfo(fm.FilePath);
-            // parse(fm.FilePath);
             let fileType = fileTypeMaster.find((ftm: any) => ftm.fileTypeName.toLowerCase() === fm.FileTypeName.toLowerCase() && ftm.fileTypeExtension.toLowerCase() === fm.FileTypeExtension.toLowerCase());
             let file = fileInfos.find((fm: any) => fm.name.toLowerCase() === fileInfo.name.toLowerCase() && fm.ext.toLowerCase() === fileInfo.ext.toLowerCase());
             let fileDetails = {
@@ -230,7 +231,6 @@ const addFileDetails = async (allFiles: string[], lm: LanguageMaster, fileMaster
             } as FileMaster;
             await appService.fileMaster.addItem(fileDetails);
         } catch (ex) {
-            console.log("Exception In :", fm);
             console.log("Exception", ex);
         }
     }
@@ -264,22 +264,6 @@ const addProject = async (totalObjects: number, extractPath: string, uploadDetai
         }
     }
 };
-const formatData = (json: any) => {
-    return `${JSON.stringify({ data: json })}\n`;
-}
-async function sleep(ms: number) {
-    return new Promise((resolve) => setTimeout(resolve, ms));
-}
-const readJsonFile = (path: string): Promise<any[] | any> => new Promise((resolve, reject) => {
-    if (!existsSync(path)) return reject({ message: "File does not exist", code: 404, path });
-    let json = readFileSync(path, 'utf8').toString();
-    try {
-        let jsonData = JSON.parse(json);
-        resolve(jsonData);
-    } catch (error) {
-        reject({ message: "Error parsing JSON", code: 500, error });
-    }
-});
 const processingStages: Array<{ stepName: string, stage?: string, tableName?: string, canReprocess: boolean, description: string }> = [{
     stepName: "check directory structure",
     stage: "confirmDirectoryStructure",

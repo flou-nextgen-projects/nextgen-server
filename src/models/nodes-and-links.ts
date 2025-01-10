@@ -1,4 +1,4 @@
-import Mongoose, { ObjectId } from "mongoose";
+import Mongoose from "mongoose";
 import { parse } from "path";
 import { FileMaster } from "./file-master";
 
@@ -78,7 +78,9 @@ export const prepareLinks = function (inputData: any[], nodes: Array<Node>): Arr
         fileData.CallExternals.forEach((externalFile: any) => {
             console.log("ExternalFile", externalFile);
             const targetNodeIndex = nodes.findIndex((node) => node.info.name === externalFile.FileName && node.fileType.toLowerCase() === externalFile.FileTypeName.toLowerCase());
-            if (targetNodeIndex === -1) return; // that means, this is missing file // TODO: check it later
+            // if targetNodeIndex === -1 - that means, this is missing file
+            // TODO: check it later
+            if (targetNodeIndex === -1) return;
             let exists = links.find((link) => link.source === index && link.target === targetNodeIndex);
             if (exists) return;
             links.push({
