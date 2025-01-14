@@ -126,6 +126,7 @@ pmRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
             response.write(formatData({ message: "Started processing network connectivity." }), "utf-8", checkWrite);
             let networkJson: any[] = await readJsonFile(join(extractPath, "member-references", "member-references.json"));
             await processNetworkConnectivity(languageMaster, workspace, networkJson);
+            await addMemberReference(networkJson);
 
             // process for file contents...
             response.write(formatData({ message: "Started processing file contents." }), "utf-8", checkWrite);
@@ -176,6 +177,15 @@ pmRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
     } catch (error) {
         response.status(500).json(error).end();
     }
+}).post("/add-member-ref", async function (request: Request, response: Response) {
+    try {
+        var path = "D:\\next-gen-projects\\nextgen-server\\extracted-projects\\KDOT_CI\\KDOT_CI\\member-references\\member-references.json";
+        let networkJson: any[] = await readJsonFile(path);
+        await addMemberReference(networkJson);
+        response.status(200).json().end();
+    } catch (error) {
+        response.status(400).send(error).end();
+    }
 });
 
 const processFileContents = async (wm: WorkspaceMaster) => {
@@ -210,6 +220,48 @@ const processNetworkConnectivity = async (lm: LanguageMaster, wm: WorkspaceMaste
         await collection.insertOne(link);
     }
 };
+
+const addMemberReference = async (memeberRefJson: any[]) => {
+    for (const member of memeberRefJson) {
+        let fileType = await appService.fileTypeMaster.getItem({ fileTypeName: member.FileTypeName });
+        try {
+            let callExts: Array<any> = [];
+            if (member.CallExternals.length > 0) {
+                for (const ce of member.CallExternals) {
+                    callExts.push({
+                        fid: ce._id,
+                        fileName: ce.FileName,
+                        callExternals: ce.CallExternals,
+                        wid: member.WorkspaceId,
+                        fileTypeName: ce.FileTypeName,
+                        pid: member.ProjectId
+                    });
+                }
+            }
+            let memberDetails = {
+                wid: member.WorkspaceId,
+                fid: member._id,
+                pid: member.ProjectId,
+                fileName: member.FileName,
+                filePath: member.FilePath,
+                processed: member.Processed,
+                fileType: member.FileTypeName,
+                fileTypeExt: member.FileTypeExtension,
+                fileTypeId: fileType._id,
+                slnid: member.SolutionId,
+                workflowStatus: member.WorkFlowStatus,
+                doneParsing: member.DoneParsing,
+                isNewVersion: member.IsNewVersion,
+                linesCount: member.LinesCount,
+                folderName: member.FolderName,
+                callExternals: callExts
+            } as any;
+            await appService.mongooseConnection.collection("memberReferences").insertOne(memberDetails);
+        } catch (ex) {
+            console.log("Exception", ex);
+        }
+    }
+}
 const addFileDetails = async (allFiles: string[], lm: LanguageMaster, fileMasterJson: any[]) => {
     const fileTypeMaster = await appService.fileTypeMaster.getDocuments({ lid: lm._id });
     let fileInfos = allFiles.map((file) => {
