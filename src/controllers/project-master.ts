@@ -66,10 +66,15 @@ pmRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
         }
     });
 }).get("/nodes-and-links/:pid", async function (request: Request, response: Response) {
-    let pid: string = <string>request.params.pid;
-    let project = await appService.projectMaster.findById(pid);
-    let nodesAndLinks = await appService.objectConnectivity.getDocuments({ wid: project.wid });
-    response.status(200).json(nodesAndLinks).end();
+    try {
+        let pid: string = <string>request.params.pid;
+        let project = await appService.projectMaster.findById(pid);
+        if (!project) response.status(404).json({ message: 'Project with provided ID not found' }).end();
+        let nodesAndLinks = await appService.objectConnectivity.getDocuments({ wid: project.wid });
+        response.status(200).json(nodesAndLinks).end();
+    } catch (error) {
+        response.status(500).json({ error }).end();
+    }
 }).post("/upload-project-bundle", async function (request: any, response: Response) {
     try {
         response.writeHead(200, { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', Connection: 'keep-alive', 'X-Accel-Buffering': 'no' });
@@ -86,11 +91,11 @@ pmRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
         await sleep(500);
 
         extractProjectZip({ uploadDetails: uploadDetails }).then(async (extractPath: string) => {
-            response.write(formatData({ message: "Zip extracted successfully" }), "utf-8", checkWrite);
+            response.write(formatData({ message: "Zip extracted successfully." }), "utf-8", checkWrite);
 
             await sleep(1000);
             // response for reading file details from extracted path
-            response.write(formatData({ message: "Reading file details from extracted path" }), "utf-8", checkWrite);
+            response.write(formatData({ message: "Reading file details from extracted path." }), "utf-8", checkWrite);
             let allFiles = fileExtensions.getAllFilesFromPath(join(extractPath, "project-files"), [], true);
 
             // read workspace-master.json file from workspace-master folder and create workspace
@@ -98,11 +103,11 @@ pmRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
             let wmJsonPath = join(extractPath, "workspace-master", "workspace-master.json");
 
             if (!existsSync(wmJsonPath)) {
-                response.write(formatData({ message: "Workspace master JSON not found, so using project master JSON for creating workspace" }), "utf-8", checkWrite);
+                response.write(formatData({ message: "Workspace master JSON not found, so using project master JSON for creating workspace." }), "utf-8", checkWrite);
                 response.end();
             }
             let wJson = await readJsonFile(wmJsonPath);
-            let workspace = await addWorkspace(wJson);
+            let workspace = await addWorkspace(extractPath, wJson);
 
             let languageMaster = await appService.languageMaster.getItem({ _id: workspace.lid });
 
@@ -111,12 +116,12 @@ pmRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
             let pJson = await readJsonFile(pmJsonPath);
             await addProject(allFiles.length, extractPath, uploadDetails, pJson, workspace);
 
-            response.write(formatData({ message: "Project and Workspace details added successfully" }), "utf-8", checkWrite);
+            response.write(formatData({ message: "Project and Workspace details added successfully." }), "utf-8", checkWrite);
             await sleep(200);
 
             // get file-master data            
             let fileJson: any[] = await readJsonFile(join(extractPath, "file-master", "file-master.json"));
-            response.write(formatData({ message: "Started adding file master details to repository" }), "utf-8", checkWrite);
+            response.write(formatData({ message: "Started adding file master details to repository." }), "utf-8", checkWrite);
 
             await addFileDetails(allFiles, languageMaster, fileJson);
 
@@ -126,10 +131,13 @@ pmRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
             response.write(formatData({ message: "Started processing network connectivity." }), "utf-8", checkWrite);
             let networkJson: any[] = await readJsonFile(join(extractPath, "member-references", "member-references.json"));
             await processNetworkConnectivity(languageMaster, workspace, networkJson);
+
+            response.write(formatData({ message: "Started process for adding references to repository." }), "utf-8", checkWrite);
             await addMemberReference(networkJson);
 
             // process for file contents...
-            response.write(formatData({ message: "Started processing file contents." }), "utf-8", checkWrite);
+            response.write(formatData({ message: "Started processing file contents to repository." }), "utf-8", checkWrite);
+
             await processFileContents(workspace);
 
             response.write(formatData({ message: "You can start loading project now." }), "utf-8", checkWrite);
@@ -141,11 +149,11 @@ pmRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
     } catch (error) {
         response.end(formatData(error));
     }
-}).get("/regenerate-network-connectivity/:wid", async function (request: Request, response: Response) {
+}).get("/reprocess-network-connectivity/:wid", async function (request: Request, response: Response) {
     let wid: string = <string>request.params.wid;
-    let workspaces = await appService.workspaceMaster.aggregate([{ $match: { _id: new Mongoose.Types.ObjectId(wid) } }]); // .findById(new Mongoose.Types.ObjectId(pid));
+    let workspaces = await appService.workspaceMaster.aggregate([{ $match: { _id: new Mongoose.Types.ObjectId(wid) } }]);
     let workspace = workspaces.shift();
-    let jsonPath = join(__dirname, "../", "../", "extracted-projects", 'cobol-wma-process');
+    let jsonPath = join(__dirname, "../", "../", "extracted-projects", 'KDOT-CI-NEW');
     let networkJson: any[] = await readJsonFile(join(jsonPath, "member-references", "member-references.json"));
     await processNetworkConnectivity(workspace.languageMaster, workspace, networkJson);
     response.status(200).json({ message: "Network connectivity is regenerated successfully." }).end();
@@ -165,12 +173,12 @@ pmRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
     response.status(200).json({ message: "File contents processed successfully." }).end();
 }).get("/reprocess-file-details/:wid", async function (request: Request, response: Response) {
     let wid: Mongoose.Types.ObjectId = new Mongoose.Types.ObjectId(<string>request.params.wid);
-    let extractPath: string = <string>request.query.extractPath;
     let workspace = await appService.workspaceMaster.findById(wid);
     if (!workspace) return response.status(404).end();
+    let extractPath: string = <string>workspace.dirPath;
     let languageMaster = await appService.languageMaster.getItem({ _id: workspace.lid });
-    let fmJson = await readJsonFile(extractPath);
-    let allFiles = fileExtensions.getAllFilesFromPath('E:\\nextgen-projects\\nextgen-server\\extracted-projects\\LocationService\\project-files');
+    let fmJson = await readJsonFile(join(extractPath, "file-master", "file-master.json"));
+    let allFiles = fileExtensions.getAllFilesFromPath(join(workspace.dirPath, "project-files"));
     try {
         await addFileDetails(allFiles, languageMaster, fmJson);
         response.status(200).json({ message: "File master details processed successfully" }).end();
@@ -203,7 +211,12 @@ const processFileContents = async (wm: WorkspaceMaster) => {
 };
 const processNetworkConnectivity = async (lm: LanguageMaster, wm: WorkspaceMaster, networkJson: any[]) => {
     let allFiles = await appService.fileMaster.aggregate([{ $match: { wid: wm._id } }]);
-    let nodes = prepareNodes(allFiles);
+    var networkFiles: any[] = [];
+    networkJson.forEach((nj) => {
+        let file = allFiles.find((d) => d._id.toString() === nj._id);
+        networkFiles.push(file);
+    });
+    let nodes = prepareNodes(networkFiles);
     let links: any[] = [];
     // we'll add else if for other languages if needed.
     if (lm.name === "C#") {
@@ -213,6 +226,7 @@ const processNetworkConnectivity = async (lm: LanguageMaster, wm: WorkspaceMaste
         links = prepareLinks(networkJson, nodes);
     }
     let collection = appService.mongooseConnection.collection("objectConnectivity");
+    await collection.deleteMany({ wid: wm._id })
     for (let node of nodes) {
         await collection.insertOne(node);
     }
@@ -220,39 +234,28 @@ const processNetworkConnectivity = async (lm: LanguageMaster, wm: WorkspaceMaste
         await collection.insertOne(link);
     }
 };
-
-const addMemberReference = async (memeberRefJson: any[]) => {
-    for (const member of memeberRefJson) {
+const addMemberReference = async (memberRefJson: any[]) => {
+    for (const member of memberRefJson) {
         let fileType = await appService.fileTypeMaster.getItem({ fileTypeName: member.FileTypeName });
         try {
             let callExts: Array<any> = [];
-            if (member.CallExternals.length > 0) {
-                for (const ce of member.CallExternals) {
-                    callExts.push({
-                        fid: ce._id,
-                        fileName: ce.FileName,
-                        callExternals: ce.CallExternals,
-                        wid: member.WorkspaceId,
-                        fileTypeName: ce.FileTypeName,
-                        pid: member.ProjectId
-                    });
-                }
+            for (const ce of member.CallExternals) {
+                callExts.push({
+                    fid: Mongoose.Types.ObjectId.createFromHexString(ce._id),
+                    fileName: ce.FileName,
+                    callExternals: ce.CallExternals,
+                    wid: Mongoose.Types.ObjectId.createFromHexString(member.WorkspaceId),
+                    fileTypeName: ce.FileTypeName,
+                    pid: Mongoose.Types.ObjectId.createFromHexString(member.ProjectId)
+                });
             }
             let memberDetails = {
-                wid: member.WorkspaceId,
-                fid: member._id,
-                pid: member.ProjectId,
+                wid: Mongoose.Types.ObjectId.createFromHexString(member.WorkspaceId),
+                fid: Mongoose.Types.ObjectId.createFromHexString(member._id),
+                pid: Mongoose.Types.ObjectId.createFromHexString(member.ProjectId),
                 fileName: member.FileName,
-                filePath: member.FilePath,
-                processed: member.Processed,
                 fileType: member.FileTypeName,
-                fileTypeExt: member.FileTypeExtension,
                 fileTypeId: fileType._id,
-                slnid: member.SolutionId,
-                workflowStatus: member.WorkFlowStatus,
-                doneParsing: member.DoneParsing,
-                isNewVersion: member.IsNewVersion,
-                linesCount: member.LinesCount,
                 folderName: member.FolderName,
                 callExternals: callExts
             } as any;
@@ -261,19 +264,20 @@ const addMemberReference = async (memeberRefJson: any[]) => {
             console.log("Exception", ex);
         }
     }
-}
+};
 const addFileDetails = async (allFiles: string[], lm: LanguageMaster, fileMasterJson: any[]) => {
     const fileTypeMaster = await appService.fileTypeMaster.getDocuments({ lid: lm._id });
     let fileInfos = allFiles.map((file) => {
         let info = fileExtensions.getFileInfo(file);
-        return { ...info, filePath: file }
+        let path = file.substring(file.indexOf("project-files\\") + 14);
+        return { ...info, filePath: file, path };
     });
 
     for (const fm of fileMasterJson) {
         try {
-            let fileInfo = fileExtensions.getFileInfo(fm.FilePath);
             let fileType = fileTypeMaster.find((ftm: any) => ftm.fileTypeName.toLowerCase() === fm.FileTypeName.toLowerCase() && ftm.fileTypeExtension.toLowerCase() === fm.FileTypeExtension.toLowerCase());
-            let file = fileInfos.find((fm: any) => fm.name.toLowerCase() === fileInfo.name.toLowerCase() && fm.ext.toLowerCase() === fileInfo.ext.toLowerCase());
+            let path = fm.FilePath.substring(fm.FilePath.indexOf("project-files\\") + 14);
+            let file = fileInfos.find((fm: any) => fm.path === path);
             let fileDetails = {
                 _id: fm._id, pid: fm.ProjectId, fileTypeId: fileType._id, wid: fm.WorkspaceId,
                 fileName: fm.FileName, filePath: file.filePath,
@@ -288,11 +292,11 @@ const addFileDetails = async (allFiles: string[], lm: LanguageMaster, fileMaster
     }
 };
 // add workspace master information
-const addWorkspace = async (wmJson: any) => {
+const addWorkspace = async (extractPath: string, wmJson: any) => {
     let languageMaster = await appService.languageMaster.getItem({ name: wmJson.LanguageName });
     if (!languageMaster) throw new AppError("Language does not exist", 404, { code: 404, name: wmJson.LanguageName });
 
-    let workspaceMaster = { _id: wmJson._id, name: wmJson.Name, lid: languageMaster._id, description: wmJson.Description } as WorkspaceMaster;
+    let workspaceMaster = { _id: wmJson._id, name: wmJson.Name, lid: languageMaster._id, description: wmJson.Description, dirPath: extractPath, physicalPath: extractPath } as WorkspaceMaster;
     // add workspace to database and return workspaceMaster
     let workspace = await appService.workspaceMaster.getItem({ name: workspaceMaster.name });
     if (!workspace) {

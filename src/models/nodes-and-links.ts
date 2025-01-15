@@ -27,7 +27,7 @@ export class Link {
     public srcFileId?: Mongoose.Types.ObjectId | string;
     public tarFileId?: Mongoose.Types.ObjectId | string;
 };
-const _createNode = function (fileData: FileMaster, originalIndex: number) {
+export const _createNode = function (fileData: FileMaster, originalIndex: number) {
     let image = fileData.fileTypeMaster?.img || "object-node.png";
     return {
         name: fileData.fileName, group: 1,
@@ -73,20 +73,18 @@ export const prepareDotNetLinks = function (inputData: any[], nodes: Array<Node>
 };
 export const prepareLinks = function (inputData: any[], nodes: Array<Node>): Array<Link> {
     const links: Array<Link> = [];
-    inputData.forEach((fileData, index) => {
+    inputData.forEach((fileData) => {
         if (!fileData.CallExternals || fileData.CallExternals.length <= 0) return;
         fileData.CallExternals.forEach((externalFile: any) => {
-            console.log("ExternalFile", externalFile);
-            const targetNodeIndex = nodes.findIndex((node) => node.info.name === externalFile.FileName && node.fileType.toLowerCase() === externalFile.FileTypeName.toLowerCase());
-            // if targetNodeIndex === -1 - that means, this is missing file
-            // TODO: check it later
-            if (targetNodeIndex === -1) return;
-            let exists = links.find((link) => link.source === index && link.target === targetNodeIndex);
+            const targetNodeIndex = nodes.findIndex((node) => node.id === externalFile._id);
+            const sourceNodeIndex = nodes.findIndex((node) => node.id === fileData._id);
+            if (targetNodeIndex === -1 || sourceNodeIndex === -1) return;
+            let exists = links.find((link) => link.source === sourceNodeIndex && link.target === targetNodeIndex);
             if (exists) return;
             links.push({
                 wid: Mongoose.Types.ObjectId.createFromHexString(fileData.WorkspaceId),
                 pid: Mongoose.Types.ObjectId.createFromHexString(fileData.ProjectId),
-                source: index,
+                source: sourceNodeIndex,
                 target: targetNodeIndex,
                 weight: 3, linkText: externalFile.FileName,
                 type: NodeLinkType.link

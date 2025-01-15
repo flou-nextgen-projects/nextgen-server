@@ -138,13 +138,12 @@ export default class BaseRepository<TSource extends EntityBase> implements IBase
         return this[methodName];
     };
     async aggregate(pipeLine?: Array<PipelineStage>): Promise<Array<TSource>> {
-        const pipelines = pipeLine && pipeLine.length > 0 ? pipeLine : [];
-        return await this.mongooseModel.aggregate(pipeLine).exec();
+        const pLine = pipeLine && pipeLine.length > 0 ? pipeLine : [];
+        return await this.mongooseModel.aggregate(pLine).exec();
     };
-    async aggregateOne({ body }: { body?: Array<PipelineStage> } = { body: [] }): Promise<TSource | null> {
-        const pipeLines: Array<PipelineStage> = typeof body === "object" && isEmpty(body) ? [] : body;
-        let docs = await this.mongooseModel.aggregate(pipeLines).exec();
-        return docs && docs.length > 0 ? docs.shift() : null;
+    async aggregateOne(pipeLine: Array<PipelineStage>): Promise<TSource | null> {        
+        let docs = await this.mongooseModel.aggregate(pipeLine).exec();
+        return docs.length > 0 ? docs.shift() : null;
     };
     get = async ({ query }: { query: any }): Promise<Array<TSource> | []> => {
         try {

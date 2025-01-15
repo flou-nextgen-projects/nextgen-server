@@ -7,7 +7,8 @@ class WorkspaceMaster extends EntityBase {
     public name: string;
     public description?: string;
     public dirPath?: string;
-    public languageMaster: LanguageMaster;
+    public physicalPath?: string;
+    public languageMaster?: LanguageMaster;
 }
 
 const WorkspaceMasterSchema: Schema<WorkspaceMaster> = new Schema({
@@ -22,6 +23,9 @@ const WorkspaceMasterSchema: Schema<WorkspaceMaster> = new Schema({
         required: false,
         type: String
     }, dirPath: {
+        required: false,
+        type: String
+    }, physicalPath: {
         required: false,
         type: String
     }
