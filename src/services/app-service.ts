@@ -56,6 +56,7 @@ class AppService {
     public cobolEntities = new BaseRepository<CobolEntities>({ collectionName: "cobolEntities", schema: CobolEntitiesSchema });
     public promptConfig = new BaseRepository<PromptConfigMaster>({ collectionName: "promptConfigMaster", schema: PromptConfigMasterSchema });
     public objectConnectivity = new BaseRepository<any>({ collectionName: "objectConnectivity", schema: new Mongoose.Schema<any>() });
+    public memberReferences = new BaseRepository<any>({ collectionName: "memberReferences", schema: new Mongoose.Schema<any>() });
 
     get = function <T extends EntityBase>(propertyName: string): BaseRepository<T> { return this[propertyName]; };
     dataSets = async (collections: Array<MultipleCollectionsConfig>): Promise<Array<{ collection: string, documents: any[] }>> => {

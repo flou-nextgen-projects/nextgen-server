@@ -33,7 +33,6 @@ class CommonHelper {
                 var basename = path.basename(oldPath);
                 if (!(basename.lastIndexOf(ext) === -1)) return;
                 var newPath = path.join(rootPath, dir, file).concat(ext);
-                console.log(newPath);
                 fs.renameSync(oldPath, newPath);
             });
         }

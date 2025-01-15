@@ -381,7 +381,6 @@ export default class CobolAdditionalHelperOne extends CobolAdditionalHelperTwo {
             assignStatement = assignStatement.replace("UT-S-", "").replace("UT-I-", "").replace("UT-R-", "").replace("UT-D-", "")
                 .replace("UR-S-", "").replace("UR-I-", "").replace("UR-R-", "").replace("UR-R-", "")
                 .replace("DA-S-", "").replace("DA-I-", "").replace("DA-R-", "").replace("DA-D-", "");
-            console.log(`${selectStatement} --#####-- ${assignStatement}`);
             dataSetStatements.set(selectStatement, assignStatement);
         });
         return dataSetStatements;
