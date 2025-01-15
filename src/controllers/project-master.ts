@@ -236,10 +236,14 @@ const processNetworkConnectivity = async (lm: LanguageMaster, wm: WorkspaceMaste
 };
 const addMemberReference = async (memberRefJson: any[]) => {
     for (const member of memberRefJson) {
-        let fileType = await appService.fileTypeMaster.getItem({ fileTypeName: member.FileTypeName });
+        // let fileType = await appService.fileTypeMaster.getItem({ fileTypeName: member.FileTypeName });
+        let fileType = await appService.fileTypeMaster.getItem({
+            fileTypeName: { $regex: new RegExp(`^${member.FileTypeName}$`, 'i') } // Use variable dynamically
+        });
         try {
             let callExts: Array<any> = [];
             for (const ce of member.CallExternals) {
+                if (!Mongoose.Types.ObjectId.isValid(ce._id)) continue;
                 callExts.push({
                     fid: Mongoose.Types.ObjectId.createFromHexString(ce._id),
                     fileName: ce.FileName,
