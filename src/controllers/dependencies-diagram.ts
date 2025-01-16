@@ -9,7 +9,7 @@ dependencyRouter.use("/", (request: Request, response: Response, next: NextFunct
     try {
         let fid = <string>request.query.fid;
         let pipeLine: Array<PipelineStage> = [
-            { $match: { fid: mongoose.Types.ObjectId.createFromHexString(fid) } },
+            { $match: { _id: mongoose.Types.ObjectId.createFromHexString(fid) } },
             { $lookup: { from: 'fileMaster', localField: 'fid', foreignField: '_id', as: 'fileMaster' } },
             { $unwind: { preserveNullAndEmptyArrays: true, path: "$fileMaster" } },
             { $lookup: { from: 'fileTypeMaster', localField: 'fileTypeId', foreignField: '_id', as: 'fileMaster.fileTypeMaster' } },

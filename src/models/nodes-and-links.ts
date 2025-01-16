@@ -33,10 +33,10 @@ export const _createNode = function (fileData: FileMaster, originalIndex: number
         name: fileData.fileName, group: 1,
         image, id: fileData._id.toString(),
         originalIndex, pid: fileData.pid, wid: fileData.wid,
-        fileId: fileData._id,
+        fileId: fileData._id.toString(),
         info: parse(fileData.filePath),
         fileType: fileData.fileTypeMaster.fileTypeName, type: NodeLinkType.node,
-        filePath: fileData.filePath,
+        filePath: fileData.filePath
     };
 };
 export const prepareNodes = function (inputData: any[] = []): Array<Node> {
@@ -76,8 +76,8 @@ export const prepareLinks = function (inputData: any[], nodes: Array<Node>): Arr
     inputData.forEach((fileData) => {
         if (!fileData.CallExternals || fileData.CallExternals.length <= 0) return;
         fileData.CallExternals.forEach((externalFile: any) => {
-            const targetNodeIndex = nodes.findIndex((node) => node.id === externalFile._id);
             const sourceNodeIndex = nodes.findIndex((node) => node.id === fileData._id);
+            const targetNodeIndex = nodes.findIndex((node) => node.id === externalFile._id);
             if (targetNodeIndex === -1 || sourceNodeIndex === -1) return;
             let exists = links.find((link) => link.source === sourceNodeIndex && link.target === targetNodeIndex);
             if (exists) return;

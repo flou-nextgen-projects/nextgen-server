@@ -236,9 +236,8 @@ const processNetworkConnectivity = async (lm: LanguageMaster, wm: WorkspaceMaste
 };
 const addMemberReference = async (memberRefJson: any[]) => {
     for (const member of memberRefJson) {
-        // let fileType = await appService.fileTypeMaster.getItem({ fileTypeName: member.FileTypeName });
         let fileType = await appService.fileTypeMaster.getItem({
-            fileTypeName: { $regex: new RegExp(`^${member.FileTypeName}$`, 'i') } // Use variable dynamically
+            fileTypeName: { $regex: new RegExp(`^${member.FileTypeName}$`, 'i') }
         });
         try {
             let callExts: Array<any> = [];
