@@ -9,7 +9,7 @@ dependencyRouter.use("/", (request: Request, response: Response, next: NextFunct
     try {
         let fid = <string>request.query.fid;
         let pipeLine: Array<PipelineStage> = [
-            { $match: { _id: mongoose.Types.ObjectId.createFromHexString(fid) } },
+            { $match: { fid: mongoose.Types.ObjectId.createFromHexString(fid) } },
             { $lookup: { from: 'fileMaster', localField: 'fid', foreignField: '_id', as: 'fileMaster' } },
             { $unwind: { preserveNullAndEmptyArrays: true, path: "$fileMaster" } },
             { $lookup: { from: 'fileTypeMaster', localField: 'fileTypeId', foreignField: '_id', as: 'fileMaster.fileTypeMaster' } },
@@ -22,7 +22,6 @@ dependencyRouter.use("/", (request: Request, response: Response, next: NextFunct
         // this will be a focal node and all node elements will be of type Node and links will be of type Link
         let links: Array<Link> = [];
         let nodes: Array<Node> = [];
-        let index = 0;
         let node: Node = _createNode(member.fileMaster, 0);
         nodes.push(node);
         for (const callExt of member.callExternals) {
@@ -55,10 +54,9 @@ const _expandCallExternals = async (callExt: Partial<FileMaster | any>, node: No
         if ((opt.nodes.findIndex(x => x.name == nd.name) >= 0)) return;
         opt.nodes.push(nd);
         opt.links.push({ source: node.originalIndex, target: nd.originalIndex, weight: 3, linkText: node.name, wid: nd.wid, pid: nd.pid } as any);
-        if (member.callExternals.length > 0) {
-            for (const callE of member.callExternals) {
-                await _expandCallExternals(callE, nd, { nodes: opt.nodes, links: opt.links, index: ++opt.index });
-            }
+        if (member.callExternals.length === 0) return;
+        for (const callE of member.callExternals) {
+            await _expandCallExternals(callE, nd, { nodes: opt.nodes, links: opt.links, index: ++opt.index });
         }
     }
 };

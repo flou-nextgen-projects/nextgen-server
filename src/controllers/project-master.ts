@@ -70,7 +70,7 @@ pmRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
         let pid: string = <string>request.params.pid;
         let project = await appService.projectMaster.findById(pid);
         if (!project) response.status(404).json({ message: 'Project with provided ID not found' }).end();
-        let nodesAndLinks = await appService.objectConnectivity.getDocuments({ wid: project.wid });
+        let nodesAndLinks = await appService.objectConnectivity.getDocuments({ wid: project.wid }, {}, {}, { _id: 1 });
         response.status(200).json(nodesAndLinks).end();
     } catch (error) {
         response.status(500).json({ error }).end();
