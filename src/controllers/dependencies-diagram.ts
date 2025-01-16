@@ -9,7 +9,7 @@ dependencyRouter.use("/", (request: Request, response: Response, next: NextFunct
     try {
         let fid = <string>request.query.fid;
         let pipeLine: Array<PipelineStage> = [
-            { $match: { _id: mongoose.Types.ObjectId.createFromHexString(fid) } },
+            { $match: { fid: mongoose.Types.ObjectId.createFromHexString(fid) } },
             { $lookup: { from: 'fileMaster', localField: 'fid', foreignField: '_id', as: 'fileMaster' } },
             { $unwind: { preserveNullAndEmptyArrays: true, path: "$fileMaster" } },
             { $lookup: { from: 'fileTypeMaster', localField: 'fileTypeId', foreignField: '_id', as: 'fileMaster.fileTypeMaster' } },
@@ -25,15 +25,21 @@ dependencyRouter.use("/", (request: Request, response: Response, next: NextFunct
         let index = 0;
         let node: Node = _createNode(member.fileMaster, 0);
         nodes.push(node);
+        console.log('1', index);
         for (const callExt of member.callExternals) {
+            console.log('2', index);
             // at this point we'll call separate function which will get called recursively
-            await _expandCallExternals(callExt, node, { nodes, links, index: 0 });
+            let result = await _expandCallExternals(callExt, node, { nodes, links, index: index });
+            if (result != false) {
+                index += 1;
+            }
+            console.log('3', index);
         }
         response.status(200).json({ nodes, links }).end();
     } catch (error) {
         return response.status(500).json(error).end();
     }
-});
+})
 
 const _expandCallExternals = async (callExt: Partial<FileMaster | any>, node: Node, opt: { nodes: Array<Node>, links: Array<Link>, index: number }) => {
     let pipeLine: Array<PipelineStage> = [
@@ -45,14 +51,29 @@ const _expandCallExternals = async (callExt: Partial<FileMaster | any>, node: No
     ];
     const member = await appService.memberReferences.aggregateOne(pipeLine);
     // if member is null, simply means - missing object
+    if (opt.index == 3) {
+        debugger;
+    }
     if (!member) {
+        // console.log('4',++opt.index);
+        console.log('5', opt.index);
         let nd = { originalIndex: ++opt.index, fileId: callExt._id, id: callExt._id, image: 'missing.png', group: 1, pid: callExt.pid, name: callExt.fileName, fileType: callExt.fileTypeName as any } as Node;
-        if ((opt.nodes.findIndex(x => x.name == nd.name) >= 0)) return;
+        if ((opt.nodes.findIndex(x => x.name == nd.name) >= 0)) {
+            opt.index -= 1;
+            return false;
+        };
         opt.nodes.push(nd);
         opt.links.push({ source: node.originalIndex, target: nd.originalIndex, weight: 3, linkText: node.name, wid: nd.wid, pid: nd.pid } as any);
     } else {
+        //  console.log('6',++opt.index);
+        console.log('7', opt.index);
         let nd: Node = _createNode(member.fileMaster, ++opt.index);
-        if ((opt.nodes.findIndex(x => x.name == nd.name) >= 0)) return;
+        if ((opt.nodes.findIndex(x => x.name == nd.name) >= 0)) {
+            console.log('empty', opt.index);
+            opt.index -= 1;
+            console.log('empty 2', opt.index);
+            return false;
+        }
         opt.nodes.push(nd);
         opt.links.push({ source: node.originalIndex, target: nd.originalIndex, weight: 3, linkText: node.name, wid: nd.wid, pid: nd.pid } as any);
         if (member.callExternals.length > 0) {
