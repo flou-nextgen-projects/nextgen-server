@@ -125,7 +125,7 @@ pmRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
 
             await addFileDetails(allFiles, languageMaster, fileJson);
 
-            response.write(formatData({ extra: { totalFiles: allFiles.length }, message: `File details are added to repository successfully` }), "utf-8", checkWrite);
+            response.write(formatData({ extra: { totalFiles: allFiles.length }, message: `File details are added successfully to repository.` }), "utf-8", checkWrite);
 
             // process for network connectivity
             response.write(formatData({ message: "Started processing network connectivity." }), "utf-8", checkWrite);

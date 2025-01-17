@@ -23,7 +23,7 @@ dependencyRouter.use("/", (request: Request, response: Response, next: NextFunct
         let links: Array<Link> = [];
         let nodes: Array<Node> = [];
         let node: Node = _createNode(member.fileMaster, 0);
-        nodes.push(node);
+        nodes.push({ ...node, image: 'focal-node.png' });
         for (const callExt of member.callExternals) {
             // at this point we'll call separate function which will get called recursively
             await _expandCallExternals(callExt, node, { nodes, links, index: 0 });
@@ -44,19 +44,22 @@ const _expandCallExternals = async (callExt: Partial<FileMaster | any>, node: No
     ];
     const member = await appService.memberReferences.aggregateOne(pipeLine);
     // if member is null, simply means - missing object
+    // if (!member) return;
     if (!member) {
         let nd = { originalIndex: ++opt.index, fileId: callExt._id, id: callExt._id, image: 'missing.png', group: 1, pid: callExt.pid, name: callExt.fileName, fileType: callExt.fileTypeName as any } as Node;
         if ((opt.nodes.findIndex(x => x.name == nd.name) >= 0)) return;
         opt.nodes.push(nd);
-        opt.links.push({ source: node.originalIndex, target: nd.originalIndex, weight: 3, linkText: node.name, wid: nd.wid, pid: nd.pid } as any);
+        let nodeIdx: number = opt.nodes.findIndex(x => x.name == nd.name);
+        opt.links.push({ source: node.originalIndex, target: nodeIdx, weight: 3, linkText: node.name, wid: nd.wid, pid: nd.pid } as any);
     } else {
-        let nd: Node = _createNode(member.fileMaster, ++opt.index);
-        if ((opt.nodes.findIndex(x => x.name == nd.name) >= 0)) return;
+        if ((opt.nodes.findIndex(x => x.name == member.fileMaster.fileName) >= 0)) return;
+        let nd: Node = _createNode(member.fileMaster, ++opt.index);        
         opt.nodes.push(nd);
-        opt.links.push({ source: node.originalIndex, target: nd.originalIndex, weight: 3, linkText: node.name, wid: nd.wid, pid: nd.pid } as any);
+        let nodeIdx: number = opt.nodes.findIndex(x => x.name == nd.name);
+        opt.links.push({ source: node.originalIndex, target: nodeIdx, weight: 3, linkText: node.name, wid: nd.wid, pid: nd.pid } as any);
         if (member.callExternals.length === 0) return;
         for (const callE of member.callExternals) {
-            await _expandCallExternals(callE, nd, { nodes: opt.nodes, links: opt.links, index: ++opt.index });
+            await _expandCallExternals(callE, nd, { nodes: opt.nodes, links: opt.links, index: opt.index });
         }
     }
 };
