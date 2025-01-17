@@ -6,8 +6,7 @@ let config: any = {
     // user: auth.username,
     // pass: auth.password,
     databaseName: configs.mongoDb,
-    mongoDbUrl: `mongodb://localhost:27000/yogesh-latest?ssl=false`
-    // mongoDbUrl: `mongodb://${auth.username}:${auth.password}@${configs.mongoHost}:${configs.mongoPort}/?retryWrites=true&loadBalanced=false&serverSelectionTimeoutMS=5000&connectTimeoutMS=10000&authSource=admin&authMechanism=SCRAM-SHA-256`
+    mongoDbUrl: `mongodb://${auth.username}:${auth.password}@${configs.mongoHost}:${configs.mongoPort}/?retryWrites=true&loadBalanced=false&serverSelectionTimeoutMS=5000&connectTimeoutMS=10000&authSource=admin&authMechanism=SCRAM-SHA-256`
 };
 const mongoDbOpt: Mongoose.ConnectOptions = {
     dbName: config.databaseName,
