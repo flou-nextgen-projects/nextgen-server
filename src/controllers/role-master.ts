@@ -13,5 +13,12 @@ roleMasterRouter.use("/", (request: Request, response: Response, next: NextFunct
     }, (err: Mongoose.Error) => {
         response.status(500).json({ message: err.message, exception: err }).end();
     });
+}).get('/', function (request: Request, response: Response) {
+    let $filter = JSON.parse(<string>request.query.filter || "{}");
+    appService.roleMaster.getDocuments($filter).then((result) => {
+        response.status(200).send(result).end();
+    }, (err: Mongoose.Error) => {
+        response.status(500).json({ message: err.message, exception: err }).end();
+    });
 });
 module.exports = roleMasterRouter;

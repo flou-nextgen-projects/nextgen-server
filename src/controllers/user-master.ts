@@ -1,3 +1,4 @@
+
 import Express, { Request, Response, Router, NextFunction } from "express";
 import Mongoose, { PipelineStage } from "mongoose";
 import { pick } from "lodash";
@@ -13,6 +14,7 @@ userRouter.use("/", (request: Request, response: Response, next: NextFunction) =
     next();
 }).post("/", function (request: Request, response: Response) {
     var user = request.body;
+    user.roleId = user.roleId || new Mongoose.Types.ObjectId('65d09dde2b488f3930d90264');
     var UserMaster = appService.userMaster.getModel();
     var newUser: any = new UserMaster(user);
     appService.userMaster.getItem({ userName: user.userName }).then((userResult: UserMaster) => {
@@ -23,34 +25,20 @@ userRouter.use("/", (request: Request, response: Response, next: NextFunction) =
             newUser.save().then(() => {
                 response.status(200).json({ message: "User registered successfully" }).end();
             }).catch((e: Mongoose.Error) => {
-                response.status(400).json({ code: 400, message: e.message, data: e });
+                response.status(400).json({ code: 400, message: e.message, data: e }).end();
             });
         }
     }).catch((error: Mongoose.Error) => {
-        response.status(400).json({ code: 400, message: error.message, data: error });
-    });
-}).post("/login", function (request: Request, response: Response) {
-    var body = pick(request.body, ['userName', 'password']);
-    var UserMaster: any = appService.userMaster.getModel();
-    UserMaster.findByCredentials(body.userName, body.password).then(async function (user: any) {
-        var token = UserMaster.generateAuthTokenOne(user);
-        await appService.userMaster.updateDocument({ _id: user._id }, { lastLoggedInDate: new Date() });
-        response.setHeader('Access-Control-Allow-Headers', 'x-token');
-        response.setHeader('Access-Control-Expose-Headers', 'x-token');
-        response.setHeader('x-token', token);
-        response.send().end();
-    }).catch(function (ex: Mongoose.Error) {
-        response.status(404).json({ exception: ex });
+        response.status(400).json({ code: 400, message: error.message, data: error }).end();
     });
 }).post("/upload", (request: Request, response: Response, next: NextFunction) => {
-
 }).get("/get-all", function (request: Request, response: Response) {
     var pipelineOne: Array<PipelineStage> = [{ $lookup: { from: "roleMaster", localField: "roleId", foreignField: "_id", as: "roleMaster" } }, { $unwind: { path: "$roleMaster", preserveNullAndEmptyArrays: true } }];
     appService.userMaster.aggregate(pipelineOne).then((users) => {
         users.forEach((d) => delete d.password);
-        response.status(200).send({ code: 200, data: users }).end();
+        response.status(200).json(users).end();
     }).catch((err) => {
-        response.status(404).json({ code: 404, message: err.message, data: err });
+        response.status(404).json(err).end();
     })
 }).get("/search-user", (request: Request, response: Response, next: NextFunction) => {
     let keyword: string = <string>request.query.keyword;
@@ -102,14 +90,14 @@ userRouter.use("/", (request: Request, response: Response, next: NextFunction) =
     }).catch(() => {
         response.status(500).end();
     });
-}).post("/update-profileImg", (request: Request, response: Response) => {
+}).post("/update-profile-img", (request: Request, response: Response) => {
     var { userId, imgId } = request.body;
     appService.userMaster.updateDocument({ _id: userId }, { $set: { imageId: imgId } }).then((result) => {
         response.status(200).send().end();
     }).catch((err) => {
         response.status(500).end();
     });
-}).post("/get-profileImg", (request: Request, response: Response) => {
+}).post("/get-profile-img", (request: Request, response: Response) => {
     var userId: string = request.body.userId;
     appService.userMaster.aggregate([
         { $match: { _id: ObjectId.createFromHexString(userId) } },
@@ -141,5 +129,6 @@ userRouter.use("/", (request: Request, response: Response, next: NextFunction) =
         response.status(500).end();
     }
 });
+
 
 module.exports = userRouter;

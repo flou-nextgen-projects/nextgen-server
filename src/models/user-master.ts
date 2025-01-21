@@ -17,7 +17,6 @@ class UserMaster extends EntityBase {
     public token: string;
     public roleId: Mongoose.Schema.Types.ObjectId | string;
     public lastLoggedInDate: Date;
-    public hubId: Mongoose.Schema.Types.ObjectId | string;
     public isActive: boolean;
     public imageId: Mongoose.Schema.Types.ObjectId;
 }
@@ -29,10 +28,9 @@ const UserMasterSchema: Mongoose.Schema<UserMaster> = new Mongoose.Schema<UserMa
     lastName: { type: String, select: true, required: true },
     email: { type: String, select: true, required: true },
     contact: { type: String, select: true, required: true },
-    roleId: { type: Mongoose.Types.ObjectId, select: true, required: true },
+    roleId: { type: Mongoose.Types.ObjectId, select: true, required: false },
     token: { type: String, required: false },
     lastLoggedInDate: { type: Date, required: false, default: null },
-    hubId: { type: Mongoose.Types.ObjectId, select: true, required: false },
     isActive: { type: Boolean, required: false, default: true },
     imageId: { type: Mongoose.Types.ObjectId, select: true, required: false },
 }, { toJSON: { useProjection: true }, toObject: { useProjection: true } });
