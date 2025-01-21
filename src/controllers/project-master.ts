@@ -194,7 +194,39 @@ pmRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
     } catch (error) {
         response.status(400).send(error).end();
     }
+}).post("/add-missing-objects", async function (request: Request, response: Response) {
+    try {
+        var path = "D:\\next-gen-projects\\nextgen-server\\extracted-projects\\KDOT_CI\\KDOT_CI\\missing-objects\\missing-objects.json";
+        let missingJson: any[] = await readJsonFile(path);
+        await addMissingObjects(missingJson);
+        response.status(200).json().end();
+    } catch (error) {
+        response.status(500).send().end();
+    }
 });
+
+const addMissingObjects = async (missingJson: any[]) => {
+    try {
+        let distinctMissingList: Array<any> = [];
+        missingJson.forEach((m) => {
+            if (m.FileName == null) return;
+            if (distinctMissingList.filter((x) => { return x.FileTypeName == m.FileTypeName && x.FileName == m.FileName }).length > 0) return;
+            distinctMissingList.push(m);
+        });
+        for (const m of distinctMissingList) {
+            if (m.FileName == null) continue;
+            let missingObjDetail = {
+                pid: Mongoose.Types.ObjectId.createFromHexString(m.ProjectId),
+                wid: Mongoose.Types.ObjectId.createFromHexString(m.WorkspaceId),
+                fileName: m.FileName,
+                fileTypeName: m.FileTypeName
+            } as any;
+            await appService.mongooseConnection.collection("missingObjects").insertOne(missingObjDetail);
+        }
+    } catch (error) {
+        console.log(error);
+    }
+};
 
 const processFileContents = async (wm: WorkspaceMaster) => {
     let projects = await appService.projectMaster.getDocuments({ wid: wm._id });
@@ -242,14 +274,14 @@ const addMemberReference = async (memberRefJson: any[]) => {
         try {
             let callExts: Array<any> = [];
             for (const ce of member.CallExternals) {
-                if (!Mongoose.Types.ObjectId.isValid(ce._id)) continue;
                 callExts.push({
-                    fid: Mongoose.Types.ObjectId.createFromHexString(ce._id),
+                    fid: Mongoose.Types.ObjectId.isValid(ce._id) ? Mongoose.Types.ObjectId.createFromHexString(ce._id) : 0,
                     fileName: ce.FileName,
                     callExternals: ce.CallExternals,
                     wid: Mongoose.Types.ObjectId.createFromHexString(member.WorkspaceId),
                     fileTypeName: ce.FileTypeName,
-                    pid: Mongoose.Types.ObjectId.createFromHexString(member.ProjectId)
+                    pid: Mongoose.Types.ObjectId.createFromHexString(member.ProjectId),
+                    missing: Mongoose.Types.ObjectId.isValid(ce._id) ? false : true
                 });
             }
             let memberDetails = {
