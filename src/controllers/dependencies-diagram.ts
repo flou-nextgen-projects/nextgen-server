@@ -23,11 +23,12 @@ dependencyRouter.use("/", (request: Request, response: Response, next: NextFunct
         let links: Array<Link> = [];
         let nodes: Array<Node> = [];
         let node: Node = _createNode(member.fileMaster, 0);
-        nodes.push({ ...node, image: 'focal-node.png' });
+        nodes.push({ ...node, image: 'focal-node.png', color: member.fileMaster.fileTypeMaster.color });
         for (const callExt of member.callExternals) {
             // at this point we'll call separate function which will get called recursively
             await _expandCallExternals(callExt, node, { nodes, links, index: 0 });
         }
+        nodes.forEach((d, i) => { d.originalIndex = i; });
         response.status(200).json({ nodes, links }).end();
     } catch (error) {
         return response.status(500).json(error).end();
@@ -44,7 +45,7 @@ const _expandCallExternals = async (callExt: Partial<FileMaster | any>, node: No
     ];
     const member = await appService.memberReferences.aggregateOne(pipeLine);
     // if member is null, simply means - missing object
-    // if (!member) return;
+    if (!member) return;
     if (!member) {
         let nd = { originalIndex: ++opt.index, fileId: callExt._id, id: callExt._id, image: 'missing.png', group: 1, pid: callExt.pid, name: callExt.fileName, fileType: callExt.fileTypeName as any } as Node;
         if ((opt.nodes.findIndex(x => x.name == nd.name) >= 0)) return;
@@ -53,7 +54,7 @@ const _expandCallExternals = async (callExt: Partial<FileMaster | any>, node: No
         opt.links.push({ source: node.originalIndex, target: nodeIdx, weight: 3, linkText: node.name, wid: nd.wid, pid: nd.pid } as any);
     } else {
         if ((opt.nodes.findIndex(x => x.name == member.fileMaster.fileName) >= 0)) return;
-        let nd: Node = _createNode(member.fileMaster, ++opt.index);        
+        let nd: Node = _createNode(member.fileMaster, ++opt.index);
         opt.nodes.push(nd);
         let nodeIdx: number = opt.nodes.findIndex(x => x.name == nd.name);
         opt.links.push({ source: node.originalIndex, target: nodeIdx, weight: 3, linkText: node.name, wid: nd.wid, pid: nd.pid } as any);

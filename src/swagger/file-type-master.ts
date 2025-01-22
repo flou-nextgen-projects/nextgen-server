@@ -13,7 +13,7 @@
 
 /**
  * @swagger
- * /:
+ * /backend/main/api/file-type-master/:
  *   post:
  *     security:
  *       - bearerAuth: [] 

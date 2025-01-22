@@ -2,7 +2,7 @@ import express, { NextFunction, Request, Response } from "express";
 import Cors from 'cors';
 import { json, urlencoded } from 'body-parser';
 var morgan = require('morgan');
-import { clientAuth } from './middleware/client-auth';
+// import { clientAuth } from './middleware/client-auth';
 import http2Express from 'http2-express-bridge';
 const swaggerJsdoc = require('swagger-jsdoc');
 const swaggerUi = require('swagger-ui-express');
@@ -25,6 +25,7 @@ export const setAppRoutes = function (app: express.Application) {
     app.get('/', function (request: Request, response: Response) {
         response.status(200).json({ msg: 'Server app is up and running!.' }).end();
     });
+    
     app.use((err: any, req: Request, res: Response, next: Function) => {
         if (res.headersSent) return next();
         res.status(err.httpStatusCode || 500).render('UnknownError');
@@ -36,6 +37,9 @@ export const setAppRoutes = function (app: express.Application) {
         next();
     });
 
+    let authRouter = require("./middleware/client-auth");
+    app.use("/backend/main/api/*", authRouter);
+
     var combined = morgan("combined");
     app.use(combined);
 
@@ -43,10 +47,10 @@ export const setAppRoutes = function (app: express.Application) {
         response.status(200).json({ msg: "OK", data: { id: request.params } }).end();
     });
     const router = require("./routes/default.routes");
-    app.use(/backend\/main\/api\/defaults\/.*/g, router);
-    // app.use("/backend/main/api/*", clientAuth);
+    app.use(/backend\/main\/api\/defaults\/.*/g, router);    
     var homeRouter = require('./controllers/home');
     var userRouter = require("./controllers/user-master");
+    var loginRouter = require("./controllers/user-login");
     var roleMasterRouter = require("./controllers/role-master");
     var pmRouter = require("./controllers/project-master");
     var langRouter = require("./controllers/language-master");
@@ -65,7 +69,8 @@ export const setAppRoutes = function (app: express.Application) {
     var dependencyRouter = require('./controllers/dependencies-diagram');
     require("./kafka-services/kafka-consumer"); // no need to have routes
     app.use("/check/api/home", homeRouter);
-    app.use("/backend/api/user-master", userRouter);
+    app.use("/backend/api/user-login", loginRouter);
+    app.use("/backend/main/api/user-master", userRouter);
     app.use("/backend/main/api/role-master", roleMasterRouter);
     app.use("/backend/main/api/language-master", langRouter);
     app.use("/backend/main/api/workspace-master", workspaceRouter);
@@ -89,12 +94,14 @@ export const setAppRoutes = function (app: express.Application) {
     var cobolProcessRouter = require("./jobs/process-cobol-project");
     var startProcessRouter = require("./jobs/start-processing");
     app.use("/backend/jobs/api/cobol-process", cobolProcessRouter);
-    app.use("/backend/jobs/api/project", startProcessRouter);
+    app.use("/backend/jobs/api/csharp-process", startProcessRouter);
 
     // GenAI routes
     // all routes are added into gen-ai.routes file under routes folder
+
     let genAiRoutes = require("./routes/gen-ai.routes");
     app.use("/backend/main/api", genAiRoutes);
+
     app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
         if (err instanceof AppError) {
             res.status(err.statusCode).json({
@@ -114,11 +121,11 @@ export const setAppRoutes = function (app: express.Application) {
         definition: {
             openapi: "3.0.1",
             info: {
-                title: "floKapture Backend Application API",
+                title: "NextGen Backend Application APIs",
                 version: "1.0.0"
             },
             basePath: "/",
-            servers: [{ url: "/flou-job-api" }, { url: "/" }],
+            servers: [{ url: "/" }],
             components: {
                 securitySchemes: {
                     bearerAuth: {

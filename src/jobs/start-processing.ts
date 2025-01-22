@@ -21,7 +21,7 @@ startProcessRouter.use("/", (_: Request, __: Response, next: NextFunction) => {
     let wm = workspaces.shift();
     if (wm.languageMaster.name === "C#") {
         const processCsharpProjects: ProcessCsharpProjects = new ProcessCsharpProjects();
-        processCsharpProjects.startProcessing(wm._id.toString());
+        processCsharpProjects.processProject(wm._id.toString());
         response.status(200).json({ message: "Project processing has been started!" }).end();
     } else if (wm.languageMaster.name === "COBOL") {
         executeProcessActionsOnyByOne(project._id);
