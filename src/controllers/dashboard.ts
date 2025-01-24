@@ -46,7 +46,8 @@ dashBoardRouter.use("/", (request: Request, response: Response, next: NextFuncti
         response.status(500).json(err).end();
     });
 }).get("/get-missing-objects", (request: Request, response: Response) => {
-    appService.mongooseConnection.collection("missingObjects").find().toArray().then((data: any) => {
+    let pid = <string>request.query.pid;
+    appService.mongooseConnection.collection("missingObjects").find({ pid: new ObjectId(pid) }).toArray().then((data: any) => {
         response.status(200).json(data).end();
     }).catch(() => {
         response.status(500).send().end();

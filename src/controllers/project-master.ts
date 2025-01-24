@@ -196,7 +196,7 @@ pmRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
     }
 }).post("/add-missing-objects", async function (request: Request, response: Response) {
     try {
-        var path = "D:\\next-gen-projects\\nextgen-server\\extracted-projects\\KDOT_CI\\KDOT_CI\\missing-objects\\missing-objects.json";
+        var path = "D:\\next-gen-projects\\nextgen-server\\extracted-projects\\General Insurance\\missing-objects\\missing-objects.json";
         let missingJson: any[] = await readJsonFile(path);
         await addMissingObjects(missingJson);
         response.status(200).json().end();
