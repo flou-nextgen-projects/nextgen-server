@@ -60,7 +60,6 @@ bsRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
             if( element.callExternals.filter((x: any) => x.fid.toString() === fid).length>0){
                 calledBy.push(element);
             }
-            
         }
         response.status(200).json(calledBy).end();
     } catch (error) {
