@@ -29,7 +29,7 @@ export class Link {
 };
 export const _createNode = function (fileData: FileMaster, originalIndex: number) {
     let image = fileData.fileTypeMaster?.img || "object-node.png";
-    let color = fileData.fileTypeMaster.color || '#c0c0c0';
+    let color = fileData.fileTypeMaster?.color || '#c0c0c0';
     return {
         name: fileData.fileName, group: 1,
         image, id: fileData._id.toString(),

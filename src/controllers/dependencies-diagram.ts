@@ -2,6 +2,8 @@ import Express, { Request, Response, Router, NextFunction } from "express";
 import { appService } from "../services/app-service";
 import { FileMaster, Link, Node, _createNode } from "../models";
 import mongoose, { PipelineStage } from "mongoose";
+import { ObjectId } from "mongodb";
+
 const dependencyRouter: Router = Express.Router();
 dependencyRouter.use("/", (request: Request, response: Response, next: NextFunction) => {
     next();
@@ -28,6 +30,7 @@ dependencyRouter.use("/", (request: Request, response: Response, next: NextFunct
             // at this point we'll call separate function which will get called recursively
             await _expandCallExternals(callExt, node, { nodes, links, index: 0 });
         }
+        await _expandParentCalls({ nodes, links, index: nodes.length + 1 }, node);
         nodes.forEach((d, i) => { d.originalIndex = i; });
         response.status(200).json({ nodes, links }).end();
     } catch (error) {
@@ -64,5 +67,29 @@ const _expandCallExternals = async (callExt: Partial<FileMaster | any>, node: No
         }
     }
 };
+
+const _expandParentCalls = async (opt: { nodes: Array<Node>, links: Array<Link>, index: number }, node: Node) => {
+    try {
+        let members = await appService.memberReferences.getDocuments({ pid: new ObjectId(node.pid) });
+        for (const element of members) {
+            if (element.callExternals.length == 0) continue;
+            if (element.callExternals.filter((x: any) => { return x.fid.toString() == node.fileId.toString() }).length > 0) {
+                let list = element.callExternals.find((x: any) => { return x.fid.toString() == node.fileId.toString() });
+                var fileMaster = await appService.fileMaster.aggregate([
+                    { $match: { _id: new ObjectId(element.fid) } },
+                    { $lookup: { from: 'fileTypeMaster', localField: 'fileTypeId', foreignField: '_id', as: 'fileTypeMaster' } },
+                    { $unwind: { preserveNullAndEmptyArrays: true, path: "$fileTypeMaster" } }
+                ]);
+                var parentNode: Node = _createNode(fileMaster[0], ++opt.index);
+                opt.nodes.push(parentNode);
+                let parentIndex = opt.nodes.findIndex(y => y.name == parentNode.name);
+                let nodeIdx: number = opt.nodes.findIndex(x => x.name == node.name);
+                opt.links.push({ source: parentIndex, target: nodeIdx, weight: 3, linkText: node.name, wid: node.wid, pid: node.pid } as any);
+            }
+        }
+    } catch (error) {
+        console.log(error);
+    }
+}
 
 module.exports = dependencyRouter;
