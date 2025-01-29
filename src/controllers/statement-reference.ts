@@ -51,9 +51,7 @@ const _expandBlock = async (callExt: any, sps: string, options: { progress: Prog
     statements.forEach((d: any) => { d.originalLine = `${s}${d.originalLine}`; });
     callExt.children = statements;
     for (const statement of callExt.children) {
-        if (!statement.references || statement.references.length === 0) {
-            continue;
-        }
+        if (!statement.references || statement.references.length === 0) continue;
         let sps: string = statement.originalLine.match(/^[\s]+/gi)?.shift() || " ";
         options.progress.tick({ done: ++options.counter });
         await _expandBlock(statement, sps, options);

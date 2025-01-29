@@ -80,7 +80,7 @@ const _expandParentCalls = async (opt: { nodes: Array<Node>, links: Array<Link>,
         for (const element of members) {
             if (element.callExternals.length == 0) continue;
             if (element.callExternals.filter((x: any) => { return x.fid.toString() == node.fileId.toString() }).length > 0) {
-                let list = element.callExternals.find((x: any) => { return x.fid.toString() == node.fileId.toString() });
+                // let list = element.callExternals.find((x: any) => { return x.fid.toString() == node.fileId.toString() });
                 var fileMaster = await appService.fileMaster.aggregate([
                     { $match: { _id: new ObjectId(element.fid) } },
                     { $lookup: { from: 'fileTypeMaster', localField: 'fileTypeId', foreignField: '_id', as: 'fileTypeMaster' } },
