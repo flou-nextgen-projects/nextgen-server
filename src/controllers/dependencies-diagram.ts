@@ -54,9 +54,15 @@ const _expandCallExternals = async (callExt: Partial<FileMaster | any>, node: No
         if ((opt.nodes.findIndex(x => x.name == nd.name) >= 0)) return;
         opt.nodes.push(nd);
         let nodeIdx: number = opt.nodes.findIndex(x => x.name == nd.name);
+
         opt.links.push({ source: node.originalIndex, target: nodeIdx, weight: 3, linkText: node.name, wid: nd.wid, pid: nd.pid } as any);
     } else {
-        if ((opt.nodes.findIndex(x => x.name == member.fileMaster.fileName) >= 0)) return;
+        if ((opt.nodes.findIndex(x => x.name == member.fileMaster.fileName) >= 0)) {
+            let existNode: any = opt.nodes.find((x) => {return x.name == member.fileMaster.fileName});
+           let existsIndex:number=opt.nodes.findIndex(x => x.name == member.fileMaster.fileName);
+            opt.links.push({ source: node.originalIndex, target: existsIndex, weight: 3, linkText: node.name, wid: existNode.wid, pid: existNode.pid } as any);
+            return;
+        }
         let nd: Node = _createNode(member.fileMaster, ++opt.index);
         opt.nodes.push(nd);
         let nodeIdx: number = opt.nodes.findIndex(x => x.name == nd.name);
