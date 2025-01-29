@@ -57,13 +57,13 @@ UserMasterSchema.methods.generateAuthToken = function () {
     var userMaster = this.toJSON();
     delete userMaster.password;
     userMaster._id = userMaster._id.toHexString();
-    var token = Jwt.sign({ user: userMaster }, config.secretKey).toString();
+    var token = Jwt.sign({ user: userMaster }, config.secretKey, { expiresIn: '2h' }).toString();
     return token;
 };
 UserMasterSchema.statics.generateAuthTokenOne = function (userMaster: any) {
     delete userMaster.password;
     userMaster._id = userMaster._id.toHexString();
-    var token = Jwt.sign({ user: userMaster }, config.secretKey).toString();
+    var token = Jwt.sign({ user: userMaster }, config.secretKey, { expiresIn: '2h' }).toString();
     return token;
 }
 

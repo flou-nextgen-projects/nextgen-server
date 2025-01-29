@@ -51,21 +51,21 @@ export const prepareNodes = function (inputData: any[] = []): Array<Node> {
 export const prepareDotNetLinks = function (inputData: any[], nodes: Array<Node>) {
     const links: Array<Link> = [];
     inputData.forEach((fileData) => {
-        if (!fileData.MethodCallers || fileData.MethodCallers.length <= 0) return;
-        fileData.MethodCallers.forEach((callFile: any) => {
-            const sourceNodeIndex = nodes.findIndex((node) => node.fileId.toString() === callFile.FileId);
-            const targetNodeIndex = nodes.findIndex((node) => node.fileId.toString() === fileData.FileId);
+        if (!fileData.callers || fileData.callers.length <= 0) return;
+        fileData.callers.forEach((callFile: any) => {
+            const sourceNodeIndex = nodes.findIndex((node) => node.fileId.toString() === callFile.fid);
+            const targetNodeIndex = nodes.findIndex((node) => node.fileId.toString() === fileData.fid);
             if (sourceNodeIndex === -1 || targetNodeIndex === -1) return;
-            if (callFile.FileId === fileData.FileId) return;
+            if (callFile.fid === fileData.fid) return;
             let exists = links.find((link) => link.target === targetNodeIndex && link.source === sourceNodeIndex);
             if (exists) return;
             links.push({
-                wid: fileData.WorkspaceId,
-                pid: Mongoose.Types.ObjectId.createFromHexString(callFile.ProjectId),
+                wid: fileData.wid,
+                pid: Mongoose.Types.ObjectId.createFromHexString(callFile.pid),
                 source: sourceNodeIndex, target: targetNodeIndex, weight: 3,
-                srcFileId: Mongoose.Types.ObjectId.createFromHexString(callFile.FileId),
-                tarFileId: Mongoose.Types.ObjectId.createFromHexString(fileData.FileId),
-                linkText: callFile.CallingMethod,
+                srcFileId: Mongoose.Types.ObjectId.createFromHexString(callFile.fid),
+                tarFileId: Mongoose.Types.ObjectId.createFromHexString(fileData.fid),
+                linkText: callFile.callingMethod,
                 type: NodeLinkType.link
             });
         });
