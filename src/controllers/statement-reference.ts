@@ -37,14 +37,18 @@ statementRouter.use("/", (request: Request, response: Response, next: NextFuncti
         }
         let sps: string = statement.originalLine.match(/^[\s]+/gi)?.shift() || " ";
         progress.tick({ done: counter, length: 100 });
-        await _expandBlock(statement, sps, { progress, counter });
+        await _expandBlock(statement, sps, { progress, counter, expanded: [] });
     }
     progress.terminate();
     winstonLogger.info(`There were total '${progress.curr}' call/s made to expand this workflow.`);
     response.status(200).json(statements).end();
 });
-const _expandBlock = async (callExt: any, sps: string, options: { progress: ProgressBar, counter: number }) => {
+const _expandBlock = async (callExt: any, sps: string, options: { progress: ProgressBar, counter: number, expanded: Array<string> }) => {
     const statements: any[] = await _getBlock(callExt.references.shift().memberId);
+    let method = statements.find((d) => d.indicators.includes(5) && d.methodId);
+    let methodId = method._id.toString();
+    if (options.expanded.includes(methodId)) return;
+    options.expanded.push(methodId);
     let original = statements[0].originalLine;
     let sp: string = original.match(/^[\s]+/gi).shift();
     let s = sps.replace(sp, "");
