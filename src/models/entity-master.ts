@@ -6,6 +6,9 @@ class EntityMaster extends EntityBase {
     public entityName: string;
     public pid: Mongoose.Types.ObjectId | string;
     public fid: Mongoose.Types.ObjectId | string;
+    public type: string;
+    public description: string;
+    public attributes: Array<any>;
 }
 const EntityMasterSchema: Mongoose.Schema<EntityMaster> = new Mongoose.Schema({
     entityName: {
@@ -14,14 +17,24 @@ const EntityMasterSchema: Mongoose.Schema<EntityMaster> = new Mongoose.Schema({
         type: Mongoose.Schema.Types.ObjectId, required: true
     }, fid: {
         type: Mongoose.Schema.Types.ObjectId, required: true
+    },
+    type: {
+        type: String, required: false
+    },
+    description: {
+        type: String, required: false
+    },
+    attributes: {
+        type: [], required: false
     }
+
 });
 class DataDependency extends EntityBase {
     public entity: string;
     public attributes: string;
     public pid: Mongoose.Types.ObjectId | string;
     public fid: Mongoose.Types.ObjectId | string;
-    public fileMaster?: FileMaster;    
+    public fileMaster?: FileMaster;
 }
 const DataDependencySchema: Mongoose.Schema<DataDependency> = new Mongoose.Schema({
     pid: {

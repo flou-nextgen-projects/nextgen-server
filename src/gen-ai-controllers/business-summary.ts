@@ -1,6 +1,7 @@
 import Express, { Request, Response, Router, NextFunction } from "express";
 import { appService } from "../services/app-service";
 import { ObjectId } from "mongodb";
+import Mongoose from "mongoose";
 
 const bsRouter: Router = Express.Router();
 bsRouter.use("/", (request: Request, response: Response, next: NextFunction) => {
@@ -57,11 +58,60 @@ bsRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
         let members = await appService.memberReferences.getAllDocuments();
         for (const element of members) {
             if (element.callExternals.length == 0) continue;
-            if( element.callExternals.filter((x: any) => x.fid.toString() === fid).length>0){
+            if (element.callExternals.filter((x: any) => x.fid.toString() === fid).length > 0) {
                 calledBy.push(element);
             }
         }
         response.status(200).json(calledBy).end();
+    } catch (error) {
+        response.status(500).send().end();
+    }
+}).post("/extract-variables", (request: Request, response: Response) => {
+    try {
+        var reqBody = request.body;
+        let variables: Array<any> = reqBody.data.SqlEntities.concat(reqBody.data.FlatEntities).concat(reqBody.data.VSAMEntities);
+        let pid = reqBody.pid;
+        let fid = reqBody.fid;
+        variables.forEach(async (variable) => {
+            const entityName: string = variable.entity;
+            // const description: string = variable.description;
+            const document: any = {
+                entityName: entityName,
+                // description: description,
+                fid: Mongoose.Types.ObjectId.createFromHexString(fid),
+                pid: Mongoose.Types.ObjectId.createFromHexString(pid),
+                type: variable.type,
+                attributes: variable.attributes
+            };
+            await appService.entityMaster.addItem(document);
+        });
+        response.status(200).json("Data saved successfully.").end();
+    } catch (error) {
+        response.status(500).json(error).end();
+    }
+}).get("/get-data-element-tree/:fid", async (request: Request, response: Response) => {
+    try {
+        let fid = request.params.fid;
+        let entityList = await appService.entityMaster.getDocuments({ fid: new Mongoose.Types.ObjectId(fid) });
+        let jsonData: Array<any> = [];
+        let i: number = 0;
+        if (entityList.length == 0) {
+            response.status(200).json(jsonData).end();
+        } else {
+            let rootNode = { id: i++, parent: "#", text: "Entities", state: { selected: true } };
+            jsonData.push(rootNode);
+            for (const entity of entityList) {
+                let entityNode = { id: i++, parent: 0, text: entity.entityName, state: { selected: false } };
+                if (entity.attributes && entity.attributes.length > 0) {
+                    for (const attribute of entity.attributes) {
+                        let attributeNode = { id: i++, parent: entityNode.id, text: attribute, state: { selected: false } };
+                        jsonData.push(attributeNode);
+                    }
+                }
+                jsonData.push(entityNode);
+            }
+            response.status(200).json(jsonData).end();
+        }
     } catch (error) {
         response.status(500).send().end();
     }
