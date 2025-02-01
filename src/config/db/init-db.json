@@ -7,7 +7,7 @@
                 "fileTypeName": "PROC",
                 "fileTypeExtension": ".proc",
                 "delimiter": ".",
-                "color": "#f84f9a",
+                "color": "#ffcc00",
                 "folderNames": [
                     "proc",
                     "PROC"
@@ -35,7 +35,7 @@
                 "fileTypeName": "BMS",
                 "fileTypeExtension": ".bms",
                 "delimiter": ".",
-                "color": "#c242cc",
+                "color": "#ccffcc",
                 "folderNames": [
                     "bms",
                     "BMS"
@@ -48,7 +48,7 @@
                 "fileTypeName": "SQL",
                 "fileTypeExtension": ".sql",
                 "delimiter": ".",
-                "color": "#ff9999",
+                "color": "#00ffff",
                 "folderNames": [
                     "sql",
                     "SQL",
@@ -89,7 +89,7 @@
                 "fileTypeName": "COBOL",
                 "fileTypeExtension": ".cbl",
                 "delimiter": ".",
-                "color": "#43CCA7",
+                "color": "#33cccc",
                 "folderNames": [
                     "source",
                     "cobol",
@@ -104,7 +104,7 @@
                 "fileTypeName": "JCL",
                 "fileTypeExtension": ".jcl",
                 "delimiter": ".",
-                "color": "#5E7C96",
+                "color": "#5e7c96",
                 "folderNames": [
                     "proto",
                     "jcl",
@@ -158,7 +158,7 @@
                 "fileTypeName": "SQL",
                 "fileTypeExtension": ".sql",
                 "delimiter": "",
-                "color": "#FFF78C",
+                "color": "#00ffff",
                 "folderNames": [
                     "plsql"
                 ],

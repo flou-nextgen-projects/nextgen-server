@@ -22,23 +22,25 @@ dependencyRouter.use("/", (request: Request, response: Response, next: NextFunct
         // if member reference is present, then we need to get all call externals and loop through all elements        
         // since, this data is going for d3 network, we'll prepare elements in that way
         // this will be a focal node and all node elements will be of type Node and links will be of type Link
+        let skipTypes: Array<string> = ["BMS", "COPYBOOK", "INCLUDE", "InputLib"].map((d) => d.toLowerCase());
         let links: Array<Link> = [];
         let nodes: Array<Node> = [];
         let node: Node = _createNode(member.fileMaster, 0);
-        nodes.push({ ...node, image: 'focal-node.png', color: member.fileMaster.fileTypeMaster.color });
+        nodes.push({ ...node, image: 'focal-node.png', color: "#00ff00" });
         for (const callExt of member.callExternals) {
             // at this point we'll call separate function which will get called recursively
-            await _expandCallExternals(callExt, node, { nodes, links, index: 0 });
+            if (skipTypes.includes(callExt.fileTypeName.toLowerCase())) continue;
+            await _expandCallExternals(callExt, node, { nodes, links, index: 0, skipTypes });
         }
-        await _expandParentCalls({ nodes, links, index: nodes.length + 1 }, node);
         nodes.forEach((d, i) => { d.originalIndex = i; });
+        await _expandParentCalls({ nodes, links, index: nodes.length + 1 }, node);
         response.status(200).json({ nodes, links }).end();
     } catch (error) {
         return response.status(500).json(error).end();
     }
 });
 
-const _expandCallExternals = async (callExt: Partial<FileMaster | any>, node: Node, opt: { nodes: Array<Node>, links: Array<Link>, index: number }) => {
+const _expandCallExternals = async (callExt: Partial<FileMaster | any>, node: Node, opt: { nodes: Array<Node>, links: Array<Link>, index: number, skipTypes: Array<string> }) => {
     let pipeLine: Array<PipelineStage> = [
         { $match: { fid: callExt.fid } },
         { $lookup: { from: 'fileMaster', localField: 'fid', foreignField: '_id', as: 'fileMaster' } },
@@ -58,9 +60,9 @@ const _expandCallExternals = async (callExt: Partial<FileMaster | any>, node: No
         opt.links.push({ source: node.originalIndex, target: nodeIdx, weight: 3, linkText: node.name, wid: nd.wid, pid: nd.pid } as any);
     } else {
         if ((opt.nodes.findIndex(x => x.name == member.fileMaster.fileName) >= 0)) {
-            let existNode: any = opt.nodes.find((x) => {return x.name == member.fileMaster.fileName});
-           let existsIndex:number=opt.nodes.findIndex(x => x.name == member.fileMaster.fileName);
-            opt.links.push({ source: node.originalIndex, target: existsIndex, weight: 3, linkText: node.name, wid: existNode.wid, pid: existNode.pid } as any);
+            let existNode: any = opt.nodes.findIndex((x) => x.name == member.fileMaster.fileName);
+            let existsIndex: number = opt.nodes.findIndex((x) => x.name == member.fileMaster.fileName);
+            opt.links.push({ source: existNode, target: existsIndex, weight: 3, linkText: node.name, wid: existNode.wid, pid: existNode.pid } as any);
             return;
         }
         let nd: Node = _createNode(member.fileMaster, ++opt.index);
@@ -69,7 +71,8 @@ const _expandCallExternals = async (callExt: Partial<FileMaster | any>, node: No
         opt.links.push({ source: node.originalIndex, target: nodeIdx, weight: 3, linkText: node.name, wid: nd.wid, pid: nd.pid } as any);
         if (member.callExternals.length === 0) return;
         for (const callE of member.callExternals) {
-            await _expandCallExternals(callE, nd, { nodes: opt.nodes, links: opt.links, index: opt.index });
+            if (opt.skipTypes.includes(callE.fileTypeName.toLowerCase())) continue;
+            await _expandCallExternals(callE, nd, { nodes: opt.nodes, links: opt.links, index: opt.index, skipTypes: opt.skipTypes });
         }
     }
 };
