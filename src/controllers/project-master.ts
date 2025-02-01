@@ -412,7 +412,7 @@ const addMemberReference = async (wm: WorkspaceMaster, memberRefJson: any[]) => 
                     wid: Mongoose.Types.ObjectId.createFromHexString(member.WorkspaceId),
                     fileTypeName: ce.FileTypeName,
                     pid: Mongoose.Types.ObjectId.createFromHexString(member.ProjectId),
-                    missing: ce.Missing == 0 ? false : true
+                    missing: ce.Missing === 0 ? false : true
                 });
             }
             let memberDetails = {
