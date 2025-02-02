@@ -448,8 +448,9 @@ const addFileDetails = async (allFiles: string[], lm: LanguageMaster, fileMaster
                 _id: fm._id, pid: fm.ProjectId, fileTypeId: fileType._id, wid: fm.WorkspaceId,
                 fileName: fm.FileName, filePath: file.filePath,
                 linesCount: fm.LinesCount, processed: true,
+                sourceFilePath: file.filePath.replace(/project-files/ig, "original-files"),
                 fileNameWithoutExt: fm.FileNameWithoutExt,
-                fileStatics: { lineCount: fm.LinesCount, parsed: true, processedLineCount: fm.DoneParsing }
+                fileStatics: { lineCount: fm.LinesCount, parsed: true, processedLineCount: fm.DoneParsing, commentedLines: fm.CommentedLines }
             } as FileMaster;
             await appService.fileMaster.addItem(fileDetails);
         } catch (ex) {
