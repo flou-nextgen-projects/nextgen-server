@@ -22,17 +22,16 @@ dependencyRouter.use("/", (request: Request, response: Response, next: NextFunct
         // if member reference is present, then we need to get all call externals and loop through all elements        
         // since, this data is going for d3 network, we'll prepare elements in that way
         // this will be a focal node and all node elements will be of type Node and links will be of type Link
-        let skipTypes: Array<string> = ["BMS", "COPYBOOK", "INCLUDE", "InputLib"].map((d) => d.toLowerCase());
         let links: Array<Link> = [];
         let nodes: Array<Node> = [];
         let node: Node = _createNode(member.fileMaster, 0);
-        nodes.push({ ...node, image: 'focal-node.png', color: "#00ff00" });
+        nodes.push({ ...node, image: 'focal-node.png', color: member.fileMaster.fileTypeMaster.color });
+        let skipTypes: Array<string> = ["BMS", "COPYBOOK", "INCLUDE", "INPUTLIB"].map((d) => d.toLowerCase());
         for (const callExt of member.callExternals) {
             // at this point we'll call separate function which will get called recursively
             if (skipTypes.includes(callExt.fileTypeName.toLowerCase())) continue;
             await _expandCallExternals(callExt, node, { nodes, links, index: 0, skipTypes });
         }
-        nodes.forEach((d, i) => { d.originalIndex = i; });
         await _expandParentCalls({ nodes, links, index: nodes.length + 1 }, node);
         response.status(200).json({ nodes, links }).end();
     } catch (error) {
@@ -51,50 +50,44 @@ const _expandCallExternals = async (callExt: Partial<FileMaster | any>, node: No
     const member = await appService.memberReferences.aggregateOne(pipeLine);
     // if member is null, simply means - missing object
     if (!member) return;
-    if (!member) {
-        let nd = { originalIndex: ++opt.index, fileId: callExt._id, id: callExt._id, image: 'missing.png', group: 1, pid: callExt.pid, name: callExt.fileName, fileType: callExt.fileTypeName as any } as Node;
-        if ((opt.nodes.findIndex(x => x.name == nd.name) >= 0)) return;
-        opt.nodes.push(nd);
-        let nodeIdx: number = opt.nodes.findIndex(x => x.name == nd.name);
-
-        opt.links.push({ source: node.originalIndex, target: nodeIdx, weight: 3, linkText: node.name, wid: nd.wid, pid: nd.pid } as any);
-    } else {
-        if ((opt.nodes.findIndex(x => x.name == member.fileMaster.fileName) >= 0)) {
-            let existNode: any = opt.nodes.findIndex((x) => x.name == member.fileMaster.fileName);
-            let existsIndex: number = opt.nodes.findIndex((x) => x.name == member.fileMaster.fileName);
-            opt.links.push({ source: existNode, target: existsIndex, weight: 3, linkText: node.name, wid: existNode.wid, pid: existNode.pid } as any);
-            return;
-        }
-        let nd: Node = _createNode(member.fileMaster, ++opt.index);
-        opt.nodes.push(nd);
-        let nodeIdx: number = opt.nodes.findIndex(x => x.name == nd.name);
-        opt.links.push({ source: node.originalIndex, target: nodeIdx, weight: 3, linkText: node.name, wid: nd.wid, pid: nd.pid } as any);
-        if (member.callExternals.length === 0) return;
-        for (const callE of member.callExternals) {
-            if (opt.skipTypes.includes(callE.fileTypeName.toLowerCase())) continue;
-            await _expandCallExternals(callE, nd, { nodes: opt.nodes, links: opt.links, index: opt.index, skipTypes: opt.skipTypes });
-        }
+    if ((opt.nodes.findIndex((x) => x.name == member.fileMaster.fileName) >= 0)) {
+        let existsIndex: number = opt.nodes.findIndex((x) => x.name === member.fileMaster.fileName);
+        let srcIdx = opt.nodes.findIndex((x) => x.name === node.name);
+        opt.links.push({ source: srcIdx, target: existsIndex, weight: 3, linkText: node.name } as any);
+        return;
+    }
+    let nd: Node = _createNode(member.fileMaster, ++opt.index);
+    opt.nodes.push(nd);
+    let targetIdx: number = opt.nodes.findIndex(x => x.name === nd.name);
+    let srcIdx = opt.nodes.findIndex((x) => x.name === node.name);
+    opt.links.push({ source: srcIdx, target: targetIdx, weight: 3, linkText: node.name } as any);
+    if (member.callExternals.length === 0) return;
+    for (const callE of member.callExternals) {
+        if (opt.skipTypes.includes(callE.fileTypeName.toLowerCase())) continue;
+        await _expandCallExternals(callE, nd, { nodes: opt.nodes, links: opt.links, index: opt.index, skipTypes: opt.skipTypes });
     }
 };
 
 const _expandParentCalls = async (opt: { nodes: Array<Node>, links: Array<Link>, index: number }, node: Node) => {
     try {
-        let members = await appService.memberReferences.getDocuments({ pid: new ObjectId(node.pid) });
+        let pipeLine = [{ $match: { callExternals: { $elemMatch: { fid: new ObjectId(node.fileId) } } } },
+        { $lookup: { from: "fileMaster", localField: "fid", foreignField: "_id", as: "fileMaster" } },
+        { $unwind: { path: "$fileMaster", preserveNullAndEmptyArrays: true } },
+        { $lookup: { from: "fileTypeMaster", localField: "fileMaster.fileTypeId", foreignField: "_id", as: "fileMaster.fileTypeMaster" } },
+        { $unwind: { path: "$fileMaster.fileTypeMaster", preserveNullAndEmptyArrays: true } }];
+        let members = await appService.memberReferences.aggregate(pipeLine);
         for (const element of members) {
             if (element.callExternals.length == 0) continue;
-            if (element.callExternals.filter((x: any) => { return x.fid.toString() == node.fileId.toString() }).length > 0) {
-                // let list = element.callExternals.find((x: any) => { return x.fid.toString() == node.fileId.toString() });
-                var fileMaster = await appService.fileMaster.aggregate([
-                    { $match: { _id: new ObjectId(element.fid) } },
-                    { $lookup: { from: 'fileTypeMaster', localField: 'fileTypeId', foreignField: '_id', as: 'fileTypeMaster' } },
-                    { $unwind: { preserveNullAndEmptyArrays: true, path: "$fileTypeMaster" } }
-                ]);
-                var parentNode: Node = _createNode(fileMaster[0], ++opt.index);
+            let callExts = element.callExternals.filter((x: any) => { return x.fid.toString() == node.fileId });
+            if (callExts.length <= 0) continue;
+            let findEle = opt.nodes.find((y) => y.name === element.fileMaster.fileName);
+            if (!findEle) {
+                var parentNode: Node = _createNode(element.fileMaster, ++opt.index);
                 opt.nodes.push(parentNode);
-                let parentIndex = opt.nodes.findIndex(y => y.name == parentNode.name);
-                let nodeIdx: number = opt.nodes.findIndex(x => x.name == node.name);
-                opt.links.push({ source: parentIndex, target: nodeIdx, weight: 3, linkText: node.name, wid: node.wid, pid: node.pid } as any);
             }
+            let parentIdx = opt.nodes.findIndex((y) => y.name === element.fileMaster.fileName);
+            let nodeIdx: number = opt.nodes.findIndex((x) => x.name === node.name);
+            opt.links.push({ source: parentIdx, target: nodeIdx, weight: 3, linkText: node.name } as any);
         }
     } catch (error) {
         console.log(error);

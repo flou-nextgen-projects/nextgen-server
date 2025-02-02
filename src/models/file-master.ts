@@ -7,6 +7,7 @@ interface FileStatics {
     processedLineCount: number;
     parsed: boolean;
     exceptions: any;
+    commentedLines: number;
 }
 
 class FileMaster extends EntityBase {
@@ -16,6 +17,7 @@ class FileMaster extends EntityBase {
     public fileName: string;
     public fileNameWithoutExt: string;
     public filePath: string;
+    public sourceFilePath: string;
     public processed: boolean;
     public linesCount: number;
     public workflowStatus: string;
@@ -28,7 +30,8 @@ const fileStaticsSchema: Schema<FileStatics> = new Schema({
     lineCount: Number,
     processedLineCount: Number,
     parsed: Boolean,
-    exceptions: Mongoose.Schema.Types.Mixed
+    exceptions: Mongoose.Schema.Types.Mixed,
+    commentedLines: Number
 });
 
 const FileMasterSchema: Schema<FileMaster> = new Schema({
@@ -38,6 +41,7 @@ const FileMasterSchema: Schema<FileMaster> = new Schema({
     fileName: { type: String, trim: true, required: true },
     fileNameWithoutExt: { type: String, trim: true, required: false },
     filePath: { type: String, required: true, trim: true },
+    sourceFilePath: { type: String, required: true, trim: true },
     processed: { type: Boolean, default: false, required: false },
     linesCount: { type: Number, default: 0, required: false },
     workflowStatus: { type: String, required: false, sparse: true },
