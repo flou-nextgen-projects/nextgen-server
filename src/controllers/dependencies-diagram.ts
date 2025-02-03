@@ -1,7 +1,7 @@
 import Express, { Request, Response, Router, NextFunction } from "express";
 import { appService } from "../services/app-service";
-import { FileMaster, Link, Node, _createNode } from "../models";
-import mongoose, { PipelineStage } from "mongoose";
+import { FileMaster, Link, Node, NodeLinkType, _createNode } from "../models";
+import mongoose, { Mongoose, PipelineStage } from "mongoose";
 import { ObjectId } from "mongodb";
 
 const dependencyRouter: Router = Express.Router();
@@ -33,6 +33,7 @@ dependencyRouter.use("/", (request: Request, response: Response, next: NextFunct
             await _expandCallExternals(callExt, node, { nodes, links, index: 0, skipTypes });
         }
         await _expandParentCalls({ nodes, links, index: nodes.length + 1 }, node);
+        await _attachEntityNodes({ nodes, links, index: nodes.length + 1 });
         response.status(200).json({ nodes, links }).end();
     } catch (error) {
         return response.status(500).json(error).end();
@@ -91,6 +92,28 @@ const _expandParentCalls = async (opt: { nodes: Array<Node>, links: Array<Link>,
         }
     } catch (error) {
         console.log(error);
+    }
+}
+const _attachEntityNodes = async (opt: { nodes: Array<Node>, links: Array<Link>, index: number }) => {
+    for (const node of opt.nodes) {
+        if (node.type == NodeLinkType.entity) continue;
+        let entities = await appService.entityMaster.getDocuments({ fid: mongoose.Types.ObjectId.createFromHexString(node.fileId.toString()) });
+        if (entities.length == 0) return;
+        let entityNode: Node = {
+            name: "",
+            group: 3,
+            image: "sql.png",
+            id: `entity-${node.fileId.toString()}`,
+            originalIndex: opt.index++,
+            pid: node.pid,
+            wid: node.wid,
+            fileId: node.fileId.toString(),
+            type: NodeLinkType.entity,
+        } as Node;
+        opt.nodes.push(entityNode);
+        let parentIdx = opt.nodes.findIndex((x) => x.name === node.name);;
+        let targetIdx = opt.nodes.findIndex((x) => x.id === `entity-${node.fileId.toString()}`);;
+        opt.links.push({ source: parentIdx, target: targetIdx, weight: 3, linkText: entityNode.name } as any);
     }
 }
 
