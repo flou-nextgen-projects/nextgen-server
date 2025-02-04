@@ -1,30 +1,23 @@
-name: flou-job-api
+name: next-gen-server
 
-networks:
-  kafka-network:
-    external: true
-    driver: "bridge"
-    
 volumes:
   shared-volume:
     external: true
 
 services:
-  flou-job-api:
-    image: flou-job-api:latest
-    container_name: flou-job-api
-    hostname: flou-job-api
+  next-gen-server:
+    image: next-gen-server:latest
+    container_name: next-gen-server
+    hostname: next-gen-server
     build:
       context: .
       dockerfile: ./dockerfile
     environment:
-      NODE_ENV: development
-      KAFKA_BROKER_HOST: kafka
-      KAFKA_BROKER_PORT: 9092
+      NODE_ENV: production
     env_file:
       - .env  
     ports:
-      - 3800:3800
+      - 9000:9000
       - 9229:9229
     develop:
       watch:
@@ -42,4 +35,4 @@ services:
     networks:
       - kafka-network
     volumes:
-      - shared-volume:/app/dist/certificates:rw  
+      - shared-volume:/app/dist/certificates:rw

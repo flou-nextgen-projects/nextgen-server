@@ -241,12 +241,15 @@
  *       - bearerAuth: []
  *     summary: Upload a project bundle
  *     tags: [Project]
+ *     consumes:
+ *       - multipart/form-data
  *     requestBody:
  *       required: true
  *       content:
- *         application/json:
+ *         multipart/form-data:
  *           schema:
- *             type: object
+ *             type: string
+ *             format: binary
  *     responses:
  *       200:
  *         description: Project bundle uploaded successfully

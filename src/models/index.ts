@@ -1,7 +1,7 @@
 import EntityBase from "./entity-base";
 import { MultipleCollectionsConfig } from "./multiple-collections-config";
 import { UserMaster, UserMasterSchema } from "./user-master";
-import { RoleMaster, RoleMasterSchema } from "./role-master";
+import { RoleMaster, RoleMasterSchema, UserRoles } from "./role-master";
 import { WorkspaceMaster, WorkspaceMasterSchema } from "./workspace-master";
 import { LanguageMaster, LanguageMasterSchema } from "./language-master";
 import { ProjectMaster, ProjectMasterSchema, ProcessingStatus } from "./project-master";
@@ -25,7 +25,7 @@ import { Link, Node, prepareNodes, prepareLinks, prepareDotNetLinks, NodeLinkTyp
 export {
     EntityBase, MultipleCollectionsConfig,
     UserMaster, UserMasterSchema,
-    RoleMaster, RoleMasterSchema,
+    RoleMaster, RoleMasterSchema, UserRoles,
     WorkspaceMaster, WorkspaceMasterSchema,
     LanguageMaster, LanguageMasterSchema,
     ProjectMaster, ProjectMasterSchema, ProcessingStatus,

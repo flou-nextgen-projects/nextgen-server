@@ -24,7 +24,7 @@ statementRouter.use("/", (request: Request, response: Response, next: NextFuncti
         response.status(200).json([]).end();
     }
     let original = statements[0].originalLine;
-    let sp: string = original.match(/^[\s]+/gi).shift();
+    let sp: string = original.match(/^[\s]+/gi)?.shift() || "";
     statements.forEach((d: any) => { d.originalLine = d.originalLine.replace(sp, ""); });
     let expanded: any[] = [];
     consoleLogger.log("Expanding call externals...");

@@ -34,6 +34,7 @@ dependencyRouter.use("/", (request: Request, response: Response, next: NextFunct
         }
         await _expandParentCalls({ nodes, links, index: nodes.length + 1 }, node);
         await _attachEntityNodes({ nodes, links, index: nodes.length + 1 });
+        // _assignLinkTexts(links);
         response.status(200).json({ nodes, links }).end();
     } catch (error) {
         return response.status(500).json(error).end();
@@ -93,7 +94,29 @@ const _expandParentCalls = async (opt: { nodes: Array<Node>, links: Array<Link>,
     } catch (error) {
         console.log(error);
     }
-}
+};
+
+const _assignLinkTexts = function (links: Array<Link>) {
+    const linkMap = new Map<number, Array<Link>>();
+    links.forEach(link => {
+        if (!linkMap.has(link.source)) {
+            linkMap.set(link.source, []);
+        }
+        linkMap.get(link.source).push(link);
+    });
+
+    const dfs = (source: number, prefix: string) => {
+        const children = linkMap.get(source) || [];
+        children.forEach((link, index) => {
+            const linkText = prefix ? `${prefix}.${index + 1}` : `${index + 1}`;
+            link.linkText = linkText;
+            dfs(link.target, linkText);
+        });
+    };
+
+    dfs(0, "");
+};
+
 const _attachEntityNodes = async (opt: { nodes: Array<Node>, links: Array<Link>, index: number }) => {
     for (const node of opt.nodes) {
         if (node.type == NodeLinkType.entity) continue;

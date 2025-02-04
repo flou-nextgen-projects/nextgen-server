@@ -13,4 +13,12 @@ const RoleMasterSchema: Mongoose.Schema<RoleMaster> = new Mongoose.Schema<RoleMa
     menus: { type: [{ mainMenuName: String, id: Mongoose.Schema.Types.ObjectId, route: String, subMenuMaster: Array<{ subMenuName: String, id: Mongoose.Schema.Types.ObjectId, route: String }> }], required: false, select: true }
 }, { toJSON: { useProjection: true }, toObject: { useProjection: true } });
 
-export { RoleMaster, RoleMasterSchema };
+enum UserRoles {
+    SUPER_ADMIN = "superAdmin",
+    ADMIN = "admin",
+    USER_ADMIN = "userAdmin",
+    SITE_ADMIN = "siteAdmin",
+    NORMAL_USER = "normalUser"
+}
+
+export { RoleMaster, RoleMasterSchema, UserRoles };

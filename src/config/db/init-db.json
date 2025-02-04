@@ -171,16 +171,50 @@
         "collection": "roleMaster",
         "documents": [
             {
-                "_id": "65d09dde2b488f3930d90264",
                 "roleName": "admin",
                 "screens": [],
-                "menus": []
+                "menus": [],
+                "_id": "65d09dde2b488f3930d90264"
+            },
+            {
+                "roleName": "superAdmin",
+                "screens": [],
+                "menus": [],
+                "_id": "67a0aa72e5a8381203fb7e3c"
+            },
+            {
+                "roleName": "userAdmin",
+                "screens": [],
+                "menus": [],
+                "_id": "67a0aa90e5a8381203fb7e3d"
+            },
+            {
+                "roleName": "siteAdmin",
+                "screens": [],
+                "menus": [],
+                "_id": "67a0aaa1e5a8381203fb7e3e"
+            },
+            {
+                "roleName": "normalUser",
+                "screens": [],
+                "menus": [],
+                "_id": "67a0aac3e5a8381203fb7e3f"
             }
         ]
     },
     {
         "collection": "userMaster",
-        "documents": [
+        "documents": [{
+                "userName": "yogeshs",
+                "password": "$2a$10$KUgNdWEfi0goD0zm8uihruRpIUhx.Ljkn4/OHXrKIu1fEpSnr.EIe",
+                "firstName": "Yogesh",
+                "lastName": "Sonawane",
+                "email": "sonawaneyogeshb@gmail.com",
+                "contact": "+918149497650",
+                "roleId": "67a0aa72e5a8381203fb7e3c",
+                "lastLoggedInDate": null,
+                "isActive": true
+            },
             {
                 "userName": "admin",
                 "password": "$2a$10$kO1Y6ZjIUb3RT63Vy2HKv.W4ylWHWbWRjWW1z03QJ6.CwGBKSI9Nm",

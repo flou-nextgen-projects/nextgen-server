@@ -3,28 +3,18 @@ import Express, { NextFunction, Request, Response, Router } from 'express';
 import config from "../configurations";
 
 const authRouter: Router = Express.Router();
-authRouter.use("/", (request: Request | any, response: Response, next: NextFunction) => {
-    const authHeader = request.header('authorization');
-
-    if (!authHeader) {
-        return response.status(401).send({ message: "Unauthorized", details: 'Authorization header was not sent' }).end();
-    }
-
-    var token = request.headers.authorization.replace("Bearer ", "").trim();
-
+const knownErrors = ['JsonWebTokenError', 'TokenExpiredError'];
+authRouter.use("/", (request: Request, response: Response, next: NextFunction) => {
+    const token = request.headers.authorization?.replace("Bearer ", "").trim();
     if (!token) {
-        return response.status(401).send({ message: "Unauthorized", details: 'Invalid or no token used' }).end();
+        return response.status(401).json({ message: "Unauthorized"});
     }
-
     try {
-        const decoded = verify(token, config.secretKey);
-        request.user = decoded;
+        const decoded: any = verify(token, config.secretKey);                
+        request.user = decoded.user;
         next();
     } catch (error) {
-        if (["JsonWebTokenError", "TokenExpiredError"].includes(error.name)) {
-            return response.status(401).send({ message: "Unauthorized", details: 'Token expired' }).end();
-        }
-        return response.status(400).send({ message: "Unauthorized", details: 'Token expired' }).end();
+        return response.status(401).json({ message: "Unauthorized", details: knownErrors.includes(error.name) ? 'Invalid Token' : 'Authentication failed' }).end();
     }
 });
 
