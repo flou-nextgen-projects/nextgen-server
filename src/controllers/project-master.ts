@@ -2,15 +2,20 @@ import Express, { Request, Response, Router, NextFunction } from "express";
 import Mongoose from "mongoose";
 import { join, resolve } from "path";
 import { appService } from "../services/app-service";
-import { FileContentMaster, FileMaster, LanguageMaster, ProcessingStatus, ProjectMaster, WorkspaceMaster } from "../models";
-import { extractProjectZip, Upload, FileExtensions, formatData, readJsonFile, sleep } from "nextgen-utilities";
+import { FileContentMaster, FileMaster, LanguageMaster, ProcessingStatus, ProjectMaster, UserMaster, WorkspaceMaster } from "../models";
+import { extractProjectZip, Upload, FileExtensions, formatData, readJsonFile, sleep, ConsoleLogger, WinstonLogger } from "nextgen-utilities";
 import { existsSync } from "fs";
 import { AppError } from "../common/app-error";
 import { prepareNodes, prepareLinks, prepareDotNetLinks } from "../models";
 import { convertMemberReferencesArray } from "../helpers";
+import { isEmpty } from "lodash";
+import ProgressBar from "progress";
 
 const pmRouter: Router = Express.Router();
 const fileExtensions = new FileExtensions();
+const logger: ConsoleLogger = new ConsoleLogger(`controllers - ${__filename}`);
+const winstonLogger: WinstonLogger = new WinstonLogger(`controllers - ${__filename}`);
+
 pmRouter.use("/", (request: Request, response: Response, next: NextFunction) => {
     next();
 }).get("/docs", async (request: Request, response: Response, next: NextFunction) => {
@@ -75,22 +80,27 @@ pmRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
     } catch (error) {
         response.status(500).json({ error }).end();
     }
-}).post("/upload-project-bundle", async function (request: any, response: Response) {
+}).post("/upload-project-bundle/:pname", async function (request: Request | any, response: Response) {
     try {
         response.writeHead(200, { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', Connection: 'keep-alive', 'X-Accel-Buffering': 'no' });
         let rootDir = resolve(join(__dirname, "../", "../"));
         let uploadDetails = request.body;
         request.rootDir = rootDir;
+        let user: UserMaster = request.user;
+        winstonLogger.info(`Upload project bundle request received from user ${user.fullName}.`, { code: "UPLOAD_PROJECT_BUNDLE_START", name: request.params.pname });
+
         function checkWrite(err: any) {
-            if (err) {
-                response.json({ message: "Error occurred during extraction", error: err }).end();
-            }
+            if (!err) return;
+            winstonLogger.error(new Error("Error occurred during extraction"), { code: "EXTRACTION_ERROR", name: request.params.pname, extras: err });
+            response.json({ message: "Error occurred during extraction", error: err }).end();
         }
-        response.write(formatData({ message: "Starting extraction of project project bundle" }), "utf-8", checkWrite);
+        response.write(formatData({ message: "Starting extraction of project bundle" }), "utf-8", checkWrite);
 
         await sleep(500);
 
         extractProjectZip({ uploadDetails: uploadDetails }).then(async (extractPath: string) => {
+            winstonLogger.info("Project bundle extracted successfully", { code: "EXTRACTION_SUCCESS", name: request.params.pname });
+
             response.write(formatData({ message: "Project bundle extracted successfully." }), "utf-8", checkWrite);
 
             await sleep(1000);
@@ -103,13 +113,17 @@ pmRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
             let wmJsonPath = join(extractPath, "workspace-master", "workspace-master.json");
 
             if (!existsSync(wmJsonPath)) {
+                winstonLogger.warn("Workspace master JSON not found", { code: "WORKSPACE_JSON_NOT_FOUND", name: request.params.pname });
                 response.write(formatData({ message: "Workspace master JSON not found, so using project master JSON for creating workspace." }), "utf-8", checkWrite);
                 response.end();
             }
 
             let readWsJson = await readJsonFile(wmJsonPath);
 
-            if ([500, 404].includes(readWsJson.code)) return response.end(formatData({ message: 'Workspace JSON not found' }));
+            if ([500, 404].includes(readWsJson.code)) {
+                winstonLogger.error(new Error("Workspace JSON not found"), { code: "WORKSPACE_JSON_NOT_FOUND", name: request.params.pname });
+                return response.end(formatData({ message: 'Workspace JSON not found' }));
+            }
 
             let workspace: WorkspaceMaster = undefined;
             if (readWsJson.code === 200) {
@@ -122,9 +136,15 @@ pmRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
             let pmJsonPath = join(extractPath, "project-master", "project-master.json");
             let readPrJson = await readJsonFile(pmJsonPath);
 
-            if ([500, 404].includes(readPrJson.code)) return response.end(formatData({ message: 'Project JSON not found' }));
+            if ([500, 404].includes(readPrJson.code)) {
+                winstonLogger.error(new Error("Project JSON not found"), { code: "PROJECT_JSON_NOT_FOUND", name: request.params.pname });
+                return response.end(formatData({ message: 'Project JSON not found' }));
+            }
 
             if (readPrJson.code === 200) {
+                // check if project name is provided in request url params.. if yes, then override in JSON
+                let name: string = <string>request.params.pname;
+                readPrJson.data.forEach((d: any) => { d.Name = isEmpty(name) ? d.Name : name });
                 await addProject(allFiles.length, extractPath, uploadDetails, readPrJson.data, workspace);
             }
 
@@ -167,10 +187,12 @@ pmRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
             }
 
             // process for statement master
-            response.write(formatData({ message: "Started process for statement references details to repository." }), "utf-8", checkWrite);
+            response.write(formatData({ message: "Started process for adding statement reference details to repository." }), "utf-8", checkWrite);
             let statementReferencesJson: any = await readJsonFile(join(extractPath, "statement-master", "statement-master.json"));
             if (statementReferencesJson.code === 200) {
-                await addStatementReferences(workspace, statementReferencesJson.data);
+                await addStatementReferences(workspace, statementReferencesJson.data, (progress: string) => {
+                    response.write(formatData({ message: progress }), "utf-8", checkWrite);
+                });
             }
 
             // process for file contents...
@@ -180,10 +202,11 @@ pmRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
             response.write(formatData({ message: "You can start loading project now." }), "utf-8", checkWrite);
             response.end();
         }).catch((err: any) => {
-            console.log(err);
+            winstonLogger.error(new Error("Error during project bundle extraction"), { code: "EXTRACTION_ERROR", name: request.params.pname, extras: err });
             response.end(formatData(err));
         });
     } catch (error) {
+        winstonLogger.error(new Error("Error in upload project bundle"), { code: "UPLOAD_PROJECT_BUNDLE_ERROR", name: request.params.pname, extras: error });
         response.end(formatData(error));
     }
 }).get("/reprocess-network-connectivity/:wid", async function (request: Request, response: Response) {
@@ -198,17 +221,9 @@ pmRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
     response.status(200).json({ message: "Network connectivity is regenerated successfully." }).end();
 }).get("/reprocess-file-contents/:wid", async function (request: Request, response: Response) {
     let wid: Mongoose.Types.ObjectId = new Mongoose.Types.ObjectId(<string>request.params.wid);
-    let projects = await appService.projectMaster.getDocuments({ wid });
-    for (const project of projects) {
-        let collection = appService.fileContentMaster.getModel();
-        await collection.deleteMany({ pid: project._id });
-        let allFiles = await appService.fileMaster.getDocuments({ pid: project._id });
-        for (let file of allFiles) {
-            let content = fileExtensions.readTextFile(file.filePath);
-            if (content === "") continue;
-            await appService.fileContentMaster.addItem({ fid: file._id, original: content } as FileContentMaster);
-        }
-    }
+    let workspace = await appService.workspaceMaster.aggregateOne([{ $match: { _id: new Mongoose.Types.ObjectId(wid) } }]);
+    if (!workspace) return response.status(404).end();
+    await processFileContents(workspace);
     response.status(200).json({ message: "File contents processed successfully." }).end();
 }).get("/reprocess-file-details/:wid", async function (request: Request, response: Response) {
     let wid: Mongoose.Types.ObjectId = new Mongoose.Types.ObjectId(<string>request.params.wid);
@@ -260,10 +275,20 @@ pmRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
         let _id: Mongoose.Types.ObjectId = new Mongoose.Types.ObjectId(<string>request.params.wid);
         let workspace = await appService.workspaceMaster.aggregateOne([{ $match: { _id } }]);
         if (!workspace) return response.status(404).end();
+        winstonLogger.info(`User ${request.user.fullName} has restarted processing of statement masters data.`, { code: 'reprocess-1002', name: 'reprocess-statement-references', extras: { id: request.user._id.toString() } });
+        function checkWrite(err: any) {
+            if (!err) return;
+            winstonLogger.error(new Error("Error occurred during extraction"), { code: "EXTRACTION_ERROR", name: request.params.pname, extras: err });
+            response.json({ message: "Error occurred during extraction", error: err }).end();
+        }
+        response.writeHead(200, { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', Connection: 'keep-alive', 'X-Accel-Buffering': 'no' });
         let extractPath: string = <string>workspace.dirPath;
         let statementReferencesJson: any = await readJsonFile(join(extractPath, "statement-master", "statement-master.json"));
         if (statementReferencesJson.code === 200) {
-            await addStatementReferences(workspace, statementReferencesJson.data);
+            winstonLogger.info(`There are total: ${statementReferencesJson.data.length} records to process.`);
+            await addStatementReferences(workspace, statementReferencesJson.data, (progress: string) => {
+                response.write(formatData({ message: progress }), "utf-8", checkWrite);
+            });
         }
         response.status(200).json().end();
     } catch (error) {
@@ -285,14 +310,31 @@ pmRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
     }
 });
 
-const addStatementReferences = async function addStatementReferences(wm: WorkspaceMaster, statementMastersJson: any[]): Promise<any> {
+const addStatementReferences = async function addStatementReferences(wm: WorkspaceMaster, statementMastersJson: any[], callback: Function): Promise<any> {
     try {
         let collection = appService.mongooseConnection.collection("statementMaster");
         await collection.deleteMany({ wid: wm._id });
+        statementMastersJson.filter((d) => isEmpty(d.wid)).forEach((d) => d.wid = wm._id);
         let modifiedStatementMasters = convertMemberReferencesArray(statementMastersJson);
+        const totalRecords = modifiedStatementMasters.length;
+        let bar: ProgressBar = logger.showProgress(totalRecords);
+        // we'll report back progress, as this is time consuming process
+        // we'll report progress in batch of 30 records        
+        callback(`There are total ${totalRecords} records to process into repository.`);
+        let counter: number = 0;
+        let lastProgress: number = 0;
         for (const statementMaster of modifiedStatementMasters) {
             await collection.insertOne(statementMaster);
+            ++counter;
+            const currentProgress = Math.floor((counter * 100) / totalRecords / 10) * 10;
+            if (currentProgress > lastProgress) {
+                bar.tick({ done: counter, length: totalRecords });
+                const progress = `Added ${currentProgress}% records to repository successfully...`;
+                callback(progress);
+                lastProgress = currentProgress;
+            }
         }
+        bar.terminate();
     } catch (error) {
         console.log(error);
     }
@@ -362,11 +404,18 @@ const processFileContents = async (wm: WorkspaceMaster) => {
     for (const project of projects) {
         let collection = appService.fileContentMaster.getModel();
         await collection.deleteMany({ pid: project._id });
-        let allFiles = await appService.fileMaster.getDocuments({ pid: project._id });
+        let allFiles = await appService.fileMaster.aggregate([{ $match: { pid: project._id } }]);
         for (let file of allFiles) {
-            let content = fileExtensions.readTextFile(file.filePath);
+            // in case of COBOL language, we need to store sourceFilePath (original) contents as original 
+            // and filePath contents are modified. We'll as this field only in case of COBOL
+            let path = wm.languageMaster.name === "COBOL" ? file.sourceFilePath : file.filePath;
+            let content = fileExtensions.readTextFile(path);
             if (content === "") continue;
-            await appService.fileContentMaster.addItem({ fid: file._id, original: content } as FileContentMaster);
+            // if COBOL then read filePath's contents and store this as modified
+            let modified = wm.languageMaster.name === "COBOL" && file.fileTypeMaster.fileTypeName === "COBOL" ? fileExtensions.readTextFile(file.filePath) : "";
+            let fcm = { fid: file._id, pid: file.pid, original: content, formatted: modified } as FileContentMaster;
+            if (isEmpty(modified)) delete fcm.formatted;
+            await appService.fileContentMaster.addItem(fcm);
         }
     }
 };

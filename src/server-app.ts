@@ -29,30 +29,40 @@ Promise.resolve(mongoConnection()).then(() => {
         if (!existsSync(uploadPath)) { mkdirSync(uploadPath); }
     });
     app.use(Express.static(join(__dirname, '')));
-    const crtPath = resolve(__dirname, 'certificates');
-    const httpsOptions: http2.SecureServerOptions = {
-        cert: readFileSync(join(crtPath, 'device.crt')),
-        key: readFileSync(join(crtPath, 'device.key')),
-        allowHTTP1: true,
-        ALPNProtocols: ["h2"]
-    };
-    const httpsServer = http2.createSecureServer(httpsOptions, app as any);
+
     setAppRoutes(app);
-    httpsServer.listen(config.port, async function () {
-        const address: any = this.address();
-        await mongoConnection();
-        if (!globalAny.dbConnection) {
+
+    const startNodeJsServer = (protocol: string, server: http2.Http2SecureServer | Express.Application) => {
+        server.listen(config.port, async function () {
+            const address: any = this.address();
+            await mongoConnection();
+            if (!globalAny.dbConnection) {
+                console.log('=======================================================================');
+                console.log(`Database connection failed!!!`);
+                console.log('=======================================================================');
+            }
             console.log('=======================================================================');
-            console.log(`Database connection failed!!!`);
+            const dt = new Date().toLocaleString("en-us")
+            console.log(chalk.red("Restarted app: " + chalk.green(dt)));
+            console.log(`Server Host application is running on port: ${config.port} with protocol: ${protocol}`);
+            console.log(JSON.stringify(address));
             console.log('=======================================================================');
-        }
-        console.log('=======================================================================');
-        const dt = new Date().toLocaleString("en-us")
-        console.log(chalk.red("Restarted app: " + chalk.green(dt)));
-        console.log(`Server Host application is up running on port: ${config.port}`);
-        console.log(JSON.stringify(address));
-        console.log('=======================================================================');
-    });
+        });
+    };
+
+    if (config.useHttps === "true") {
+        const crtPath = resolve(__dirname, 'certificates');
+        const httpsOptions: http2.SecureServerOptions = {
+            cert: readFileSync(join(crtPath, 'device.crt')),
+            key: readFileSync(join(crtPath, 'device.key')),
+            allowHTTP1: true,
+            ALPNProtocols: ["h2"]
+        };
+        let http2SecureServer: http2.Http2SecureServer = http2.createSecureServer(httpsOptions, app as any);
+        startNodeJsServer("HTTPS", http2SecureServer);
+    } else {
+        startNodeJsServer("HTTP", app);
+    }
 });
 
 export default app;

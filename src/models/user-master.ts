@@ -63,6 +63,7 @@ UserMasterSchema.methods.generateAuthToken = function () {
 UserMasterSchema.statics.generateAuthTokenOne = function (userMaster: any) {
     delete userMaster.password;
     userMaster._id = userMaster._id.toHexString();
+    userMaster.fullName = `${userMaster.firstName} ${userMaster.lastName}`;
     var token = Jwt.sign({ user: userMaster }, config.secretKey, { expiresIn: '2h' }).toString();
     return token;
 }

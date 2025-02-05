@@ -25,7 +25,7 @@ export const setAppRoutes = function (app: express.Application) {
     app.get('/', function (request: Request, response: Response) {
         response.status(200).json({ msg: 'Server app is up and running!.' }).end();
     });
-    
+
     app.use((err: any, req: Request, res: Response, next: Function) => {
         if (res.headersSent) return next();
         res.status(err.httpStatusCode || 500).render('UnknownError');
@@ -39,6 +39,8 @@ export const setAppRoutes = function (app: express.Application) {
 
     let authRouter = require("./middleware/client-auth");
     app.use("/backend/main/api/*", authRouter);
+    let superAuthRouter = require("./middleware/super-auth");
+    app.use("/backend/super/admin/*", superAuthRouter);
 
     var combined = morgan("combined");
     app.use(combined);
@@ -47,7 +49,7 @@ export const setAppRoutes = function (app: express.Application) {
         response.status(200).json({ msg: "OK", data: { id: request.params } }).end();
     });
     const router = require("./routes/default.routes");
-    app.use(/backend\/main\/api\/defaults\/.*/g, router);    
+    app.use(/backend\/main\/api\/defaults\/.*/g, router);
     var homeRouter = require('./controllers/home');
     var userRouter = require("./controllers/user-master");
     var loginRouter = require("./controllers/user-login");
@@ -68,7 +70,7 @@ export const setAppRoutes = function (app: express.Application) {
     var functionalFlowRouter = require('./controllers/functional-flow');
     var dependencyRouter = require('./controllers/dependencies-diagram');
     require("./kafka-services/kafka-consumer"); // no need to have routes
-    app.use("/check/api/home", homeRouter);
+    app.use("/backend/api/home", homeRouter);
     app.use("/backend/api/user-login", loginRouter);
     app.use("/backend/main/api/user-master", userRouter);
     app.use("/backend/main/api/role-master", roleMasterRouter);
@@ -89,7 +91,7 @@ export const setAppRoutes = function (app: express.Application) {
     app.use("/backend/main/api/dependencies", dependencyRouter);
     // db status router
     var dbStatusRouter = require("./config/check-status");
-    app.use("/backend/db", dbStatusRouter);
+    app.use("/backend/super/admin/db", dbStatusRouter);
     // job processing routers
     var cobolProcessRouter = require("./jobs/process-cobol-project");
     var startProcessRouter = require("./jobs/start-processing");
