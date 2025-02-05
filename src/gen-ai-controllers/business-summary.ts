@@ -69,11 +69,12 @@ bsRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
 }).post("/extract-variables", (request: Request, response: Response) => {
     try {
         var reqBody = request.body;
-        let variables: Array<any> = reqBody.data.SqlEntities.concat(reqBody.data.FlatEntities).concat(reqBody.data.VSAMEntities);
+        let variables: any = JSON.parse(reqBody.data);
+        let entities = variables.entities;
         let pid = reqBody.pid;
         let fid = reqBody.fid;
-        variables.forEach(async (variable) => {
-            const entityName: string = variable.entity;
+        entities.forEach(async (variable: any) => {
+            const entityName: string = variable.entityName;
             // const description: string = variable.description;
             const document: any = {
                 entityName: entityName,
