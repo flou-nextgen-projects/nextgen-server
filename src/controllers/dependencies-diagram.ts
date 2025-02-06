@@ -10,6 +10,7 @@ dependencyRouter.use("/", (request: Request, response: Response, next: NextFunct
 }).get("/", async (request: Request, response: Response) => {
     try {
         let fid = <string>request.query.fid;
+        let populateEntities = request.query.getEntities;
         let pipeLine: Array<PipelineStage> = [
             { $match: { fid: mongoose.Types.ObjectId.createFromHexString(fid) } },
             { $lookup: { from: 'fileMaster', localField: 'fid', foreignField: '_id', as: 'fileMaster' } },
@@ -33,7 +34,9 @@ dependencyRouter.use("/", (request: Request, response: Response, next: NextFunct
             await _expandCallExternals(callExt, node, { nodes, links, index: 0, skipTypes });
         }
         await _expandParentCalls({ nodes, links, index: nodes.length + 1 }, node);
-        await _attachEntityNodes({ nodes, links, index: nodes.length + 1 });
+        if (populateEntities === "true") {
+            await _attachEntityNodes({ nodes, links, index: nodes.length + 1 });
+        }
         // _assignLinkTexts(links);
         response.status(200).json({ nodes, links }).end();
     } catch (error) {
@@ -121,7 +124,9 @@ const _attachEntityNodes = async (opt: { nodes: Array<Node>, links: Array<Link>,
     for (const node of opt.nodes) {
         if (node.type == NodeLinkType.entity) continue;
         let entities = await appService.entityMaster.getDocuments({ fid: mongoose.Types.ObjectId.createFromHexString(node.fileId.toString()) });
-        if (entities.length == 0) return;
+        if (entities.length == 0) {
+            // send request to model-handler-api to get entities and save it into database
+        }
         let entityNode: Node = {
             name: "",
             group: 3,

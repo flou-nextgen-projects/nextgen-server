@@ -199,6 +199,12 @@ pmRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
             response.write(formatData({ message: "Started processing file contents to repository." }), "utf-8", checkWrite);
             await processFileContents(workspace);
 
+            // process for missing objects
+            response.write(formatData({ message: "Started process for missing objects." }));
+            let missingJson = await readJsonFile(join(extractPath, "missing-objects", "missing-objects.json"));
+            if (missingJson.code === 200) {
+                await addMissingObjects(missingJson.data);
+            }
             response.write(formatData({ message: "You can start loading project now." }), "utf-8", checkWrite);
             response.end();
         }).catch((err: any) => {
