@@ -66,26 +66,26 @@ bsRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
     } catch (error) {
         response.status(500).send().end();
     }
-}).post("/extract-variables", (request: Request, response: Response) => {
+}).post("/extract-data-entities", async (request: Request, response: Response) => {
     try {
         var reqBody = request.body;
         let variables: any = JSON.parse(reqBody.data);
         let entities = variables.entities;
         let pid = reqBody.pid;
         let fid = reqBody.fid;
-        entities.forEach(async (variable: any) => {
-            const entityName: string = variable.entityName;
-            // const description: string = variable.description;
-            const document: any = {
-                entityName: entityName,
-                // description: description,
-                fid: Mongoose.Types.ObjectId.createFromHexString(fid),
-                pid: Mongoose.Types.ObjectId.createFromHexString(pid),
-                type: variable.type,
-                attributes: variable.attributes
-            };
-            await appService.entityMaster.addItem(document);
-        });
+        for (const key in entities) {
+            if (Object.prototype.hasOwnProperty.call(entities, key)) {
+                const element = entities[key];
+                const entityName: string = key;
+                const document: any = {
+                    entityName: entityName,
+                    fid: Mongoose.Types.ObjectId.createFromHexString(fid),
+                    pid: Mongoose.Types.ObjectId.createFromHexString(pid),
+                    attributes: element.attributes
+                };
+                await appService.entityMaster.addItem(document);
+            }
+        }
         response.status(200).json("Data saved successfully.").end();
     } catch (error) {
         response.status(500).json(error).end();
@@ -105,7 +105,7 @@ bsRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
                 let entityNode = { id: i++, parent: 0, text: entity.entityName, state: { selected: false } };
                 if (entity.attributes && entity.attributes.length > 0) {
                     for (const attribute of entity.attributes) {
-                        let attributeNode = { id: i++, parent: entityNode.id, text: attribute, state: { selected: false } };
+                        let attributeNode = { id: i++, parent: entityNode.id, text: attribute.attributeName, state: { selected: false } };
                         jsonData.push(attributeNode);
                     }
                 }
