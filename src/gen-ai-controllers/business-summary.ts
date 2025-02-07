@@ -2,6 +2,7 @@ import Express, { Request, Response, Router, NextFunction } from "express";
 import { appService } from "../services/app-service";
 import { ObjectId } from "mongodb";
 import Mongoose from "mongoose";
+import extractDataEntities from "../helpers/common/entity-master-helper";
 
 const bsRouter: Router = Express.Router();
 bsRouter.use("/", (request: Request, response: Response, next: NextFunction) => {
@@ -69,7 +70,8 @@ bsRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
 }).post("/extract-data-entities", async (request: Request, response: Response) => {
     try {
         var reqBody = request.body;
-        let variables: any = JSON.parse(reqBody.data);
+        let result = await extractDataEntities(reqBody.data, reqBody.pid, reqBody.fid)
+        /*let variables: any = JSON.parse(reqBody.data);
         let entities = variables.entities;
         let pid = reqBody.pid;
         let fid = reqBody.fid;
@@ -85,8 +87,12 @@ bsRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
                 };
                 await appService.entityMaster.addItem(document);
             }
+        }*/
+        if (result.success) {
+            response.status(200).json("Data saved successfully.").end();
+        } else {
+            response.status(500).json(result.error).end();
         }
-        response.status(200).json("Data saved successfully.").end();
     } catch (error) {
         response.status(500).json(error).end();
     }
@@ -99,13 +105,13 @@ bsRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
         if (entityList.length == 0) {
             response.status(200).json(jsonData).end();
         } else {
-            let rootNode = { id: i++, parent: "#", text: "Entities", state: { selected: true } };
+            let rootNode = { id: i++, parent: "#", text: "Entities", icon:"fa fa-folder",state: { selected: true } };
             jsonData.push(rootNode);
             for (const entity of entityList) {
-                let entityNode = { id: i++, parent: 0, text: entity.entityName, state: { selected: false } };
+                let entityNode = { id: i++, parent: 0, text: entity.entityName, icon: "fa fa-folder", state: { selected: false } };
                 if (entity.attributes && entity.attributes.length > 0) {
                     for (const attribute of entity.attributes) {
-                        let attributeNode = { id: i++, parent: entityNode.id, text: attribute.attributeName, state: { selected: false } };
+                        let attributeNode = { id: i++, parent: entityNode.id, icon: "fa fa-file", text: ` ${attribute.attributeName}: ${attribute.description}`, state: { selected: false } };
                         jsonData.push(attributeNode);
                     }
                 }
