@@ -3,8 +3,20 @@ import { appService } from "../services/app-service";
 import { FileMaster, Link, Node, NodeLinkType, _createNode } from "../models";
 import mongoose, { Mongoose, PipelineStage } from "mongoose";
 import { ObjectId } from "mongodb";
+import configs from "../configurations";
+import extractDataEntities from "../helpers/common/entity-master-helper";
+
+import axios from "axios";
+import { Agent } from 'https';
 
 const dependencyRouter: Router = Express.Router();
+const genaiAddress: string = configs.genAIUrl;
+const axiosInstance: any = axios.create({
+    httpsAgent: new Agent({
+        rejectUnauthorized: false
+    })
+});
+
 dependencyRouter.use("/", (request: Request, response: Response, next: NextFunction) => {
     next();
 }).get("/", async (request: Request, response: Response) => {
@@ -35,7 +47,7 @@ dependencyRouter.use("/", (request: Request, response: Response, next: NextFunct
         }
         await _expandParentCalls({ nodes, links, index: nodes.length + 1 }, node);
         if (populateEntities === "true") {
-            await _attachEntityNodes({ nodes, links, index: nodes.length + 1 });
+            await _attachEntityNodes({ nodes, links, index: nodes.length + 1 }, request.headers.authorization);
         }
         // _assignLinkTexts(links);
         response.status(200).json({ nodes, links }).end();
@@ -120,29 +132,84 @@ const _assignLinkTexts = function (links: Array<Link>) {
     dfs(0, "");
 };
 
-const _attachEntityNodes = async (opt: { nodes: Array<Node>, links: Array<Link>, index: number }) => {
+const _attachEntityNodes = async (opt: { nodes: Array<Node>, links: Array<Link>, index: number }, authToken: string) => {
     for (const node of opt.nodes) {
         if (node.type == NodeLinkType.entity) continue;
         let entities = await appService.entityMaster.getDocuments({ fid: mongoose.Types.ObjectId.createFromHexString(node.fileId.toString()) });
         if (entities.length == 0) {
-            // send request to model-handler-api to get entities and save it into database
+            // send request to multi-handler-api to get entities and save it into database
+            let fileContents = await appService.fileContentMaster.getItem({ fid: new ObjectId(node.fileId) });
+            try {
+                const result = await axiosInstance.post(
+                    `${genaiAddress}multi-model-handler`,
+                    {
+                        promptId: 1001,
+                        fileData: fileContents.formatted,
+                        language: "COBOL",
+                        fid: node.fileId,
+                        reGen: false
+                    },
+                    {
+                        headers: {
+                            Authorization: `${authToken}`
+                        }
+                    }
+                );
+                let formatedRes = result.data.response.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ');
+                const cleanedString = formatedRes.replace(/```json|```/g, '').trim();
+                let extractedJson = extractJson(cleanedString);
+                let res = await extractDataEntities(extractedJson, node.pid.toString(), node.fileId.toString());
+                // if res.code==3 means json is invalid we need to handle this situation
+                if (res.success) {
+                    let entityNode: Node = {
+                        name: "",
+                        group: 3,
+                        image: "sql.png",
+                        id: `entity-${node.fileId.toString()}`,
+                        originalIndex: opt.index++,
+                        pid: node.pid,
+                        wid: node.wid,
+                        fileId: node.fileId.toString(),
+                        type: NodeLinkType.entity,
+                    } as Node;
+                    opt.nodes.push(entityNode);
+                    let parentIdx = opt.nodes.findIndex((x) => x.name === node.name);;
+                    let targetIdx = opt.nodes.findIndex((x) => x.id === `entity-${node.fileId.toString()}`);;
+                    opt.links.push({ source: parentIdx, target: targetIdx, weight: 3, linkText: entityNode.name } as any);
+                }
+            } catch (err) {
+                console.log(err);
+            }
+
+        } else {
+            let entityNode: Node = {
+                name: "",
+                group: 3,
+                image: "sql.png",
+                id: `entity-${node.fileId.toString()}`,
+                originalIndex: opt.index++,
+                pid: node.pid,
+                wid: node.wid,
+                fileId: node.fileId.toString(),
+                type: NodeLinkType.entity,
+            } as Node;
+            opt.nodes.push(entityNode);
+            let parentIdx = opt.nodes.findIndex((x) => x.name === node.name);;
+            let targetIdx = opt.nodes.findIndex((x) => x.id === `entity-${node.fileId.toString()}`);;
+            opt.links.push({ source: parentIdx, target: targetIdx, weight: 3, linkText: entityNode.name } as any);
         }
-        let entityNode: Node = {
-            name: "",
-            group: 3,
-            image: "sql.png",
-            id: `entity-${node.fileId.toString()}`,
-            originalIndex: opt.index++,
-            pid: node.pid,
-            wid: node.wid,
-            fileId: node.fileId.toString(),
-            type: NodeLinkType.entity,
-        } as Node;
-        opt.nodes.push(entityNode);
-        let parentIdx = opt.nodes.findIndex((x) => x.name === node.name);;
-        let targetIdx = opt.nodes.findIndex((x) => x.id === `entity-${node.fileId.toString()}`);;
-        opt.links.push({ source: parentIdx, target: targetIdx, weight: 3, linkText: entityNode.name } as any);
+
     }
+    function extractJson(input: string) {
+        const regex = /```json<br>([\s\S]*?)<br>```/;
+        const match = input.match(regex);
+        if (match && match[1]) {
+            return match[1].replace(/<br>/g, "");
+        } else {
+            return input;
+        }
+    };
 }
+
 
 module.exports = dependencyRouter;

@@ -32,7 +32,7 @@ export default {
         return process.env.MONGO_USER;
     }, get mongoPass() {
         return process.env.MONGO_PASS;
-    }, get dotNetApiUrl(){
+    }, get dotNetApiUrl() {
         return process.env.DOTNET_API_URL;
     }, get mongoHost() {
         return process.env.MONGO_HOST;
@@ -40,5 +40,8 @@ export default {
         return process.env.MONGO_PORT;
     }, get cohereApiKey() {
         return process.env.COHERE_API_KEY;
+    },
+    get genAIUrl() {
+        return process.env.GEN_AI_URL
     }
 }
