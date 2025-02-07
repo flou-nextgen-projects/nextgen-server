@@ -58,7 +58,7 @@ const _initDatabaseConfiguration = (dbStatus: any): Promise<{ message: string }>
         let ftMasterDocs = configJson.find((d) => d.collection === "fileTypeMaster").documents;
         await appService.fileTypeMaster.bulkInsert(ftMasterDocs);
         let bcmDocs = configJson.find((d) => d.collection === "baseCommandMaster").documents;
-        await appService.baseCommandMaster.bulkInsert(bcmDocs);        
+        await appService.baseCommandMaster.bulkInsert(bcmDocs);
         let formattingConfig = configJson.find((d) => d.collection === "formattingConfig").documents;
         await appService.mongooseConnection.collection("formattingConfig").insertMany(formattingConfig);
         let languageMasters = configJson.find((d) => d.collection === "languageMaster").documents;

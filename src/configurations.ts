@@ -40,8 +40,7 @@ export default {
         return process.env.MONGO_PORT;
     }, get cohereApiKey() {
         return process.env.COHERE_API_KEY;
-    },
-    get genAIUrl() {
+    }, get genAIUrl() {
         return process.env.GEN_AI_URL
     }
 }

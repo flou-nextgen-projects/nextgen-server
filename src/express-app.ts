@@ -28,12 +28,14 @@ export const setAppRoutes = function (app: express.Application) {
 
     app.use((err: any, req: Request, res: Response, next: Function) => {
         if (res.headersSent) return next();
-        res.status(err.httpStatusCode || 500).render('UnknownError');
+        res.status(err.httpStatusCode || 500).render('UnKnownError');
     });
 
     app.use((req: Request, res: Response, next: NextFunction) => {
         console.log("---=================================================================---");
         console.log(chalk.green(`---==== ${req.url} ====---`));
+        req.on("error", (err: Error) => { console.log(err); });
+        res.on("error", (err: Error) => { console.log(err); });
         next();
     });
 
@@ -141,5 +143,5 @@ export const setAppRoutes = function (app: express.Application) {
         apis: [`${swaggerApi}/*.js`]
     };
     const specs = swaggerJsdoc(options);
-    app.use('/backend/api-docs', swaggerUi.serve, swaggerUi.setup(specs, { customCss: ".swagger-ui .btn {margin-right: 4px;} .swagger-ui .auth-container input[type=password], .swagger-ui .auth-container input[type=text] {min-width: 100%;} .swagger-ui .scheme-container .schemes .auth-wrapper .authorize {margin-right: 4px;} .swagger-ui .auth-btn-wrapper {justify-content: left;} .topbar {display: none !important} .swagger-ui .info {margin: 10px 0 10px 0} .swagger-ui .info hgroup.main {margin: 0px 0 10px;} .swagger-ui .scheme-container {margin: 0; padding: 15px 0;} .swagger-ui .info .title {text-align: center;}" }));
+    app.use('/backend/api-docs', swaggerUi.serve, swaggerUi.setup(specs, { customCss: ".swagger-ui .opblock {margin: 0 0 4px 0px; !important} .swagger-ui .btn {margin-right: 4px;} .swagger-ui .auth-container input[type=password], .swagger-ui .auth-container input[type=text] {min-width: 100%;} .swagger-ui .scheme-container .schemes .auth-wrapper .authorize {margin-right: 4px;} .swagger-ui .auth-btn-wrapper {justify-content: left;} .topbar {display: none !important} .swagger-ui .info {margin: 10px 0 10px 0} .swagger-ui .info hgroup.main {margin: 0px 0 10px;} .swagger-ui .scheme-container {margin: 0; padding: 15px 0;} .swagger-ui .info .title {text-align: center;}" }));
 }
