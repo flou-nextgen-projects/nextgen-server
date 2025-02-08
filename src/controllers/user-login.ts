@@ -23,10 +23,11 @@ loginRouter.use("/", (_: Request, __: Response, next: NextFunction) => {
     }).catch(function (ex: Mongoose.Error) {
         response.status(404).json({ exception: ex });
     });
-}).get("/id/:uid", function (request: Request, response: Response) {
+}).get("/id/:uid/:tid", function (request: Request, response: Response) {
     let uid: string = request.params.uid;
+    let tid: string = request.params.tid;
     var UserMaster: any = appService.userMaster.getModel();
-    UserMaster.findByObjectId(uid).then(async function (user: any) {
+    UserMaster.findByObjectId(uid, tid).then(async function (user: any) {
         var token = UserMaster.generateAuthTokenOne(user);
         await appService.userMaster.updateDocument({ _id: user._id }, { lastLogin: new Date() });
         response.setHeader('Access-Control-Allow-Headers', 'x-token');

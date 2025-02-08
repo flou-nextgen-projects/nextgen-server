@@ -87,8 +87,8 @@ UserMasterSchema.statics.findByCredentials = async function (userName: string, p
     });
 };
 
-UserMasterSchema.statics.findByObjectId = async function (objectId: string) {
-    const user = await this.aggregate([{ $match: { _id: Mongoose.Types.ObjectId.createFromHexString(objectId) } }]);
+UserMasterSchema.statics.findByObjectId = async function (objectId: string, tid: string) {
+    const user = await this.aggregate([{ $match: { _id: Mongoose.Types.ObjectId.createFromHexString(objectId), tid: Mongoose.Types.ObjectId.createFromHexString(tid) } }]);
     if (!user || user.length == 0) {
         return Promise.reject('User Not Found');
     }
