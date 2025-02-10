@@ -204,7 +204,8 @@
     },
     {
         "collection": "userMaster",
-        "documents": [{
+        "documents": [
+            {
                 "userName": "yogeshs",
                 "password": "$2a$10$KUgNdWEfi0goD0zm8uihruRpIUhx.Ljkn4/OHXrKIu1fEpSnr.EIe",
                 "firstName": "Yogesh",
@@ -212,7 +213,6 @@
                 "email": "sonawaneyogeshb@gmail.com",
                 "contact": "+918149497650",
                 "roleId": "67a0aa72e5a8381203fb7e3c",
-                "lastLoggedInDate": null,
                 "isActive": true
             },
             {
@@ -361,6 +361,54 @@
                 "removeStringConcatenationToken": true,
                 "addBracesToSingleLineConditions": true,
                 "removeEmptyFunctions": true
+            }
+        ]
+    },
+    {
+        "indexes": [
+            {
+                "collection": "fileContents",
+                "indexes": [
+                    {
+                        "fid": 1
+                    },
+                    {
+                        "original": "text"
+                    }
+                ]
+            },
+            {
+                "collection": "businessSummaries",
+                "indexes": [
+                    {
+                        "data": "text"
+                    },
+                    {
+                        "formattedData": "text"
+                    }
+                ]
+            },
+            {
+                "collection": "statementMaster",
+                "indexes": [
+                    {
+                        "originalLine": "text"
+                    },
+                    {
+                        "fid": 1
+                    },
+                    {
+                        "modifiedLine": "text"
+                    }
+                ]
+            },
+            {
+                "collection": "objectConnectivity",
+                "indexes": [
+                    {
+                        "pid": 1
+                    }
+                ]
             }
         ]
     }
