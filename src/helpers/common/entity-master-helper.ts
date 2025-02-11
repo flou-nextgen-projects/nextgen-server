@@ -4,8 +4,8 @@ import { EntityMaster } from "../../models";
 async function extractDataEntities(reqBody: any, pid: string, fid: string) {
     try {
         const variables = JSON.parse(reqBody);
-        let isValid = isValidJSON(variables);
-        if (!isValid) return { success: false, error: "Invalid json", code: 3 };
+        // let isValid = isValidJSON(variables);
+        // if (!isValid) return { success: false, error: "Invalid json", code: 3 };
         const entities = variables.entities;
         if (Array.isArray(entities)) {
             for (const element of entities) {

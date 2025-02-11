@@ -105,7 +105,7 @@ bsRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
         if (entityList.length == 0) {
             response.status(200).json(jsonData).end();
         } else {
-            let rootNode = { id: i++, parent: "#", text: "Entities", icon:"fa fa-folder",state: { selected: true } };
+            let rootNode = { id: i++, parent: "#", text: "Entities", icon: "fa fa-folder", state: { selected: true } };
             jsonData.push(rootNode);
             for (const entity of entityList) {
                 let entityNode = { id: i++, parent: 0, text: entity.entityName, icon: "fa fa-folder", state: { selected: false } };
@@ -122,6 +122,13 @@ bsRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
     } catch (error) {
         response.status(500).send().end();
     }
+}).get("/get-entities", function (request: Request, response: Response) {
+    let fid = <string>request.query.fid;
+    appService.entityMaster.getDocuments({ fid: new ObjectId(fid) }).then((result) => {
+        response.status(200).json(result).end();
+    }).catch((err) => {
+        response.status(500).json(err).end();
+    });
 });
 
 module.exports = bsRouter;
