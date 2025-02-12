@@ -22,8 +22,8 @@ loginRouter.use("/", (_: Request, __: Response, next: NextFunction) => {
         var license = false;
         let orgMaster = await appService.mongooseConnection.collection("organizationMaster").findOne({ _id: new Mongoose.Types.ObjectId(orgId) });
         try {
-            const decodedToken = jwt.verify(orgMaster.genAIToken, config.secretKey);
-            let nextGenBody = JSON.parse(atob(orgMaster.genAIToken.split('.')[1]));
+            const decodedToken = jwt.verify(orgMaster.nextGenToken, config.secretKey);
+            let nextGenBody = JSON.parse(atob(orgMaster.nextGenToken.split('.')[1]));
             const startDate = moment(nextGenBody.startDate, 'MM-DD-YYYY');
             const futureDate = startDate.clone().add(nextGenBody.days, 'days');
             const isDateValid = futureDate.startOf('day').isSameOrAfter(moment().startOf('day'));
