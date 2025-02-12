@@ -53,16 +53,11 @@ checkDbStatusRouter.use("/", (_: Request, __: Response, next: NextFunction) => {
 }).post("/generate-token", async function (_: Request, response: Response) {
     try {
         var { startDate, orgId, days, queryCount } = _.body;
-        var token = jwt.sign({ _id: orgId, access: 'auth', startDate, days, queryCount }, config.secretKey).toString();
-        let orgMaster = await appService.mongooseConnection.collection("organizationMaster").findOne({ orgId: orgId });
-        if (orgMaster !== null) {           
-            let dbCollection = await appService.mongooseConnection.collection("organizationMaster"); 
-            var update = {
-                nextGenToken: token,
-                genAiToken: token
-            }  
-            await dbCollection.updateOne({_id: orgMaster._id}, { $set: update });
-        }
+        var token = jwt.sign({ _id: orgId, access: 'auth', startDate, queryCount }, config.secretKey, { expiresIn: `${days}d` }).toString();
+        let orgMaster = await appService.mongooseConnection.collection("organizationMaster").findOne({});
+        let dbCollection = appService.mongooseConnection.collection("organizationMaster");
+        var update = { nextGenToken: token, genAiToken: token }
+        await dbCollection.updateOne({ _id: orgMaster?._id }, { $set: update }, { upsert: true });
         response.setHeader("x-genAi-token", token);
         response.status(200).send().end();
     } catch (err) {
@@ -83,14 +78,6 @@ const _initDatabaseConfiguration = (dbStatus: any): Promise<{ message: string }>
         await appService.mongooseConnection.collection("formattingConfig").insertMany(formattingConfig);
         let languageMasters = configJson.find((d) => d.collection === "languageMaster").documents;
         await appService.languageMaster.bulkInsert(languageMasters);
-        let roleMaster = configJson.find((d) => d.collection === "roleMaster").documents;
-        await appService.roleMaster.bulkInsert(roleMaster);
-        let organizationMaster = configJson.find((d) => d.collection === "organizationMaster").documents;
-        await appService.organizationMaster.bulkInsert(organizationMaster);
-        let userMaster = configJson.find((d) => d.collection === "userMaster").documents;
-        await appService.userMaster.bulkInsert(userMaster);
-        // let workspaceMaster = configJson.find((d) => d.collection === "workspaceMaster").documents;
-        // await appService.workspaceMaster.bulkInsert(workspaceMaster);
         await appService.mongooseConnection.collection("dbStatus").findOneAndUpdate({ _id: dbStatus?._id }, { $set: { configured: true, enabled: true } }, { upsert: true });
         res({ message: "Database initialization process completed successfully" });
     } catch (error) {

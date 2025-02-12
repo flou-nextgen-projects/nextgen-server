@@ -5,6 +5,7 @@ var Jwt = require('jsonwebtoken');
 var bcryptJs = require('bcryptjs');
 import config from "../configurations";
 class UserMaster extends EntityBase {
+    public tid: Mongoose.Schema.Types.ObjectId | string;
     public userName: string;
     public password: string;
     public firstName: string;
@@ -23,13 +24,14 @@ class UserMaster extends EntityBase {
 }
 
 const UserMasterSchema: Mongoose.Schema<UserMaster> = new Mongoose.Schema<UserMaster>({
+    tid: { type: Mongoose.Types.ObjectId, select: true, required: true },
     userName: { type: String, select: true, required: true },
     password: { type: String, select: true, required: true },
     firstName: { type: String, select: true, required: true },
     lastName: { type: String, select: true, required: true },
     email: { type: String, select: true, required: true },
     contact: { type: String, select: true, required: true },
-    roleId: { type: Mongoose.Types.ObjectId, select: true, required: false },
+    roleId: { type: Mongoose.Types.ObjectId, select: true, required: true },
     token: { type: String, required: false },
     lastLogin: { type: Date, required: false, default: null },
     isActive: { type: Boolean, required: false, default: true },
@@ -73,7 +75,7 @@ UserMasterSchema.statics.generateAuthTokenOne = function (userMaster: any) {
 UserMasterSchema.statics.findByCredentials = async function (userName: string, password: string) {
     const user = await this.aggregate([{ $match: { userName: userName } }]);
     if (!user || user.length == 0) {
-        return Promise.reject('User Not Found');
+        return Promise.reject('User not found');
     }
     return await new Promise((resolve, reject) => {
         var u = user.shift();
@@ -92,7 +94,7 @@ UserMasterSchema.statics.findByCredentials = async function (userName: string, p
 UserMasterSchema.statics.findByObjectId = async function (objectId: string, tid: string) {
     const user = await this.aggregate([{ $match: { _id: Mongoose.Types.ObjectId.createFromHexString(objectId), tid: Mongoose.Types.ObjectId.createFromHexString(tid) } }]);
     if (!user || user.length == 0) {
-        return Promise.reject('User Not Found');
+        return Promise.reject('User not found');
     }
     var u = user.shift();
     delete u.password;

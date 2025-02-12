@@ -95,10 +95,12 @@ export const setAppRoutes = function (app: express.Application) {
     var dbStatusRouter = require("./config/check-status");
     app.use("/backend/super/admin/db", dbStatusRouter);
     // job processing routers
+    /* 
     var cobolProcessRouter = require("./jobs/process-cobol-project");
     var startProcessRouter = require("./jobs/start-processing");
     app.use("/backend/jobs/api/cobol-process", cobolProcessRouter);
-    app.use("/backend/jobs/api/csharp-process", startProcessRouter);
+    app.use("/backend/jobs/api/csharp-process", startProcessRouter); 
+    */
 
     // GenAI routes
     // all routes are added into gen-ai.routes file under routes folder

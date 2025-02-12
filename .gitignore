@@ -25,3 +25,5 @@ dockerfiles
 logs
 uploaded-projects
 extracted-projects
+certs
+mongod.conf
