@@ -203,6 +203,16 @@
         ]
     },
     {
+        "collection": "organizationMaster",
+        "documents": [
+            {
+                "_id": "67ab7f3383a54eb29cb24fa9",
+                "orgId" : 1,
+                "orgName" : "NextGen"            
+            }            
+        ]
+    },
+    {
         "collection": "userMaster",
         "documents": [
             {
@@ -229,16 +239,7 @@
             }
         ]
     },
-    {
-        "collection": "organizationMaster",
-        "documents": [
-            {
-                "_id": "67ab7f3383a54eb29cb24fa9",
-                "orgId" : 1,
-                "orgName" : "NextGen"            
-            }            
-        ]
-    },
+    
     {
         "collection": "baseCommandMaster",
         "documents": [

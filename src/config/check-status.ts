@@ -85,6 +85,8 @@ const _initDatabaseConfiguration = (dbStatus: any): Promise<{ message: string }>
         await appService.languageMaster.bulkInsert(languageMasters);
         let roleMaster = configJson.find((d) => d.collection === "roleMaster").documents;
         await appService.roleMaster.bulkInsert(roleMaster);
+        let organizationMaster = configJson.find((d) => d.collection === "organizationMaster").documents;
+        await appService.roleMaster.bulkInsert(organizationMaster);
         let userMaster = configJson.find((d) => d.collection === "userMaster").documents;
         await appService.userMaster.bulkInsert(userMaster);
         // let workspaceMaster = configJson.find((d) => d.collection === "workspaceMaster").documents;

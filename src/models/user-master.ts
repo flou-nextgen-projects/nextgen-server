@@ -34,7 +34,7 @@ const UserMasterSchema: Mongoose.Schema<UserMaster> = new Mongoose.Schema<UserMa
     lastLogin: { type: Date, required: false, default: null },
     isActive: { type: Boolean, required: false, default: true },
     imageId: { type: Mongoose.Types.ObjectId, select: true, required: false },
-    oid: { type: Mongoose.Types.ObjectId, select: true, required: true }
+    oid: { type: Mongoose.Types.ObjectId, select: true, required: false }
 }, { toJSON: { useProjection: true }, toObject: { useProjection: true } });
 
 UserMasterSchema.statics.useVirtuals = {
