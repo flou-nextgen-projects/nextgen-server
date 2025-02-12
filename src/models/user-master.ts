@@ -19,6 +19,7 @@ class UserMaster extends EntityBase {
     public lastLogin: Date;
     public isActive: boolean;
     public imageId: Mongoose.Schema.Types.ObjectId;
+    public oid: Mongoose.Schema.Types.ObjectId | string;
 }
 
 const UserMasterSchema: Mongoose.Schema<UserMaster> = new Mongoose.Schema<UserMaster>({
@@ -33,6 +34,7 @@ const UserMasterSchema: Mongoose.Schema<UserMaster> = new Mongoose.Schema<UserMa
     lastLogin: { type: Date, required: false, default: null },
     isActive: { type: Boolean, required: false, default: true },
     imageId: { type: Mongoose.Types.ObjectId, select: true, required: false },
+    oid: { type: Mongoose.Types.ObjectId, select: true, required: true }
 }, { toJSON: { useProjection: true }, toObject: { useProjection: true } });
 
 UserMasterSchema.statics.useVirtuals = {

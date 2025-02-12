@@ -5,6 +5,8 @@ import Express, { Request, Response, Router, NextFunction } from "express";
 import { appService } from "../services/app-service";
 import { readFileSync } from "fs";
 import { resolve, join } from "path";
+import config from "../configurations";
+var jwt = require('jsonwebtoken');
 
 const checkDbStatusRouter: Router = Express.Router();
 
@@ -48,6 +50,24 @@ checkDbStatusRouter.use("/", (_: Request, __: Response, next: NextFunction) => {
     await appService.mongooseConnection.dropCollection("objectConnectivity");
     await appService.mongooseConnection.dropCollection("workspaceMaster");
     response.status(200).end();
+}).post("/generate-token", async function (_: Request, response: Response) {
+    try {
+        var { startDate, orgId, days, queryCount } = _.body;
+        var token = jwt.sign({ _id: orgId, access: 'auth', startDate, days, queryCount }, config.secretKey).toString();
+        let orgMaster = await appService.mongooseConnection.collection("organizationMaster").findOne({ orgId: orgId });
+        if (orgMaster !== null) {           
+            let dbCollection = await appService.mongooseConnection.collection("organizationMaster"); 
+            var update = {
+                nextGenToken: token,
+                genAIToken: token
+            }  
+            await dbCollection.updateOne({_id: orgMaster._id}, { $set: update });
+        }
+        response.setHeader("x-genAi-token", token);
+        response.status(200).send().end();
+    } catch (err) {
+        response.status(500).end();
+    }
 });
 
 const _initDatabaseConfiguration = (dbStatus: any): Promise<{ message: string }> => new Promise(async (res, rej) => {

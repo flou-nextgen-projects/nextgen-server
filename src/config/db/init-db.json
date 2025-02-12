@@ -213,7 +213,8 @@
                 "email": "sonawaneyogeshb@gmail.com",
                 "contact": "+918149497650",
                 "roleId": "67a0aa72e5a8381203fb7e3c",
-                "isActive": true
+                "isActive": true,
+                "oid": "67ab7f3383a54eb29cb24fa9s"
             },
             {
                 "userName": "admin",
@@ -223,8 +224,19 @@
                 "email": "sonawaneyogeshb@gmail.com",
                 "contact": "+918149497650",
                 "roleId": "65d09dde2b488f3930d90264",
-                "isActive": true
+                "isActive": true,
+                "oid": "67ab7f3383a54eb29cb24fa9"
             }
+        ]
+    },
+    {
+        "collection": "organizationMaster",
+        "documents": [
+            {
+                "_id": "67ab7f3383a54eb29cb24fa9",
+                "orgId" : 1,
+                "orgName" : "NextGen"            
+            }            
         ]
     },
     {
