@@ -59,7 +59,7 @@ checkDbStatusRouter.use("/", (_: Request, __: Response, next: NextFunction) => {
             let dbCollection = await appService.mongooseConnection.collection("organizationMaster"); 
             var update = {
                 nextGenToken: token,
-                genAIToken: token
+                genAiToken: token
             }  
             await dbCollection.updateOne({_id: orgMaster._id}, { $set: update });
         }
