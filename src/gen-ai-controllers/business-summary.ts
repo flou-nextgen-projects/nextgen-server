@@ -111,7 +111,11 @@ bsRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
                 let entityNode = { id: i++, parent: 0, text: entity.entityName, icon: "fa fa-folder", state: { selected: false } };
                 if (entity.attributes && entity.attributes.length > 0) {
                     for (const attribute of entity.attributes) {
-                        let attributeNode = { id: i++, parent: entityNode.id, icon: "fa fa-file", text: ` ${attribute.attributeName}: ${attribute.description}`, state: { selected: false } };
+                       //  console.log(attribute);
+                        // If 'attributeName' exists, return it; otherwise, use the first key
+                        let attrName = attribute.hasOwnProperty("attributeName") ? attribute["attributeName"] : Object.keys(attribute)[0] || "";
+                        let description = attribute.hasOwnProperty("description") ? attribute["description"] : Object.keys(attribute)[0] || "";
+                        let attributeNode = { id: i++, parent: entityNode.id, icon: "fa fa-file", text: ` ${attrName}: ${description}`, state: { selected: false } };
                         jsonData.push(attributeNode);
                     }
                 }
