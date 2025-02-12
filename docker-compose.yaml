@@ -1,17 +1,46 @@
-name: next-gen-server
+name: next-gen-applications
 
-volumes:
-  shared-volume:
+networks:
+  next-gen-network:
     external: true
 
 services:
+  mongo:
+    image: mongo
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=dezireGadi7081
+      - MONGO_INITDB_DATABASE=sonawaneyogeshb
+    networks:
+      - next-gen-network
+    ports:
+      - 27017:27017  
+
+  mongo-express:
+    image: mongo-express
+    environment:
+      - ME_CONFIG_MONGODB_SERVER=mongo
+      - ME_CONFIG_MONGODB_PORT=27017
+      - ME_CONFIG_MONGODB_ENABLE_ADMIN=false
+      - ME_CONFIG_MONGODB_AUTH_DATABASE=admin
+      - ME_CONFIG_MONGODB_AUTH_USERNAME=admin
+      - ME_CONFIG_MONGODB_AUTH_PASSWORD=dezireGadi7081
+      - ME_CONFIG_BASICAUTH_USERNAME=yogeshs
+      - ME_CONFIG_BASICAUTH_PASSWORD=yogeshs8032
+    depends_on:
+      - mongo
+    ports:
+      - 8081:8081
+    networks:
+      - next-gen-network  
+
   next-gen-server:
     image: next-gen-server:latest
     container_name: next-gen-server
     hostname: next-gen-server
     build:
       context: .
-      dockerfile: ./dockerfile
+      dockerfile: ./Dockerfile
     environment:
       NODE_ENV: production
     env_file:
@@ -19,20 +48,8 @@ services:
     ports:
       - 9000:9000
       - 9229:9229
-    develop:
-      watch:
-        - path: /src
-          target: /app/src
-          action: sync
-        - path: package.json
-          action: rebuild  
-          ignore:
-            - "node_modules/"
-            - "Jenkinsfile"
-            - "Jenkins.Dockerfile"
-            - "*.md"
-            - "*.dockerfile"  
+    depends_on:
+      - mongo
+      - mongo-express
     networks:
-      - kafka-network
-    volumes:
-      - shared-volume:/app/dist/certificates:rw
+      - next-gen-network
