@@ -10,12 +10,6 @@ export default {
         return process.env.SECRET_KEY;
     }, get tenantSecret() {
         return process.env.TEST_TENANT_SECRET;
-    }, get razorPayKeyId() {
-        return process.env.RAZORPAY_KEY_ID;
-    }, get razorPayKeySecret() {
-        return process.env.RAZORPAY_KEY_SECRET;
-    }, get razorPayWebhookSecret() {
-        return process.env.RAZORPAY_WEBHOOK_KEY;
     }, get kafkaHost() {
         return process.env.KAFKA_BROKER_HOST;
     }, get kafkaPort() {
@@ -27,17 +21,17 @@ export default {
     }, get useHttps() {
         return process.env.USE_HTTPS || true;
     }, get mongoDb() {
-        return process.env.MONGO_DB;
+        return process.env.NG_MONGO_DB;
     }, get mongoUser() {
-        return process.env.MONGO_USER;
+        return process.env.NG_MONGO_USER;
     }, get mongoPass() {
-        return process.env.MONGO_PASS;
+        return process.env.NG_MONGO_PASS;
     }, get dotNetApiUrl() {
         return process.env.DOTNET_API_URL;
     }, get mongoHost() {
-        return process.env.MONGO_HOST;
+        return process.env.NG_MONGO_HOST;
     }, get mongoPort() {
-        return process.env.MONGO_PORT;
+        return process.env.NG_MONGO_PORT;
     }, get cohereApiKey() {
         return process.env.COHERE_API_KEY;
     }, get genAIUrl() {
