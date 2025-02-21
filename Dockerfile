@@ -7,8 +7,15 @@ RUN apk add --no-cache openssl bash sed
 WORKDIR /app
 
 # Copy files
-COPY . .
+COPY package.* /app
+COPY ./dist ./dist
+COPY ./certs /app/certs
+COPY /.env /app
 
+# Remove certificates folder from ./dist directory
+RUN rm -r /app/dist/certificates
+
+RUN ls -a /app/certs
 # Specifically copy generate-certs.sh
 COPY generate-certs.sh /app/generate-certs.sh
 
@@ -22,10 +29,7 @@ RUN /bin/bash /app/generate-certs.sh
 RUN npm install
 
 # install typescript globally
-RUN npm install -g typescript
-
-# Compile TypeScript if needed
-RUN npm run tsc
+RUN npm install -g typescript nodemon
 
 # Expose ports
 EXPOSE 9000 9229
