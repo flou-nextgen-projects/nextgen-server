@@ -61,14 +61,14 @@ UserMasterSchema.methods.generateAuthToken = function () {
     var userMaster = this.toJSON();
     delete userMaster.password;
     userMaster._id = userMaster._id.toHexString();
-    var token = Jwt.sign({ user: userMaster }, config.secretKey, { expiresIn: '2h' }).toString();
+    var token = Jwt.sign({ user: userMaster }, config.secretKey, { expiresIn: '24h' }).toString();
     return token;
 };
 UserMasterSchema.statics.generateAuthTokenOne = function (userMaster: any) {
     delete userMaster.password;
     userMaster._id = userMaster._id.toHexString();
     userMaster.fullName = `${userMaster.firstName} ${userMaster.lastName}`;
-    var token = Jwt.sign({ user: userMaster }, config.secretKey, { expiresIn: '2h' }).toString();
+    var token = Jwt.sign({ user: userMaster }, config.secretKey, { expiresIn: '24h' }).toString();
     return token;
 }
 

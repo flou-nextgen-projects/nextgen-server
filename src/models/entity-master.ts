@@ -11,23 +11,12 @@ class EntityMaster extends EntityBase {
     public attributes: Array<any>;
 }
 const EntityMasterSchema: Mongoose.Schema<EntityMaster> = new Mongoose.Schema({
-    entityName: {
-        type: String, required: true, default: ""
-    }, pid: {
-        type: Mongoose.Schema.Types.ObjectId, required: true
-    }, fid: {
-        type: Mongoose.Schema.Types.ObjectId, required: true
-    },
-    type: {
-        type: String, required: false
-    },
-    description: {
-        type: String, required: false
-    },
-    attributes: {
-        type: [], required: false
-    }
-
+    entityName: { type: String, required: true },
+    pid: { type: Mongoose.Schema.Types.ObjectId, required: true },
+    fid: { type: Mongoose.Schema.Types.ObjectId, required: true },
+    type: { type: String, required: false },
+    description: { type: String, required: false },
+    attributes: { type: [], required: false }
 });
 class DataDependency extends EntityBase {
     public entity: string;

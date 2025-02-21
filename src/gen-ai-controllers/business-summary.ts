@@ -111,7 +111,7 @@ bsRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
                 let entityNode = { id: i++, parent: 0, text: entity.entityName, icon: "fa fa-folder", state: { selected: false } };
                 if (entity.attributes && entity.attributes.length > 0) {
                     for (const attribute of entity.attributes) {
-                       //  console.log(attribute);
+                        //  console.log(attribute);
                         // If 'attributeName' exists, return it; otherwise, use the first key
                         let attrName = attribute.hasOwnProperty("attributeName") ? attribute["attributeName"] : Object.keys(attribute)[0] || "";
                         let description = attribute.hasOwnProperty("description") ? attribute["description"] : Object.keys(attribute)[0] || "";
@@ -133,6 +133,37 @@ bsRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
     }).catch((err) => {
         response.status(500).json(err).end();
     });
-});
+}).get("/delete-gen-ai-data/:fid/:promptId", async (request: Request, response: Response) => {
+    // this api use for deleting data generated from genAI from businessSummary collection for variable & data elements,pseudo & business summary
+    const { fid, promptId } = request.params;
+    const promptid = parseInt(promptId);
+    if (promptId === "1001") {
+        let result = await appService.entityMaster.removeAll({ fid: Mongoose.Types.ObjectId.createFromHexString(fid) });
+        appService.mongooseConnection.collection("businessSummaries").deleteOne({ fid: Mongoose.Types.ObjectId.createFromHexString(fid), promptId: promptid })
+            .then((res) => {
+                response.status(200).json({ msg: "Record deleted successfully." }).end();
+            }).catch((err) => {
+                response.status(500).json(err).end();
+            });
+    } else {
+        appService.mongooseConnection.collection("businessSummaries").deleteOne({ fid: Mongoose.Types.ObjectId.createFromHexString(fid), promptId: promptid })
+            .then((res) => {
+                response.status(200).json({ msg: "Record deleted successfully." }).end();
+            }).catch((err) => {
+                response.status(500).json(err).end();
+            });
+    }
+
+}).get("/get-business-summary", async (request: Request, response: Response) => {
+    try {
+        let fid = <string>request.query.fid;
+        let promptId = Number(request.query.promptId);
+        var collection = appService.mongooseConnection.collection('businessSummaries');
+        let businessSummary = await collection.findOne({ fid: new ObjectId(fid), promptId :  promptId});
+        response.status(200).json(businessSummary).end();
+    } catch (error) {
+        response.status(500).send().end();
+    }
+});;
 
 module.exports = bsRouter;

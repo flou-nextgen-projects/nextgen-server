@@ -5,21 +5,6 @@ subjectAltName = @alt_names
 
 [alt_names]
 DNS.1 = localhost
-DNS.3 = elasticsearch
-DNS.4 = elastic-search
-DNS.5 = kibana
-DNS.6 = filebeat
-DNS.7 = file-beat
-DNS.8 = elastic-kibana
-DNS.9 = elastic
-DNS.10 = yogeshs
-DNS.11 = sonawane
-DNS.12 = y.sonawane
-IP.1 = 192.168.0.1
-IP.2 = 127.0.0.1
-IP.3 = 192.168.0.115
-IP.8 = ::1
-IP.4 = 0.0.0.0
-IP.5 = 172.22.0.2
-IP.6 = 172.24.0.2
-IP.7 = 172.28.0.2
+IP.1 = 127.0.0.1
+IP.2 = ::1
+IP.3 = 0.0.0.0
