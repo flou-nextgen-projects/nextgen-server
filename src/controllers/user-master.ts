@@ -15,7 +15,7 @@ userRouter.use("/", (request: Request, response: Response, next: NextFunction) =
 }).post("/", function (request: Request, response: Response) {
     var user = request.body;
     user.roleId = user.roleId || new Mongoose.Types.ObjectId('65d09dde2b488f3930d90264');
-    user.oid = user.roleId || new Mongoose.Types.ObjectId('67ab7f3383a54eb29cb24fa9');
+    user.oid = new Mongoose.Types.ObjectId('67ab7f3383a54eb29cb24fa9');
     var UserMaster = appService.userMaster.getModel();
     var newUser: any = new UserMaster(user);
     appService.userMaster.getItem({ userName: user.userName }).then((userResult: UserMaster) => {
