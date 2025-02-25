@@ -154,6 +154,25 @@ bsRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
             });
     }
 
+}).get("/get-business-summary", async (request: Request, response: Response) => {
+    try {
+        let fid = <string>request.query.fid;
+        let promptId = Number(request.query.promptId);
+        var collection = appService.mongooseConnection.collection('businessSummaries');
+        let businessSummary = await collection.findOne({ fid: new ObjectId(fid), promptId: promptId });
+        response.status(200).json(businessSummary).end();
+    } catch (error) {
+        response.status(500).send().end();
+    }
+}).get("/delete-business-rules/:fid/:promptId", (request: Request, response: Response) => {
+    const { fid, promptId } = request.params;
+    const promptid = parseInt(promptId);
+    appService.mongooseConnection.collection("businessRules").deleteOne({ fid: Mongoose.Types.ObjectId.createFromHexString(fid), promptId: promptid })
+        .then((res) => {
+            response.status(200).json({ msg: "Record deleted successfully." }).end();
+        }).catch((err) => {
+            response.status(500).json(err).end();
+        })
 });
 
 module.exports = bsRouter;

@@ -38,10 +38,12 @@ checkDbStatusRouter.use("/", (_: Request, __: Response, next: NextFunction) => {
 }).get("/restore-database", async function (_: Request, response: Response) {
     await appService.mongooseConnection.dropCollection("businessSummaries");
     await appService.mongooseConnection.dropCollection("cobolDataSets");
+    await appService.mongooseConnection.dropCollection("entityMaster");
     await appService.mongooseConnection.dropCollection("fieldAndPropertiesDetails");
     await appService.mongooseConnection.dropCollection("fieldAndProperties");
     await appService.mongooseConnection.dropCollection("fileMaster");
     await appService.mongooseConnection.dropCollection("fileContents");
+    await appService.mongooseConnection.dropCollection("missingObjects");
     await appService.mongooseConnection.dropCollection("processingStages");
     await appService.mongooseConnection.dropCollection("projectMaster");
     await appService.mongooseConnection.dropCollection("memberReferences");

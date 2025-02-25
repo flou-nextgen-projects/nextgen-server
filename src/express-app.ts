@@ -2,7 +2,7 @@ import express, { NextFunction, Request, Response } from "express";
 import Cors from 'cors';
 import { json, urlencoded } from 'body-parser';
 var morgan = require('morgan');
-// import { clientAuth } from './middleware/client-auth';
+import { WinstonLogger } from "nextgen-utilities";
 import http2Express from 'http2-express-bridge';
 const swaggerJsdoc = require('swagger-jsdoc');
 const swaggerUi = require('swagger-ui-express');
@@ -10,7 +10,7 @@ import { join, resolve } from "path";
 import chalk from "chalk";
 import { AppError } from './common/app-error';
 
-
+const winstonLogger: WinstonLogger = new WinstonLogger(__filename);
 const app = http2Express(express);
 app.use(json({ limit: '60mb' }));
 app.use(urlencoded({ limit: '60mb', extended: true }));
@@ -34,8 +34,12 @@ export const setAppRoutes = function (app: express.Application) {
     app.use((req: Request, res: Response, next: NextFunction) => {
         console.log("---=================================================================---");
         console.log(chalk.green(`---==== ${req.url} ====---`));
-        req.on("error", (err: Error) => { console.log(err); });
-        res.on("error", (err: Error) => { console.log(err); });
+        req.on("error", (err: Error) => {
+            winstonLogger.error(err, { name: `Error occurred in endpoint: ${req.url}`, code: "REQUEST_ERROR" });
+        });
+        res.on("error", (err: Error) => {
+            winstonLogger.error(err, { name: `Error occurred in endpoint: ${req.url}`, code: "RESPONSE_ERROR" });
+        });
         next();
     });
 
