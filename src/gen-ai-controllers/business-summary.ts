@@ -99,7 +99,12 @@ bsRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
 }).get("/get-data-element-tree/:fid", async (request: Request, response: Response) => {
     try {
         let fid = request.params.fid;
-        let entityList = await appService.entityMaster.getDocuments({ fid: new Mongoose.Types.ObjectId(fid) });
+        let entityList: Array<any> = await appService.entityAttributes.aggregate([
+            { "$match": { fid: new Mongoose.Types.ObjectId(fid) } },
+            { "$group": { "_id": "$entityName", "attributes": { "$addToSet": "$$ROOT" } } },
+            { "$project": { entityName: "$_id", attributes: 1, _id: 0 } }
+        ]);
+        // let entityList = await appService.entityMaster.getDocuments({ fid: new Mongoose.Types.ObjectId(fid) });
         let jsonData: Array<any> = [];
         let i: number = 0;
         if (entityList.length == 0) {
@@ -109,16 +114,16 @@ bsRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
             jsonData.push(rootNode);
             for (const entity of entityList) {
                 let entityNode = { id: i++, parent: 0, text: entity.entityName, icon: "fa fa-folder", state: { selected: false } };
-                if (entity.attributes && entity.attributes.length > 0) {
-                    for (const attribute of entity.attributes) {
-                        //  console.log(attribute);
-                        // If 'attributeName' exists, return it; otherwise, use the first key
-                        let attrName = attribute.hasOwnProperty("attributeName") ? attribute["attributeName"] : Object.keys(attribute)[0] || "";
-                        let description = attribute.hasOwnProperty("description") ? attribute["description"] : Object.keys(attribute)[0] || "";
-                        let attributeNode = { id: i++, parent: entityNode.id, icon: "fa fa-file", text: ` ${attrName}: ${description}`, state: { selected: false } };
-                        jsonData.push(attributeNode);
-                    }
+                //if (entity.attributes && entity.attributes.length > 0) {
+                for (const attribute of entity.attributes) {
+                    // If 'attributeName' exists, return it; otherwise, use the first key
+                    // let attrName = attribute.hasOwnProperty("attributeName") ? attribute["attributeName"] : Object.keys(attribute)[0] || "";
+                    // let description = attribute.hasOwnProperty("description") ? attribute["description"] : Object.keys(attribute)[0] || "";
+                    let attrName = attribute.attributeName;
+                    let attributeNode = { id: i++, parent: entityNode.id, icon: "fa fa-file", text: ` ${attrName}`, state: { selected: false } };
+                    jsonData.push(attributeNode);
                 }
+                // }
                 jsonData.push(entityNode);
             }
             response.status(200).json(jsonData).end();

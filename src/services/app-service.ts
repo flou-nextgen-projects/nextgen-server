@@ -51,7 +51,7 @@ class AppService {
     public externalCalls = new BaseRepository<ExternalCalls>({ collectionName: "externalCalls", schema: ExternalCallsSchema });
     public dataDependency = new BaseRepository<DataDependency>({ collectionName: "dataDependency", schema: DataDependencySchema });
     public entityMaster = new BaseRepository<EntityMaster>({ collectionName: "entityMaster", schema: EntityMasterSchema });
-    public entityAttributes = new BaseRepository<EntityAttributes>({ collectionName: "entityMaster", schema: EntityAttributesSchema });
+    public entityAttributes = new BaseRepository<EntityAttributes>({ collectionName: "entityAttributes", schema: EntityAttributesSchema });
     public cobolVariables = new BaseRepository<CobolVariables>({ collectionName: "cobolVariables", schema: CobolVariableSchema });
     public cobolEntities = new BaseRepository<CobolEntities>({ collectionName: "cobolEntities", schema: CobolEntitiesSchema });
     public promptConfig = new BaseRepository<PromptConfigMaster>({ collectionName: "promptConfigMaster", schema: PromptConfigMasterSchema });

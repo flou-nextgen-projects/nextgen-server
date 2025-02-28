@@ -2,7 +2,7 @@ import Express, { Request, Response, Router, NextFunction } from "express";
 import Mongoose from "mongoose";
 import { join, resolve } from "path";
 import { appService } from "../services/app-service";
-import { FileContentMaster, FileMaster, LanguageMaster, ProcessingStatus, ProjectMaster, UserMaster, WorkspaceMaster } from "../models";
+import { EntityAttributes, EntityMaster, FileContentMaster, FileMaster, LanguageMaster, ProcessingStatus, ProjectMaster, UserMaster, WorkspaceMaster } from "../models";
 import { extractProjectZip, Upload, FileExtensions, formatData, readJsonFile, sleep, ConsoleLogger, WinstonLogger } from "nextgen-utilities";
 import { existsSync } from "fs";
 import { AppError } from "../common/app-error";
@@ -205,6 +205,13 @@ pmRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
             if (missingJson.code === 200) {
                 await addMissingObjects(missingJson.data);
             }
+            //process for entities
+            /*response.write(formatData({ message: "Started process for getting  entities." }));
+            let entityJson = await readJsonFile(join(extractPath, "entity-master", "entity-master.json"));
+            if (entityJson.code === 200) {
+                await addEntitiesAndAttributes(entityJson.data);
+            }*/
+
             response.write(formatData({ message: "You can start loading project now." }), "utf-8", checkWrite);
             response.end();
         }).catch((err: any) => {
@@ -314,7 +321,54 @@ pmRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
     } catch (error) {
         response.status(500).send().end();
     }
+}).get("/process-entities/:wid", async (request: Request, response: Response) => {
+    try {
+        let _id: Mongoose.Types.ObjectId = new Mongoose.Types.ObjectId(<string>request.params.wid);
+        let workspace = await appService.workspaceMaster.aggregateOne([{ $match: { _id } }]);
+        let extractPath: string = <string>workspace.dirPath;
+        let entityJson: any = await readJsonFile(join(extractPath, "entity-master", "entity-master.json"));
+        if (entityJson.code === 200) {
+            await addEntitiesAndAttributes(entityJson.data);
+        }
+        response.status(200).json().end();
+    } catch (error) {
+        response.status(500).send().end();
+    }
 });
+
+const addEntitiesAndAttributes = async function (entityJson: any[]) {
+    try {
+        for (const element of entityJson) {
+            let entity: EntityMaster = {
+                _id: Mongoose.Types.ObjectId.createFromHexString(element._id),
+                entityName: element.entityName,
+                fid: Mongoose.Types.ObjectId.createFromHexString(element.fid),
+                pid: Mongoose.Types.ObjectId.createFromHexString(element.pid),
+                type: element.type
+            } as EntityMaster;
+            await appService.entityMaster.addItem(entity);
+            let attributes = element.Attributes || [];
+            if (attributes.length == 0) continue;
+            for (const attr of attributes) {
+                let attribute: EntityAttributes = {
+                    _id: Mongoose.Types.ObjectId.createFromHexString(attr._id),
+                    pid: Mongoose.Types.ObjectId.createFromHexString(attr.pid),
+                    fid: Mongoose.Types.ObjectId.createFromHexString(attr.fid),
+                    eid: Mongoose.Types.ObjectId.createFromHexString(attr.eid),
+                    entityName: element.entityName,
+                    attributeName: attr.attributeName,
+                    dataLength: attr.attributeDataLength,
+                    dataType: attr.attributeDataType,
+                    storeEntitySet: attr.storeEntitySet
+                } as EntityAttributes;
+                await appService.entityAttributes.addItem(attribute);
+            }
+        }
+    } catch (error) {
+        throw error;
+        console.log("Error while adding entities", error);
+    }
+}
 
 const addStatementReferences = async function addStatementReferences(wm: WorkspaceMaster, statementMastersJson: any[], callback: Function): Promise<any> {
     try {
