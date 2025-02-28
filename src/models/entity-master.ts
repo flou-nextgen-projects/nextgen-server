@@ -8,7 +8,7 @@ class EntityMaster extends EntityBase {
     public fid: Mongoose.Types.ObjectId | string;
     public type: string;
     public description: string;
-    public attributes: Array<any>;
+    public attributes?: Array<any>;
 }
 const EntityMasterSchema: Mongoose.Schema<EntityMaster> = new Mongoose.Schema({
     entityName: { type: String, required: true },
@@ -42,8 +42,8 @@ const DataDependencySchema: Mongoose.Schema<DataDependency> = new Mongoose.Schem
 });
 
 class EntityAttributes extends EntityBase {
-    public rowId: number;
     public pid: Mongoose.Types.ObjectId | string;
+    public fid: Mongoose.Types.ObjectId | string;
     public eid: Mongoose.Types.ObjectId | string;
     public entityName: string;
     public attributeName: string;
@@ -53,9 +53,10 @@ class EntityAttributes extends EntityBase {
 }
 
 const EntityAttributesSchema: Mongoose.Schema<EntityAttributes> = new Mongoose.Schema({
-    rowId: {
-        type: Number, required: true
-    }, pid: {
+    pid: {
+        type: Mongoose.Schema.Types.ObjectId, required: true
+    },
+    fid: {
         type: Mongoose.Schema.Types.ObjectId, required: true
     }, eid: {
         type: Mongoose.Schema.Types.ObjectId, required: true
@@ -64,11 +65,11 @@ const EntityAttributesSchema: Mongoose.Schema<EntityAttributes> = new Mongoose.S
     }, attributeName: {
         type: String, required: true, default: ""
     }, dataType: {
-        type: String, required: true, default: ""
+        type: String, required: false, default: ""
     }, dataLength: {
-        type: String, required: true, default: ""
+        type: String, required: false, default: ""
     }, storeEntitySet: {
-        type: String, required: true, default: ""
+        type: String, required: false, default: ""
     }
 });
 
