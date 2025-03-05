@@ -131,9 +131,13 @@ bsRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
     } catch (error) {
         response.status(500).send().end();
     }
-}).get("/get-entities", function (request: Request, response: Response) {
+}).get("/get-entities", async (request: Request, response: Response) => {
     let fid = <string>request.query.fid;
-    appService.entityMaster.getDocuments({ fid: new ObjectId(fid) }).then((result) => {
+    appService.entityAttributes.aggregate([
+        { "$match": { fid: new Mongoose.Types.ObjectId(fid) } },
+        { "$group": { "_id": "$entityName", "attributes": { "$addToSet": "$$ROOT" } } },
+        { "$project": { entityName: "$_id", attributes: 1, _id: 0 } }
+    ]).then((result) => {
         response.status(200).json(result).end();
     }).catch((err) => {
         response.status(500).json(err).end();
@@ -144,6 +148,7 @@ bsRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
     const promptid = parseInt(promptId);
     if (promptId === "1001") {
         let result = await appService.entityMaster.removeAll({ fid: Mongoose.Types.ObjectId.createFromHexString(fid) });
+        let attributes = await appService.entityAttributes.removeAll({ fid: Mongoose.Types.ObjectId.createFromHexString(fid) });
         appService.mongooseConnection.collection("businessSummaries").deleteOne({ fid: Mongoose.Types.ObjectId.createFromHexString(fid), promptId: promptid })
             .then((res) => {
                 response.status(200).json({ msg: "Record deleted successfully." }).end();
