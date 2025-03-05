@@ -1,0 +1,38 @@
+name: nextgen-server
+
+networks:
+  nextgen-network:
+    external: true
+
+services:
+  nextgen-server:
+    image: nextgen-server:latest
+    container_name: nextgen-server
+    hostname: nextgen-server
+    build:
+      context: .
+      dockerfile: ./dockerfile    
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+      NG_MONGO_HOST: host.docker.internal 
+      NG_MONGO_PORT: 27000  
+    ports:
+      - 9000:9000
+      - 9229:9229    
+    networks:
+      - nextgen-network
+    extra_hosts:
+      - "host.docker.internal:host-gateway"  
+    develop:
+      watch:
+        - path: /dist
+          target: /app/dist
+          action: sync
+          ignore:
+            - "node_modules/"
+            - "Jenkinsfile"
+            - "Jenkins.Dockerfile"
+            - "*.md"
+            - "*.dockerfile"  

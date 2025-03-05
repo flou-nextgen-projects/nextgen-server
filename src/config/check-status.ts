@@ -37,9 +37,11 @@ checkDbStatusRouter.use("/", (_: Request, __: Response, next: NextFunction) => {
         response.status(500).json({ error: 'Internal server error' }).end();
     }
 }).get("/restore-database", async function (_: Request, response: Response) {
+    await appService.mongooseConnection.dropCollection("actionWorkflows");
     await appService.mongooseConnection.dropCollection("businessSummaries");
     await appService.mongooseConnection.dropCollection("cobolDataSets");
     await appService.mongooseConnection.dropCollection("entityMaster");
+    await appService.mongooseConnection.dropCollection("entityAttributes");
     await appService.mongooseConnection.dropCollection("fieldAndPropertiesDetails");
     await appService.mongooseConnection.dropCollection("fieldAndProperties");
     await appService.mongooseConnection.dropCollection("fileMaster");
