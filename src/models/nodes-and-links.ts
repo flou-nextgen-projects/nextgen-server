@@ -48,26 +48,17 @@ export const prepareNodes = function (inputData: any[] = []): Array<Node> {
     });
     return nodes;
 };
-export const prepareDotNetLinks = function (inputData: any[], nodes: Array<Node>) {
+export const prepareDotNetLinks = function (networkJson: any[]) {
     const links: Array<Link> = [];
-    inputData.forEach((fileData) => {
-        if (!fileData.callers || fileData.callers.length <= 0) return;
-        fileData.callers.forEach((callFile: any) => {
-            const sourceNodeIndex = nodes.findIndex((node) => node.fileId.toString() === callFile.fid);
-            const targetNodeIndex = nodes.findIndex((node) => node.fileId.toString() === fileData.fid);
-            if (sourceNodeIndex === -1 || targetNodeIndex === -1) return;
-            if (callFile.fid === fileData.fid) return;
-            let exists = links.find((link) => link.target === targetNodeIndex && link.source === sourceNodeIndex);
-            if (exists) return;
-            links.push({
-                wid: fileData.wid,
-                pid: Mongoose.Types.ObjectId.createFromHexString(callFile.pid),
-                source: sourceNodeIndex, target: targetNodeIndex, weight: 3,
-                srcFileId: Mongoose.Types.ObjectId.createFromHexString(callFile.fid),
-                tarFileId: Mongoose.Types.ObjectId.createFromHexString(fileData.fid),
-                linkText: callFile.callingMethod,
-                type: NodeLinkType.link
-            });
+    networkJson.forEach((nj) => {
+        links.push({
+            wid: Mongoose.Types.ObjectId.createFromHexString(nj.wid),
+            pid: Mongoose.Types.ObjectId.createFromHexString(nj.pid),
+            source: nj.source, target: nj.target, weight: 3,
+            srcFileId: Mongoose.Types.ObjectId.createFromHexString(nj.srcFileId),
+            tarFileId: Mongoose.Types.ObjectId.createFromHexString(nj.tarFileId),
+            linkText: nj.linkText,
+            type: NodeLinkType.link
         });
     });
     return links;

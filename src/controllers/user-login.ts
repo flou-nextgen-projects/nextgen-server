@@ -14,6 +14,7 @@ loginRouter.use("/", (_: Request, __: Response, next: NextFunction) => {
     var UserMaster: any = appService.userMaster.getModel();
     UserMaster.findByCredentials(body.userName, body.password).then(async function (user: any) {
         var token = UserMaster.generateAuthTokenOne(user);
+        await appService.userMaster.updateDocument({ _id: user._id }, { lastLogin: new Date() });
         response.setHeader('Access-Control-Allow-Headers', 'x-token');
         response.setHeader('Access-Control-Expose-Headers', 'x-token');
         response.setHeader('x-token', token);
@@ -35,28 +36,5 @@ loginRouter.use("/", (_: Request, __: Response, next: NextFunction) => {
     }).catch(function (ex: Mongoose.Error) {
         response.status(404).json({ exception: ex }).end();
     });
-}).get("/add-default-roles-and-users", async function (request: Request, response: Response) {
-    const configPath = resolve(join(__dirname, "../", "config", "db", "init-db.json"));
-    const configData = readFileSync(configPath).toString();
-    const configJson: any[] = JSON.parse(configData) || [];
-    let docs = configJson.find((d) => d.collection === "organizationMaster").documents;
-    let collection = appService.mongooseConnection.collection("organizationMaster");
-    let orgCount = await collection.countDocuments({});
-    if (orgCount <= 0) {
-        await collection.insertMany(docs);
-    }
-
-    let roleMaster = configJson.find((d) => d.collection === "roleMaster").documents;
-    let roleCount = await appService.roleMaster.mongoDbCollection("roleMaster").countDocuments({});
-    if (roleCount <= 0) {
-        await appService.roleMaster.bulkInsert(roleMaster);
-    }
-
-    let userMaster = configJson.find((d) => d.collection === "userMaster").documents;
-    let userCount = await appService.userMaster.mongoDbCollection("userMaster").countDocuments({});
-    if (userCount <= 0) {
-        await appService.userMaster.bulkInsert(userMaster);
-    }
-    response.status(200).json({ message: "Default roles and users are added successfully" }).end();
 });
 module.exports = loginRouter;

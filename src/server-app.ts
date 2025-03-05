@@ -28,7 +28,7 @@ Promise.resolve(mongoConnection()).then(() => {
         const uploadPath = join(__dirname, "../", dir);
         if (!existsSync(uploadPath)) { mkdirSync(uploadPath); }
     });
-    app.use(Express.static(join(__dirname, '')));
+    app.use(Express.static(join(__dirname, '../', 'html')));
 
     setAppRoutes(app);
 

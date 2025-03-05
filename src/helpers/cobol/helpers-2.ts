@@ -189,7 +189,7 @@ export default class CobolAdditionalHelperTwo {
                         modifiedLine: newLine,
                         alternateName: statement.alternateName,
                         methodName: statement.methodName,
-                        lineIndex: statement.lineIndex
+                        location: statement.location
                     } as StatementMaster);
                 }
             } else {
@@ -220,7 +220,7 @@ export default class CobolAdditionalHelperTwo {
                             modifiedLine: "END-IF ",
                             alternateName: statement.alternateName,
                             methodName: statement.methodName,
-                            lineIndex: statement.lineIndex
+                            location: statement.location
                         } as StatementMaster);
                         ifCounter--;
                     }
@@ -236,7 +236,7 @@ export default class CobolAdditionalHelperTwo {
                         modifiedLine: "END-IF ",
                         alternateName: statement.alternateName,
                         methodName: statement.methodName,
-                        lineIndex: statement.lineIndex
+                        location: statement.location
                     } as StatementMaster);
                 }
                 ifCounter = 0;
@@ -248,7 +248,7 @@ export default class CobolAdditionalHelperTwo {
                     modifiedLine: "ELSE",
                     alternateName: statement.alternateName,
                     methodName: statement.methodName,
-                    lineIndex: statement.lineIndex
+                    location: statement.location
                 } as StatementMaster);
                 const addStatement = {
                     indicators: statement.indicators,
@@ -256,7 +256,7 @@ export default class CobolAdditionalHelperTwo {
                     modifiedLine: "IF " + ifGroup,
                     alternateName: statement.alternateName,
                     methodName: statement.methodName,
-                    lineIndex: statement.lineIndex
+                    location: statement.location
                 } as StatementMaster;
                 mainMethodBlock.push(addStatement);
                 ifCounter++;
@@ -272,7 +272,7 @@ export default class CobolAdditionalHelperTwo {
                             modifiedLine: line.replace(".", "").trim(),
                             alternateName: statement.alternateName,
                             methodName: statement.methodName,
-                            lineIndex: statement.lineIndex
+                            location: statement.location
                         } as StatementMaster);
                         for (let i = 0; i < ifCounter; i++) {
                             mainMethodBlock.push({
@@ -281,7 +281,7 @@ export default class CobolAdditionalHelperTwo {
                                 modifiedLine: "END-IF ",
                                 alternateName: statement.alternateName,
                                 methodName: statement.methodName,
-                                lineIndex: statement.lineIndex
+                                location: statement.location
                             } as StatementMaster);
                         }
                         ifCounter = 0;
@@ -325,7 +325,7 @@ export default class CobolAdditionalHelperTwo {
                             modifiedLine: newLine.trim(),
                             alternateName: statement.alternateName,
                             methodName: statement.methodName,
-                            lineIndex: statement.lineIndex
+                            location: statement.location
                         } as StatementMaster);
                     }
                     newLine = key;
@@ -338,7 +338,7 @@ export default class CobolAdditionalHelperTwo {
                             modifiedLine: newLine.trim(),
                             alternateName: statement.alternateName,
                             methodName: statement.methodName,
-                            lineIndex: statement.lineIndex
+                            location: statement.location
                         } as StatementMaster);
                     }
                 }
@@ -358,7 +358,7 @@ export default class CobolAdditionalHelperTwo {
                     modifiedLine: cLine,
                     alternateName: statement.alternateName,
                     methodName: statement.methodName,
-                    lineIndex: statement.lineIndex
+                    location: statement.location
                 } as StatementMaster);
             }
         }

@@ -1,4 +1,4 @@
-import Mongoose from "mongoose";
+import { ObjectId } from "mongodb";
 
 export enum memberType {
     field = 1,
@@ -13,8 +13,8 @@ function convertProperties(obj: any, fields: Array<string>): any {
                 obj[key] = obj[key].map((item: any) => convertProperties(item, fields));
             } else if (typeof obj[key] === 'object' && obj[key] !== null) {
                 obj[key] = convertProperties(obj[key], fields);
-            } else if (fields.includes(key) && !(obj[key] instanceof Mongoose.Schema.Types.ObjectId)) {
-                obj[key] = Mongoose.Types.ObjectId.createFromHexString(obj[key]);
+            } else if (fields.includes(key) && typeof obj[key] === 'string') {
+                obj[key] = new ObjectId(obj[key]);
             }
         }
     }

@@ -402,10 +402,10 @@ export default class CobolMainProcessUtils extends CobolProcessHelpers {
                 methodBlock = this.assignBaseCommandIndicatorsToMethods(methodBlock as any[], allMethods);
                 // TODO: verify conditions and end conditions count
                 // if it's not matching then make parsing status of file as not processed
-                // methodBlock.push({ lineIndex: methodBlock.length + 1, originalLine: "END", modifiedLine: "END", indicators: [], alternateName: '' } as StatementMaster);
+                // methodBlock.push({ location: methodBlock.length + 1, originalLine: "END", modifiedLine: "END", indicators: [], alternateName: '' } as StatementMaster);
                 for (const lineDetail of methodBlock) {
                     let sm: StatementMaster = {
-                        lineIndex: lineDetail.lineIndex, modifiedLine: lineDetail.modifiedLine,
+                        location: lineDetail.location, modifiedLine: lineDetail.modifiedLine,
                         originalLine: lineDetail.originalLine, indicators: lineDetail.indicators,
                         businessName: lineDetail.businessName, methodCalled: lineDetail.methodCalled, methodName: lineDetail.methodName,
                         classNameDeclared: lineDetail.classNameDeclared, classCalled: lineDetail.classCalled,

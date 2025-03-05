@@ -5,7 +5,7 @@ export default class StatementMasterBase extends CobolAdditionalHelperOne {
     prepareStatementMasterStart = function (indicators: string[] | number[], fileMaster: FileMaster, fields?: Partial<StatementMaster>): StatementMaster {
         let sm: StatementMaster = {
             fid: fileMaster._id, indicators,
-            lineIndex: 0, pid: fileMaster.pid,
+            location: 0, pid: fileMaster.pid,
             ...fields
         } as StatementMaster;
 

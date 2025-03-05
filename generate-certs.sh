@@ -25,5 +25,8 @@ fi
 cp $CERT_ROOT/device.crt $APP_DIR/dist/certificates/device.crt
 cp $CERT_ROOT/device.key $APP_DIR/dist/certificates/device.key
 cp $PEM_ROOT/rootCA.pem $APP_DIR/dist/certificates/rootCA.pem
+cat $CERT_ROOT/device.crt $CERT_ROOT/device.key > $APP_DIR/dist/certificates/mongodb-server.pem
+cat $CERT_ROOT/device.crt $CERT_ROOT/device.key > $APP_DIR/dist/certificates/mongodb-client.pem
+# remove generated certificates
 rm -r $CERT_ROOT
 echo "Certificate generation completed."

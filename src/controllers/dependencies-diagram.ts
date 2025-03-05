@@ -10,7 +10,7 @@ import axios from "axios";
 import { Agent } from 'https';
 
 const dependencyRouter: Router = Express.Router();
-const genaiAddress: string = configs.genAIUrl;
+const genAiAddress: string = configs.genAIUrl;
 const axiosInstance: any = axios.create({
     httpsAgent: new Agent({
         rejectUnauthorized: false
@@ -141,7 +141,7 @@ const _attachEntityNodes = async (opt: { nodes: Array<Node>, links: Array<Link>,
             let fileContents = await appService.fileContentMaster.getItem({ fid: new ObjectId(node.fileId) });
             try {
                 const result = await axiosInstance.post(
-                    `${genaiAddress}multi-model-handler`,
+                    `${genAiAddress}multi-model-handler`,
                     {
                         promptId: 1001,
                         fileData: fileContents.formatted,
@@ -155,8 +155,8 @@ const _attachEntityNodes = async (opt: { nodes: Array<Node>, links: Array<Link>,
                         }
                     }
                 );
-                let formatedRes = result.data.response.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ');
-                const cleanedString = formatedRes.replace(/```json|```/g, '').trim();
+                let formattedRes = result.data.response.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ');
+                const cleanedString = formattedRes.replace(/```json|```/g, '').trim();
                 let extractedJson = extractJson(cleanedString);
                 let res = await extractDataEntities(extractedJson, node.pid.toString(), node.fileId.toString());
                 // if res.code==3 means json is invalid we need to handle this situation

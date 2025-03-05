@@ -1,7 +1,7 @@
 
 import Express, { Request, Response, Router, NextFunction } from "express";
 import Mongoose, { PipelineStage } from "mongoose";
-import { pick } from "lodash";
+import { isEmpty } from "lodash";
 const userRouter: Router = Express.Router();
 import AppService from "../services/app-service";
 import { UserMaster } from "../models";
@@ -12,26 +12,31 @@ const appService: AppService = new AppService();
 
 userRouter.use("/", (request: Request, response: Response, next: NextFunction) => {
     next();
-}).post("/", function (request: Request, response: Response) {
-    var user = request.body;
-    user.roleId = user.roleId || new Mongoose.Types.ObjectId('65d09dde2b488f3930d90264');
-    user.oid = new Mongoose.Types.ObjectId('67ab7f3383a54eb29cb24fa9');
-    var UserMaster = appService.userMaster.getModel();
-    var newUser: any = new UserMaster(user);
-    appService.userMaster.getItem({ userName: user.userName }).then((userResult: UserMaster) => {
-        if (userResult) {
-            var res = { message: "User already exists" };
-            response.status(200).json(res).end();
-        } else {
-            newUser.save().then(() => {
-                response.status(200).json({ message: "User registered successfully" }).end();
-            }).catch((e: Mongoose.Error) => {
-                response.status(400).json({ code: 400, message: e.message, data: e }).end();
-            });
-        }
-    }).catch((error: Mongoose.Error) => {
+}).post("/", async function (request: Request, response: Response) {
+    try {
+        var user = request.body;
+        if (isEmpty(user.oid)) return response.status(400).json({ code: 400, message: "Incomplete user info", data: {} }).end();
+        let orgMaster = await appService.organizationMaster.getItem({ _id: ObjectId.createFromHexString(user.oid) });
+        user.tid = orgMaster.tid;
+        var UserMaster = appService.userMaster.getModel();
+        var newUser: any = new UserMaster(user);
+        appService.userMaster.getItem({ userName: user.userName }).then((userResult: UserMaster) => {
+            if (userResult) {
+                var res = { message: "User already exists" };
+                response.status(200).json(res).end();
+            } else {
+                newUser.save().then(() => {
+                    response.status(200).json({ message: "User registered successfully" }).end();
+                }).catch((e: Mongoose.Error) => {
+                    response.status(400).json({ code: 400, message: e.message, data: e }).end();
+                });
+            }
+        }).catch((error: Mongoose.Error) => {
+            response.status(400).json({ code: 400, message: error.message, data: error }).end();
+        });
+    } catch (error) {
         response.status(400).json({ code: 400, message: error.message, data: error }).end();
-    });
+    }
 }).post("/upload", (request: Request, response: Response, next: NextFunction) => {
 }).get("/get-all", function (request: Request, response: Response) {
     var pipelineOne: Array<PipelineStage> = [{ $lookup: { from: "roleMaster", localField: "roleId", foreignField: "_id", as: "roleMaster" } }, { $unwind: { path: "$roleMaster", preserveNullAndEmptyArrays: true } }];

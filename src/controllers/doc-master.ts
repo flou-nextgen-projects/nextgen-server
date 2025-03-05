@@ -11,7 +11,7 @@ docRouter.use("/", (request: Request, response: Response, next: NextFunction) =>
         { $lookup: { from: "methodDetails", localField: "methodId", foreignField: "_id", as: "methodDetails" } },
         { $unwind: { path: "$methodDetails", preserveNullAndEmptyArrays: true } },
         { $lookup: { from: "memberReferences", localField: "memberId", foreignField: "_id", as: "memberInfo" } },
-        { $unwind: { path: "$memberInfo", preserveNullAndEmptyArrays: true } }, { $sort: { lineIndex: 1 } }
+        { $unwind: { path: "$memberInfo", preserveNullAndEmptyArrays: true } }, { $sort: { location: 1 } }
     ];
     let statements = await appService.mongooseConnection.collection("statementMaster").aggregate(pipeLine).toArray();
     response.status(200).json(statements).end();

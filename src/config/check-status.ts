@@ -6,6 +6,7 @@ import { appService } from "../services/app-service";
 import { readFileSync } from "fs";
 import { resolve, join } from "path";
 import config from "../configurations";
+import { UserMaster } from "../models";
 var jwt = require('jsonwebtoken');
 
 const checkDbStatusRouter: Router = Express.Router();
@@ -80,6 +81,14 @@ const _initDatabaseConfiguration = (dbStatus: any): Promise<{ message: string }>
         await appService.mongooseConnection.collection("formattingConfig").insertMany(formattingConfig);
         let languageMasters = configJson.find((d) => d.collection === "languageMaster").documents;
         await appService.languageMaster.bulkInsert(languageMasters);
+        let organizationDocs = configJson.find((d) => d.collection === "organizationMaster").documents;
+        await appService.organizationMaster.bulkInsert(organizationDocs);
+        let orgMaster = await appService.organizationMaster.getItem({});
+        let roleMaster = configJson.find((d) => d.collection === "roleMaster").documents;
+        await appService.roleMaster.bulkInsert(roleMaster);
+        let userMaster = configJson.find((d) => d.collection === "userMaster").documents;
+        userMaster.forEach((d: UserMaster) => d.oid = orgMaster._id.toString());
+        await appService.userMaster.bulkInsert(userMaster);
         await appService.mongooseConnection.collection("dbStatus").findOneAndUpdate({ _id: dbStatus?._id }, { $set: { configured: true, enabled: true } }, { upsert: true });
         res({ message: "Database initialization process completed successfully" });
     } catch (error) {
@@ -88,3 +97,4 @@ const _initDatabaseConfiguration = (dbStatus: any): Promise<{ message: string }>
 });
 
 module.exports = checkDbStatusRouter;
+module.exports.initDatabaseConfig = _initDatabaseConfiguration;

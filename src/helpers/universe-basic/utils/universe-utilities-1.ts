@@ -109,17 +109,17 @@ class UniVerseUtilities {
             if (fileLine.parsedLine.endsWith(" ELSE")) {
                 var modify = fileLine.parsedLine.replace("ELSE", "").trimRight();
                 var whiteSpaces = fileLine.parsedLine.search(/\S/) + 22;
-                fileLinesArray.push({ lineIndex: fileLine.lineIndex, originalLine: fileLine.originalLine, parsedLine: modify, businessName: fileLine.businessName, referenceFileId: fileLine.referenceFileId, statementComment: fileLine.statementComment });
+                fileLinesArray.push({ location: fileLine.location, originalLine: fileLine.originalLine, parsedLine: modify, businessName: fileLine.businessName, referenceFileId: fileLine.referenceFileId, statementComment: fileLine.statementComment });
                 let paddedLine = "IF NOT-SUCCESS THEN".padStart(whiteSpaces, " ");
-                fileLinesArray.push({ lineIndex: fileLine.lineIndex, originalLine: fileLine.originalLine, parsedLine: paddedLine, businessName: fileLine.businessName, referenceFileId: fileLine.referenceFileId, statementComment: fileLine.statementComment });
+                fileLinesArray.push({ location: fileLine.location, originalLine: fileLine.originalLine, parsedLine: paddedLine, businessName: fileLine.businessName, referenceFileId: fileLine.referenceFileId, statementComment: fileLine.statementComment });
                 continue;
             }
             if (fileLine.parsedLine.endsWith("THEN")) {
                 var modify = fileLine.parsedLine.replace("THEN", "").trimRight();
                 var whiteSpaces = fileLine.parsedLine.search(/\S/) + 18;
-                fileLinesArray.push({ lineIndex: fileLine.lineIndex, originalLine: fileLine.originalLine, parsedLine: modify, businessName: fileLine.businessName, referenceFileId: fileLine.referenceFileId, statementComment: fileLine.statementComment });
+                fileLinesArray.push({ location: fileLine.location, originalLine: fileLine.originalLine, parsedLine: modify, businessName: fileLine.businessName, referenceFileId: fileLine.referenceFileId, statementComment: fileLine.statementComment });
                 let paddedLine = "IF SUCCESS THEN".padStart(whiteSpaces, " ");
-                fileLinesArray.push({ lineIndex: fileLine.lineIndex, originalLine: fileLine.originalLine, parsedLine: paddedLine, businessName: fileLine.businessName, referenceFileId: fileLine.referenceFileId, statementComment: fileLine.statementComment });
+                fileLinesArray.push({ location: fileLine.location, originalLine: fileLine.originalLine, parsedLine: paddedLine, businessName: fileLine.businessName, referenceFileId: fileLine.referenceFileId, statementComment: fileLine.statementComment });
             }
         }
         return fileLinesArray;
@@ -141,13 +141,13 @@ class UniVerseUtilities {
             if (endCaseRegExp.test(lineDetail.parsedLine)) {
                 caseCounter = 0;
                 fileLinesArray.push({
-                    lineIndex: lineDetail.lineIndex, originalLine: "END", parsedLine: "END"
+                    location: lineDetail.location, originalLine: "END", parsedLine: "END"
                 });
                 continue;
             }
             if (caseOtherwiseRegExp.test(lineDetail.parsedLine)) {
                 fileLinesArray.push({
-                    lineIndex: lineDetail.lineIndex, originalLine: "END ELSE", parsedLine: "END ELSE", statementComment: lineDetail.statementComment
+                    location: lineDetail.location, originalLine: "END ELSE", parsedLine: "END ELSE", statementComment: lineDetail.statementComment
                 });
                 continue;
             }
@@ -155,7 +155,7 @@ class UniVerseUtilities {
                 let ld: LineDetails = universeStringExtensions.getCommentAndStatement(lineDetail);
                 let statement = ld.parsedLine.replace(/case\s+/i, "IF ") + " THEN";
                 fileLinesArray.push({
-                    lineIndex: lineDetail.lineIndex, originalLine: lineDetail.originalLine, parsedLine: statement, businessName: ld.businessName, referenceFileId: ld.referenceFileId, statementComment: ld.statementComment
+                    location: lineDetail.location, originalLine: lineDetail.originalLine, parsedLine: statement, businessName: ld.businessName, referenceFileId: ld.referenceFileId, statementComment: ld.statementComment
                 });
                 caseCounter++;
                 continue;
@@ -164,16 +164,16 @@ class UniVerseUtilities {
                 let ld: LineDetails = universeStringExtensions.getCommentAndStatement(lineDetail);
                 let statement = ld.parsedLine.replace(/case\s+/i, "IF ") + " THEN";
                 fileLinesArray.push({
-                    lineIndex: linePosition, originalLine: "END", parsedLine: "END"
+                    location: linePosition, originalLine: "END", parsedLine: "END"
                 });
                 fileLinesArray.push({
-                    lineIndex: lineDetail.lineIndex, originalLine: lineDetail.originalLine, parsedLine: statement, businessName: ld.businessName, referenceFileId: ld.referenceFileId, statementComment: ld.statementComment
+                    location: lineDetail.location, originalLine: lineDetail.originalLine, parsedLine: statement, businessName: ld.businessName, referenceFileId: ld.referenceFileId, statementComment: ld.statementComment
                 });
                 caseCounter++;
                 continue;
             }
             fileLinesArray.push({
-                lineIndex: lineDetail.lineIndex, originalLine: lineDetail.originalLine, parsedLine: lineDetail.parsedLine, businessName: lineDetail.businessName, referenceFileId: lineDetail.referenceFileId, statementComment: lineDetail.statementComment
+                location: lineDetail.location, originalLine: lineDetail.originalLine, parsedLine: lineDetail.parsedLine, businessName: lineDetail.businessName, referenceFileId: lineDetail.referenceFileId, statementComment: lineDetail.statementComment
             });
         }
         return fileLinesArray;

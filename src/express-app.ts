@@ -9,6 +9,7 @@ const swaggerUi = require('swagger-ui-express');
 import { join, resolve } from "path";
 import chalk from "chalk";
 import { AppError } from './common/app-error';
+import { appService } from "./services/app-service";
 
 const winstonLogger: WinstonLogger = new WinstonLogger(__filename);
 const app = http2Express(express);
@@ -22,23 +23,23 @@ app.use(Cors({
 export default app;
 
 export const setAppRoutes = function (app: express.Application) {
-    app.get('/', function (request: Request, response: Response) {
+    app.get('/', function (_: Request, response: Response) {
         response.status(200).json({ msg: 'Server app is up and running!.' }).end();
     });
 
-    app.use((err: any, req: Request, res: Response, next: Function) => {
-        if (res.headersSent) return next();
-        res.status(err.httpStatusCode || 500).render('UnKnownError');
+    app.use((err: any, request: Request, response: Response, next: Function) => {
+        if (response.headersSent) return next();
+        response.status(err.httpStatusCode || 500).render('UnKnownError');
     });
 
-    app.use((req: Request, res: Response, next: NextFunction) => {
+    app.use((request: Request, response: Response, next: NextFunction) => {
         console.log("---=================================================================---");
-        console.log(chalk.green(`---==== ${req.url} ====---`));
-        req.on("error", (err: Error) => {
-            winstonLogger.error(err, { name: `Error occurred in endpoint: ${req.url}`, code: "REQUEST_ERROR" });
+        console.log(chalk.green(`---==== ${request.url} ====---`));
+        request.on("error", (err: Error) => {
+            winstonLogger.error(err, { name: `Error occurred in endpoint: ${request.url}`, code: "REQUEST_ERROR" });
         });
-        res.on("error", (err: Error) => {
-            winstonLogger.error(err, { name: `Error occurred in endpoint: ${req.url}`, code: "RESPONSE_ERROR" });
+        response.on("error", (err: Error) => {
+            winstonLogger.error(err, { name: `Error occurred in endpoint: ${request.url}`, code: "RESPONSE_ERROR" });
         });
         next();
     });
@@ -109,18 +110,28 @@ export const setAppRoutes = function (app: express.Application) {
     // GenAI routes
     // all routes are added into gen-ai.routes file under routes folder
 
+    app.get("/backend/main/api/data-sets", async (request: Request, response: Response) => {
+        let collections = <any>request.query.collection;
+        let s = collections.map(function (c: string) { return { collection: c } });
+        appService.dataSets(s).then((res) => {
+            response.status(200).json(res).end();
+        }).catch((err) => {
+            winstonLogger.error(err, { name: "Error in data-set endpoint", code: "DATA_SET_ENDPOINT" });
+        });
+    });
+
     let genAiRoutes = require("./routes/gen-ai.routes");
     app.use("/backend/main/api", genAiRoutes);
 
-    app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
+    app.use((err: Error, _: Request, response: Response, next: Function) => {
         if (err instanceof AppError) {
-            res.status(err.statusCode).json({
+            response.status(err.statusCode).json({
                 status: 'error',
                 message: err.message,
                 additionalInfo: err.additionalInfo
             }).end();
         } else {
-            res.status(500).json({
+            response.status(500).json({
                 status: 'error',
                 message: 'Internal Server Error'
             }).end();
