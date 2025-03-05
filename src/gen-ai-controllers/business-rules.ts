@@ -51,5 +51,13 @@ brRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
         }).catch((err) => {
             response.status(500).json(err).end();
         })
+}).get("/check-business-rule/:fid", (request: Request, response: Response) => {
+    const { fid } = request.params;
+    appService.mongooseConnection.collection("businessRules").find({ fid: Mongoose.Types.ObjectId.createFromHexString(fid) }).toArray()
+        .then((res) => {
+            response.status(200).json(res).end();
+        }).catch((err) => {
+            response.status(500).json(err).end();
+        });
 });
 module.exports = brRouter;

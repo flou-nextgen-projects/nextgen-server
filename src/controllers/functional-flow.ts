@@ -17,9 +17,12 @@ functionalFlowRouter.use("/", (request: Request, response: Response, next: NextF
     level3Ele.state.selected = true;
     try {
         var workflows = await appService.fileMaster.getDocuments({ pid: new ObjectId(pid), fileTypeId: new ObjectId(fileTypeId) });
+        let userStories = await appService.mongooseConnection.collection("userStory").find().toArray(); // should have pid in userStory collection
         for (var workflow of workflows) {
+            let userStory = userStories.find(x => x.fid.toString() === workflow._id.toString());
             var wName: string = `${workflow.fileNameWithoutExt || workflow.fileName}`;
-            json.push({ id: ++j, parent: `${level3Ele.id}`, text: `${wName}`, data: { pid: workflow.pid, aid: workflow._id, type: "workflow", level: 4 } });
+            let nodeName = (userStory) ? `${wName} (${userStory.data})` : `${wName}`;
+            json.push({ id: ++j, parent: `${level3Ele.id}`, text: nodeName, data: { pid: workflow.pid, aid: workflow._id, type: "workflow", level: 4 } });
         }
         response.status(200).json(json).end();
     } catch (err) {
@@ -30,11 +33,13 @@ functionalFlowRouter.use("/", (request: Request, response: Response, next: NextF
     var jsonData: Array<any> = [];
     var i: number = 0;
     try {
+        var project = await appService.projectMaster.getItem({ _id: new ObjectId(pid) });
+        var name = project.name;
         var rootNode = { id: i++, parent: "#", text: "Epics", state: { selected: true }, data: { type: "epicNode", level: 0 } };
-        var epicNameNode = { id: i++, parent: `${i - 2}`, text: "Banking App", state: { selected: true }, data: { type: "epicNodeName", level: 99 } };
+        var epicNameNode = { id: i++, parent: `${i - 2}`, text: `${name}`, state: { selected: true }, data: { type: "epicNodeName", level: 99 } };
         var featureNode = { id: i++, parent: `${i - 2}`, text: "Features", state: { selected: true }, data: { type: "featureNode", level: 1 } };
         jsonData.push(rootNode); jsonData.push(epicNameNode); jsonData.push(featureNode);
-        var project = await appService.projectMaster.getItem({ _id: new ObjectId(pid) });
+
         let pipeLine = [
             { $match: { lid: project.lid } },
             { $lookup: { from: "fileMaster", localField: "_id", foreignField: "fileTypeId", as: "fileMaster" } },
@@ -43,7 +48,6 @@ functionalFlowRouter.use("/", (request: Request, response: Response, next: NextF
             { $match: { fileTypeName: { $in: ["COBOL", "JCL", "PROC"] } } }
         ];
         let result = await appService.mongooseConnection.collection("fileTypeMaster").aggregate(pipeLine).toArray();
-        var name = project.name;
         var parentId: number = jsonData.find((d) => { return d.data.type === "featureNode" }).id;
         var projectNode: any = { id: i++, parent: `${parentId}`, text: `${name}`, state: { selected: true }, data: { pid: project._id, type: `pNameNode-${project._id}`, level: 2 } };
         jsonData.push(projectNode);

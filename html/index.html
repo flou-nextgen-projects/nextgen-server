@@ -1,23 +1,67 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
+
 <head>
-<title>Welcome to nginx!</title>
-<style>
-html { color-scheme: light dark; }
-body { width: 35em; margin: 0 auto;
-font-family: Tahoma, Verdana, Arial, sans-serif; }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Config Form</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
+
 <body>
-<h1>Welcome to nginx!</h1>
-<p>If you see this page, the nginx web server is successfully installed and
-working. Further configuration is required.</p>
+    <div class="container mt-5">
+        <div class="card p-4">
+            <h2 class="mb-4">Config Details</h2>
+            <form>
+                <div class="mb-3">
+                    <label for="text1" class="form-label">License Key</label>
+                    <input type="text" class="form-control" id="txtLicense" placeholder="Enter text">
+                </div>
+                <div class="mb-3">
+                    <div class="row col-12">
+                        <div class="col-md-3">
+                            <label for="text2" class="form-label">Port</label>
+                            <input type="text" class="form-control" id="txtMongoPath" placeholder="Port">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="text2" class="form-label">Host Address</label>
+                            <input type="text" class="form-control" id="txtMongoPath" placeholder="Address">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="text2" class="form-label">Database Path</label>
+                            <input type="text" class="form-control" id="txtMongoPath" placeholder="Database Path">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="text2" class="form-label">Username</label>
+                            <input type="text" class="form-control" id="txtMongoPath" placeholder="Username">
+                        </div>
 
-<p>For online documentation and support please refer to
-<a href="http://nginx.org/">nginx.org</a>.<br/>
-Commercial support is available at
-<a href="http://nginx.com/">nginx.com</a>.</p>
+                    </div>
 
-<p><em>Thank you for using nginx.</em></p>
+                </div>
+                <div class="mb-3">
+                    <label for="dropdown1" class="form-label">floGen API</label>
+                    <select class="form-select" id="dropdown1">
+                        <option selected>Choose..</option>
+                        <option value="1">Together API</option>
+                        <option value="2">OpenAI API</option>
+                        <option value="3">Cohere API</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label for="dropdown2" class="form-label">Model</label>
+                    <select class="form-select" id="dropdown2">
+                        <option selected>Choose...</option>
+                        <option value="1">Option A</option>
+                        <option value="2">Option B</option>
+                    </select>
+                </div>
+
+                <button type="submit" class="btn btn-primary">Save</button>
+            </form>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
+
 </html>
