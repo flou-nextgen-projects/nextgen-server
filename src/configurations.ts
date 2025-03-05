@@ -20,6 +20,8 @@ export default {
         return process.env.KAFKA_TOPICS
     }, get useHttps() {
         return process.env.USE_HTTPS || true;
+    }, get mongoSSL() {
+        return process.env.NG_MONGO_SSL || false;
     }, get mongoDb() {
         return process.env.NG_MONGO_DB;
     }, get mongoUser() {
@@ -36,7 +38,7 @@ export default {
         return process.env.COHERE_API_KEY;
     }, get genAIUrl() {
         return process.env.GEN_AI_URL;
-    }, get crtPath(){
+    }, get crtPath() {
         return process.env.CERT_PATH;
     }
 }

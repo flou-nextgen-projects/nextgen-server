@@ -8,3 +8,4 @@ DNS.1 = localhost
 IP.1 = 127.0.0.1
 IP.2 = ::1
 IP.3 = 0.0.0.0
+DNS.2 = host.docker.internal

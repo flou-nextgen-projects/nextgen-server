@@ -1,6 +1,6 @@
 import Express, { Request, Response, Router, NextFunction } from "express";
 import Mongoose from "mongoose";
-import { join, resolve } from "path";
+import { join, resolve, } from "path";
 import { appService } from "../services/app-service";
 import { EntityAttributes, EntityMaster, FileContentMaster, FileMaster, LanguageMaster, ProcessingStatus, ProjectMaster, UserMaster, WorkspaceMaster } from "../models";
 import { extractProjectZip, Upload, FileExtensions, formatData, readJsonFile, sleep, ConsoleLogger, WinstonLogger } from "nextgen-utilities";
@@ -585,10 +585,63 @@ const addMemberReference = async (wm: WorkspaceMaster, memberRefJson: any[]) => 
         }
     }
 };
+
 const addFileDetails = async (allFiles: string[], lm: LanguageMaster, fileMasterJson: any[]) => {
+    const fileTypeMaster = await appService.fileTypeMaster.getDocuments({ lid: lm._id });
+    // Normalize path extraction for Windows paths
+    const normalizeWindowsPath = (filePath: string) => {
+        // Handle both Windows and potential mixed path separators
+        const normalizedPath = filePath.replace(/\\/g, '/').replace(/^[a-zA-Z]:/, '');
+        // Extract path after 'project-files'
+        const projectFilesIndex = normalizedPath.toLowerCase().indexOf('project-files');
+        return projectFilesIndex !== -1 ? normalizedPath.substring(projectFilesIndex + 13) : normalizedPath;
+    };
+    // Prepare file infos with normalized paths
+    let fileInfos = allFiles.map((file) => {
+        let info = fileExtensions.getFileInfo(file);
+        // Normalize the path extraction
+        let path = normalizeWindowsPath(file);
+        return { ...info, filePath: file, path };
+    });
+
+    for (const fm of fileMasterJson) {
+        try {
+            let path = normalizeWindowsPath(fm.FilePath);
+            // Find the matching file with normalized path
+            let file = fileInfos.find((fileInfo: any) => fileInfo.path.toLowerCase() === path.toLowerCase());
+            // If file not found, try more flexible matching
+            if (!file) {
+                const fileName = path.split('/').pop();
+                file = fileInfos.find((fileInfo: any) => fileInfo.path.toLowerCase().endsWith(fileName.toLowerCase()));
+            }
+            // Throw error if still no file found
+            if (!file) {
+                throw new Error(`File not found for path: ${path}`);
+            }
+
+            let fileType = fileTypeMaster.find((ftm: any) => ftm.fileTypeName.toLowerCase() === fm.FileTypeName.toLowerCase() && ftm.fileTypeExtension.toLowerCase() === fm.FileTypeExtension.toLowerCase());
+            let fileDetails = {
+                _id: fm._id, pid: fm.ProjectId, fileTypeId: fileType._id,
+                wid: fm.WorkspaceId, fileName: fm.FileName, filePath: file.filePath,
+                linesCount: fm.LinesCount, processed: true,
+                sourceFilePath: file.filePath.replace(/project-files/ig, "original-files"),
+                fileNameWithoutExt: fm.FileNameWithoutExt,
+                fileStatics: { lineCount: fm.LinesCount, parsed: true, processedLineCount: fm.DoneParsing, commentedLines: fm.CommentedLines }
+            } as FileMaster;
+
+            await appService.fileMaster.addItem(fileDetails);
+        } catch (ex) {
+            console.error("Exception processing file:", ex);
+            // Optionally log the specific file that caused the error
+            console.error("Problematic file:", fm.FilePath);
+        }
+    }
+};
+const addFileDetailsWindows = async (allFiles: string[], lm: LanguageMaster, fileMasterJson: any[]) => {
     const fileTypeMaster = await appService.fileTypeMaster.getDocuments({ lid: lm._id });
     let fileInfos = allFiles.map((file) => {
         let info = fileExtensions.getFileInfo(file);
+
         let path = file.substring(file.indexOf("project-files\\") + 14);
         return { ...info, filePath: file, path };
     });
