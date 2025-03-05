@@ -5,7 +5,7 @@ const globalAny: any = global;
 const dbConnection: Mongoose.Connection = globalAny.dbConnection as Mongoose.Connection;
 const mongoClient: MongoClient = globalAny.mongoDbClient as MongoClient;
 import {
-    EntityBase, MultipleCollectionsConfig, RoleMaster, UserMaster, UserMasterSchema, RoleMasterSchema,
+    EntityBase, MultipleCollectionsConfig, RoleMaster, UserMaster, UserMasterSchema, RoleMasterSchema, OrganizationMaster, OrganizationMasterSchema,
     ProjectMaster, ProjectMasterSchema, LanguageMaster, WorkspaceMaster, LanguageMasterSchema,
     WorkspaceMasterSchema, FileTypeMasterSchema, FileTypeMaster,
     FileMaster, FileMasterSchema, StatementMaster, StatementSchema, BaseCommandMasterSchema, BaseCommandMaster, FileContentMaster,
@@ -57,7 +57,7 @@ class AppService {
     public promptConfig = new BaseRepository<PromptConfigMaster>({ collectionName: "promptConfigMaster", schema: PromptConfigMasterSchema });
     public objectConnectivity = new BaseRepository<any>({ collectionName: "objectConnectivity", schema: new Mongoose.Schema<any>() });
     public memberReferences = new BaseRepository<any>({ collectionName: "memberReferences", schema: new Mongoose.Schema<any>() });
-    public organizationMaster = new BaseRepository<any>({ collectionName: "organizationMaster", schema: new Mongoose.Schema<any>() });
+    public organizationMaster = new BaseRepository<OrganizationMaster>({ collectionName: "organizationMaster", schema: OrganizationMasterSchema });
     get = function <T extends EntityBase>(propertyName: string): BaseRepository<T> { return this[propertyName]; };
     dataSets = async (collections: Array<MultipleCollectionsConfig>): Promise<Array<{ collection: string, documents: any[] }>> => {
         var tableData: Array<{ collection: string, documents: any[] }> = [];

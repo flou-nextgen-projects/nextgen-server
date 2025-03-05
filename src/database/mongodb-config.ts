@@ -1,11 +1,11 @@
 const globalAny: any = global;
 import { MongoClient, Db } from 'mongodb';
 import { EventEmitter } from "events";
-import { mongoDbOpt, config } from './connection-config';
+import { mongoDbOpt, config, mongoDbUrl } from './connection-config';
 const mongoDbServer = () =>
   new Promise((resolve: Function, reject: Function) => {
     let eventEmitter = new EventEmitter();
-    const mongoClient: MongoClient = new MongoClient(config.mongoDbUrl, mongoDbOpt as any);
+    const mongoClient: MongoClient = new MongoClient(mongoDbUrl, mongoDbOpt as any);
     eventEmitter.on('connect', function () {
       console.log('Database connection with MongoDb Driver succeeded!!');
       console.log('=======================================================================');
@@ -16,8 +16,8 @@ const mongoDbServer = () =>
       console.log(err);
       console.log('=======================================================================');
     });
-    mongoClient.on("open", (client: MongoClient) => {      
-      console.log("Database connection with Mongo successfully connected");           
+    mongoClient.on("open", (client: MongoClient) => {
+      console.log("Database connection with Mongo successfully connected");
       console.log('=======================================================================');
     }).connect().then(client => {
       globalAny.mongoDbClient = mongoClient as MongoClient;

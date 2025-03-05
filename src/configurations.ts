@@ -35,6 +35,8 @@ export default {
     }, get cohereApiKey() {
         return process.env.COHERE_API_KEY;
     }, get genAIUrl() {
-        return process.env.GEN_AI_URL
+        return process.env.GEN_AI_URL;
+    }, get crtPath(){
+        return process.env.CERT_PATH;
     }
 }

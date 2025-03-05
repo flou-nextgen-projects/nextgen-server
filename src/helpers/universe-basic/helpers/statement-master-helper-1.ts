@@ -27,10 +27,10 @@ export class StatementReferenceMasterHelper {
         }
     };
     getMethodBusinessName = function (lineDetail: LineDetails, fileContents: string[], lineComment: string): LineDetails {
-        const lineIndex = lineDetail.lineIndex;
-        if (lineIndex <= 0) return lineDetail;
+        const location = lineDetail.location;
+        if (location <= 0) return lineDetail;
         var businessName = "";
-        for (var index = lineIndex; index >= lineIndex - 4; index--) {
+        for (var index = location; index >= location - 4; index--) {
             const line = fileContents[index].trim();
             if (/^[\*\s]+$/.test(line)) continue;
             if (!line.startsWith(lineComment)) continue;

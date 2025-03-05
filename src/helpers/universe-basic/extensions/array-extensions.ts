@@ -11,7 +11,7 @@ export default class UniverseArrayExtensions extends Array {
             const ld: LineDetails = {
                 parsedLine: line.trim(),
                 originalLine: line,
-                lineIndex: index
+                location: index
             };
             lineDetails.push(ld);
         });

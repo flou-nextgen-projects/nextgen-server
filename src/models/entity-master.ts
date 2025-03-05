@@ -53,24 +53,14 @@ class EntityAttributes extends EntityBase {
 }
 
 const EntityAttributesSchema: Mongoose.Schema<EntityAttributes> = new Mongoose.Schema({
-    pid: {
-        type: Mongoose.Schema.Types.ObjectId, required: true
-    },
-    fid: {
-        type: Mongoose.Schema.Types.ObjectId, required: true
-    }, eid: {
-        type: Mongoose.Schema.Types.ObjectId, required: true
-    }, entityName: {
-        type: String, required: true, default: ""
-    }, attributeName: {
-        type: String, required: true, default: ""
-    }, dataType: {
-        type: String, required: false, default: ""
-    }, dataLength: {
-        type: String, required: false, default: ""
-    }, storeEntitySet: {
-        type: String, required: false, default: ""
-    }
+    pid: { type: Mongoose.Schema.Types.ObjectId, required: true },
+    fid: { type: Mongoose.Schema.Types.ObjectId, required: true },
+    eid: { type: Mongoose.Schema.Types.ObjectId, required: true },
+    entityName: { type: String, required: true, default: "" },
+    attributeName: { type: String, required: true, default: "" },
+    dataType: { type: String, required: false, default: "" },
+    dataLength: { type: String, required: false, default: "" },
+    storeEntitySet: { type: String, required: false, default: "" }
 });
 
 export { EntityMaster, EntityMasterSchema, DataDependency, DataDependencySchema, EntityAttributes, EntityAttributesSchema };

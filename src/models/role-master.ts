@@ -20,5 +20,16 @@ enum UserRoles {
     SITE_ADMIN = "siteAdmin",
     NORMAL_USER = "normalUser"
 }
+class OrganizationMaster extends EntityBase {
+    public orgId: number;
+    public orgName: string;
+    public tid: Mongoose.Schema.Types.ObjectId;
+}
 
-export { RoleMaster, RoleMasterSchema, UserRoles };
+const OrganizationMasterSchema: Mongoose.Schema<OrganizationMaster> = new Mongoose.Schema<OrganizationMaster>({
+    orgId: { type: Number, required: true, select: true },
+    orgName: { type: String, required: true, select: true },
+    tid: { type: Mongoose.Types.ObjectId, required: true, select: true }
+}, { toJSON: { useProjection: true }, toObject: { useProjection: true } });
+
+export { RoleMaster, RoleMasterSchema, UserRoles, OrganizationMaster, OrganizationMasterSchema };

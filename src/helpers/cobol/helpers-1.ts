@@ -96,7 +96,7 @@ export default class CobolAdditionalHelperOne extends CobolAdditionalHelperTwo {
                 if (!isEmpty(tempString)) {
                     tempString += currentLine;
                     mainMethodBlock.push({
-                        lineIndex: tempIndex,
+                        location: tempIndex,
                         originalLine: allLines[tempIndex].originalLine,
                         modifiedLine: tempString,
                         alternateName: allLines[tempIndex].alternateName,
@@ -109,7 +109,7 @@ export default class CobolAdditionalHelperOne extends CobolAdditionalHelperTwo {
                 continue;
             }
             if (!tempString) {
-                tempIndex = line.lineIndex;
+                tempIndex = line.location;
             }
             tempString += tempString ? ' ' + currentLine : currentLine;
         }
@@ -356,7 +356,7 @@ export default class CobolAdditionalHelperOne extends CobolAdditionalHelperTwo {
                 if (regexEnd.test(cLine)) {
                     tempString += ' ' + cLine.trimStart();
                     mainBlockList.push({
-                        lineIndex: allLines[i].lineIndex,
+                        location: allLines[i].location,
                         originalLine: tempString.trimStart(),
                         modifiedLine: tempString.trimStart(),
                         alternateName: allLines[i].alternateName,
@@ -455,7 +455,7 @@ export default class CobolAdditionalHelperOne extends CobolAdditionalHelperTwo {
                 continue;
             }
             let copyLines = readFileSync(incFile.filePath, 'utf-8').split('\n').map(function (line, index) {
-                return { alternateName: '', fid: incFile._id, pid: incFile.pid, lineIndex: ++index, originalLine: line, modifiedLine: line, indicators: [] } as StatementMaster
+                return { alternateName: '', fid: incFile._id, pid: incFile.pid, location: ++index, originalLine: line, modifiedLine: line, indicators: [] } as StatementMaster
             });
             if (copyLines.length <= 0) continue;
 
@@ -473,7 +473,7 @@ export default class CobolAdditionalHelperOne extends CobolAdditionalHelperTwo {
                         if (!allLines[i].modifiedLine.trim()) continue;
                         const cLine = allLines[i].modifiedLine.trimStart().trimEnd().replace("REPLACING", "").trim();
                         newLines.push({
-                            lineIndex: allLines[i].lineIndex,
+                            location: allLines[i].location,
                             originalLine: allLines[i].originalLine,
                             modifiedLine: cLine,
                             alternateName: allLines[i].alternateName,
@@ -522,7 +522,7 @@ export default class CobolAdditionalHelperOne extends CobolAdditionalHelperTwo {
             const line = statement.modifiedLine;
             const newLine = line.substring(startPosition, length).trimEnd();
             return {
-                lineIndex: statement.lineIndex,
+                location: statement.location,
                 originalLine: statement.originalLine,
                 modifiedLine: newLine,
                 alternateName: statement.alternateName,
@@ -539,7 +539,7 @@ export default class CobolAdditionalHelperOne extends CobolAdditionalHelperTwo {
                 nLine += ` ${cLine}`;
             } else {
                 if (!isEmpty(nLine)) {
-                    const newStatement = { lineIndex: 0, originalLine: nLine.trim(), modifiedLine: nLine.trim(), alternateName: '', indicators: [] } as StatementMaster;
+                    const newStatement = { location: 0, originalLine: nLine.trim(), modifiedLine: nLine.trim(), alternateName: '', indicators: [] } as StatementMaster;
                     newList.push(newStatement);
                     nLine = '';
                 }
@@ -568,7 +568,7 @@ export default class CobolAdditionalHelperOne extends CobolAdditionalHelperTwo {
                 if (inRegex.test(inLine)) {
                     oLine += ` ${inLine}`;
                     const newStatement: StatementMaster = {
-                        lineIndex: inLines[i].lineIndex, // Reuse lineIndex from the last statement
+                        location: inLines[i].location, // Reuse location from the last statement
                         originalLine: inLines[i].originalLine,
                         modifiedLine: oLine,
                         alternateName: inLines[i].alternateName, // Reuse alternateName from the last statement

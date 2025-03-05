@@ -1,7 +1,7 @@
 import Mongoose from "mongoose";
 
 export default class LineDetails {
-    lineIndex: number;
+    location: number;
     parsedLine: string;
     originalLine: string;
     statementComment?: string;

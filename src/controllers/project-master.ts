@@ -22,8 +22,7 @@ pmRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
     let pid: string = <string>request.query.pid;
     let projects = await appService.mongooseConnection.collection("projectMaster").aggregate([
         { $match: { _id: new Mongoose.Types.ObjectId(pid) } },
-        { $lookup: { from: "fileMaster", localField: "_id", foreignField: "pid", as: "docs" } },
-        { $sort: { lineIndex: 1 } }
+        { $lookup: { from: "fileMaster", localField: "_id", foreignField: "pid", as: "docs", pipeline: [{ $sort: { fileName: 1 } }] } }
     ]).toArray();
     let project = projects.shift(); // need to check
     response.status(200).json(project).end();
@@ -57,7 +56,7 @@ pmRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
         pid: new Mongoose.Types.ObjectId(projectId)
     });
     response.status(200).json(processingStages).end();
-}).post("/upload-project", function (request: any, response: Response) {
+}).post("/upload-project", function (request: any, response: Response | any) {
     let rootDir = resolve(join(__dirname, "../", "../"));
     request.rootDir = rootDir;
     Upload(request, response, function (err: any) {
@@ -164,12 +163,29 @@ pmRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
             response.write(formatData({ message: "Started processing network connectivity." }), "utf-8", checkWrite);
             let netJson = await readJsonFile(join(extractPath, "member-references", "member-references.json"));
             if (netJson.code === 200) {
-                await processNetworkConnectivity(languageMaster, workspace, netJson.data);
+                // this will work for COBOL and similar languages...
+                // NOTE: this is not needed for any languages now
+                // await processNetworkConnectivity(languageMaster, workspace, netJson.data);
                 // process for member details
                 response.write(formatData({ message: "Started process for adding member references to repository." }), "utf-8", checkWrite);
                 await addMemberReference(workspace, netJson.data);
+            }
+            // process for member-references
+            response.write(formatData({ message: "Started processing for member references." }), "utf-8", checkWrite);
+            // let dotNetMemberJson = await readJsonFile(join(extractPath, "member-references", "member-references.json"));
+            if (netJson.code === 200) {
                 // special case for dot net repositories
                 await addDotNetMemberReferences(workspace, netJson.data);
+            }
+            // process for action workflows and workflow connectivities
+            // this is only for .NET and similar languages...
+            response.write(formatData({ message: "Started process for adding action workflows to repository." }), "utf-8", checkWrite);
+
+            let actionsJson = await readJsonFile(join(extractPath, "action-workflows", "action-workflows.json"));
+            let workConnectJson = await readJsonFile(join(extractPath, "workflow-connectivities", "workflow-connectivities.json"));
+            if (actionsJson.code === 200 && workConnectJson.code === 200) {
+                await processActionWorkflows(workspace, actionsJson.data);
+                await processActionsAndConnectivities(workspace, actionsJson.data, workConnectJson.data);
             }
 
             // process for method details
@@ -206,22 +222,34 @@ pmRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
                 await addMissingObjects(missingJson.data);
             }
             //process for entities
-            /*response.write(formatData({ message: "Started process for getting  entities." }));
+            response.write(formatData({ message: "Started process for getting  entities." }));
             let entityJson = await readJsonFile(join(extractPath, "entity-master", "entity-master.json"));
             if (entityJson.code === 200) {
                 await addEntitiesAndAttributes(entityJson.data);
-            }*/
+            }
 
             response.write(formatData({ message: "You can start loading project now." }), "utf-8", checkWrite);
             response.end();
         }).catch((err: any) => {
-            winstonLogger.error(new Error("Error during project bundle extraction"), { code: "EXTRACTION_ERROR", name: request.params.pname, extras: err });
+            winstonLogger.error(new Error("Error during project bundle extraction"), { code: "EXTRACTION_ERROR", name: request.params.pname, extras: { ...err } });
             response.end(formatData(err));
         });
     } catch (error) {
         winstonLogger.error(new Error("Error in upload project bundle"), { code: "UPLOAD_PROJECT_BUNDLE_ERROR", name: request.params.pname, extras: error });
         response.end(formatData(error));
     }
+}).get("/reprocess-action-workflows/:wid", async function (request: Request, response: Response) {
+    let wid: string = <string>request.params.wid;
+    let workspace = await appService.workspaceMaster.aggregateOne([{ $match: { _id: new Mongoose.Types.ObjectId(wid) } }]);
+    if (!workspace) return response.status(404).end();
+    let extractPath: string = <string>workspace.dirPath;
+    let actionsJson = await readJsonFile(join(extractPath, "action-workflows", "action-workflows.json"));
+    let workConnectJson = await readJsonFile(join(extractPath, "workflow-connectivities", "workflow-connectivities.json"));
+    if (actionsJson.code === 200 && workConnectJson.code === 200) {
+        await processActionWorkflows(workspace, actionsJson.data);
+        await processActionsAndConnectivities(workspace, actionsJson.data, workConnectJson.data);
+    }
+    response.status(200).json({ message: "Network connectivity is regenerated successfully." }).end();
 }).get("/reprocess-network-connectivity/:wid", async function (request: Request, response: Response) {
     let wid: string = <string>request.params.wid;
     let workspace = await appService.workspaceMaster.aggregateOne([{ $match: { _id: new Mongoose.Types.ObjectId(wid) } }]);
@@ -246,14 +274,10 @@ pmRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
     let languageMaster = await appService.languageMaster.getItem({ _id: workspace.lid });
     let allFiles = fileExtensions.getAllFilesFromPath(join(workspace.dirPath, "project-files"));
     let fmJson = await readJsonFile(join(extractPath, "file-master", "file-master.json"));
-    try {
-        if (fmJson.code === 200) {
-            await addFileDetails(allFiles, languageMaster, fmJson.data);
-        }
-        response.status(200).json({ message: "File master details processed successfully" }).end();
-    } catch (error) {
-        response.status(500).json(error).end();
+    if (fmJson.code === 200) {
+        await addFileDetails(allFiles, languageMaster, fmJson.data);
     }
+    response.status(200).json({ message: "File master details processed successfully" }).end();
 }).get("/reprocess-member-references/:wid", async function (request: Request, response: Response) {
     try {
         let _id: Mongoose.Types.ObjectId = new Mongoose.Types.ObjectId(<string>request.params.wid);
@@ -321,7 +345,7 @@ pmRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
     } catch (error) {
         response.status(500).send().end();
     }
-}).get("/process-entities/:wid", async (request: Request, response: Response) => {
+}).get("/reprocess-entity-attributes/:wid", async (request: Request, response: Response) => {
     try {
         let _id: Mongoose.Types.ObjectId = new Mongoose.Types.ObjectId(<string>request.params.wid);
         let workspace = await appService.workspaceMaster.aggregateOne([{ $match: { _id } }]);
@@ -340,25 +364,25 @@ const addEntitiesAndAttributes = async function (entityJson: any[]) {
     try {
         for (const element of entityJson) {
             let entity: EntityMaster = {
-                _id: Mongoose.Types.ObjectId.createFromHexString(element._id),
                 entityName: element.entityName,
                 fid: Mongoose.Types.ObjectId.createFromHexString(element.fid),
                 pid: Mongoose.Types.ObjectId.createFromHexString(element.pid),
                 type: element.type
             } as EntityMaster;
-            await appService.entityMaster.addItem(entity);
-            let attributes = element.Attributes || [];
-            if (attributes.length == 0) continue;
+
+            let em = await appService.entityMaster.addItem(entity);
+
+            let attributes = element.attributes || [];
+            if (attributes.length === 0) continue;
             for (const attr of attributes) {
                 let attribute: EntityAttributes = {
-                    _id: Mongoose.Types.ObjectId.createFromHexString(attr._id),
                     pid: Mongoose.Types.ObjectId.createFromHexString(attr.pid),
                     fid: Mongoose.Types.ObjectId.createFromHexString(attr.fid),
-                    eid: Mongoose.Types.ObjectId.createFromHexString(attr.eid),
+                    eid: em._id,
                     entityName: element.entityName,
                     attributeName: attr.attributeName,
-                    dataLength: attr.attributeDataLength,
-                    dataType: attr.attributeDataType,
+                    dataLength: attr.dataLength,
+                    dataType: attr.dataType,
                     storeEntitySet: attr.storeEntitySet
                 } as EntityAttributes;
                 await appService.entityAttributes.addItem(attribute);
@@ -366,10 +390,8 @@ const addEntitiesAndAttributes = async function (entityJson: any[]) {
         }
     } catch (error) {
         throw error;
-        console.log("Error while adding entities", error);
     }
-}
-
+};
 const addStatementReferences = async function addStatementReferences(wm: WorkspaceMaster, statementMastersJson: any[], callback: Function): Promise<any> {
     try {
         let collection = appService.mongooseConnection.collection("statementMaster");
@@ -479,7 +501,35 @@ const processFileContents = async (wm: WorkspaceMaster) => {
         }
     }
 };
+const processActionWorkflows = async function processActionWorkflows(wm: WorkspaceMaster, actionsJson: any[]) {
+    let collection = appService.mongooseConnection.collection("actionWorkflows");
+    await collection.deleteMany({ wid: wm._id });
+    let actionWorkflows = convertMemberReferencesArray(actionsJson);
+    for (let aw of actionWorkflows) {
+        await collection.insertOne(aw);
+    }
+};
+const processActionsAndConnectivities = async function processActionsAndConnectivities(wm: WorkspaceMaster, actionsJson: any[], connectivityJson: any[]) {
+    // from actionsJson we'll prepare nodes
+    let allFiles = await appService.fileMaster.aggregate([{ $match: { wid: wm._id } }]);
+    var networkFiles: any[] = [];
+    actionsJson.forEach((aw) => {
+        let file = allFiles.find((d) => d._id.toString() === aw.fid.toString());
+        networkFiles.push({ ...file, fileName: aw.methodName });
+    });
+    let nodes = prepareNodes(networkFiles);
+    let links = prepareDotNetLinks(connectivityJson);
+    let collection = appService.mongooseConnection.collection("objectConnectivity");
+    await collection.deleteMany({ wid: wm._id });
+    for (let node of nodes) {
+        await collection.insertOne(node);
+    }
+    for (let link of links) {
+        await collection.insertOne(link);
+    }
+};
 const processNetworkConnectivity = async (lm: LanguageMaster, wm: WorkspaceMaster, networkJson: any[]) => {
+    if (lm.name !== "COBOL") return;
     let allFiles = await appService.fileMaster.aggregate([{ $match: { wid: wm._id } }]);
     var networkFiles: any[] = [];
     networkJson.forEach((nj) => {
@@ -490,14 +540,7 @@ const processNetworkConnectivity = async (lm: LanguageMaster, wm: WorkspaceMaste
         networkFiles.push(file);
     });
     let nodes = prepareNodes(networkFiles);
-    let links: any[] = [];
-    // we'll add else if for other languages if needed.
-    if (lm.name === "C#") {
-        networkJson.forEach((d) => d.wid = wm._id);
-        links = prepareDotNetLinks(networkJson, nodes);
-    } else {
-        links = prepareLinks(networkJson, nodes);
-    }
+    let links: any[] = prepareLinks(networkJson, nodes);
     let collection = appService.mongooseConnection.collection("objectConnectivity");
     await collection.deleteMany({ wid: wm._id });
     for (let node of nodes) {
@@ -508,7 +551,7 @@ const processNetworkConnectivity = async (lm: LanguageMaster, wm: WorkspaceMaste
     }
 };
 const addMemberReference = async (wm: WorkspaceMaster, memberRefJson: any[]) => {
-    if (wm.languageMaster.name === "C#") return;
+    if (wm.languageMaster.name !== "COBOL") return;
     for (const member of memberRefJson) {
         let fileType = await appService.fileTypeMaster.getItem({ fileTypeName: { $regex: new RegExp(`^${member.FileTypeName}$`, 'i') } });
         try {
@@ -532,6 +575,8 @@ const addMemberReference = async (wm: WorkspaceMaster, memberRefJson: any[]) => 
                 fileType: member.FileTypeName,
                 fileTypeId: fileType._id,
                 folderName: member.FolderName,
+                methodNo: 0,
+                location: 0,
                 callExternals: callExts
             } as any;
             await appService.mongooseConnection.collection("memberReferences").insertOne(memberDetails);
@@ -567,7 +612,6 @@ const addFileDetails = async (allFiles: string[], lm: LanguageMaster, fileMaster
         }
     }
 };
-// add workspace master information
 const addWorkspace = async (extractPath: string, wmJson: any) => {
     let languageMaster = await appService.languageMaster.getItem({ name: wmJson.LanguageName });
     if (!languageMaster) throw new AppError("Language does not exist", 404, { code: 404, name: wmJson.LanguageName });
