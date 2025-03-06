@@ -3,7 +3,7 @@ import { MongoClient, Db } from 'mongodb';
 import { EventEmitter } from "events";
 import { mongoDbOpt, config, mongoDbUrl } from './connection-config';
 const mongoDbServer = () =>
-  new Promise((resolve: Function, reject: Function) => {
+  new Promise((resolve: Function) => {
     let eventEmitter = new EventEmitter();
     const mongoClient: MongoClient = new MongoClient(mongoDbUrl, mongoDbOpt as any);
     eventEmitter.on('connect', function () {
@@ -16,7 +16,7 @@ const mongoDbServer = () =>
       console.log(err);
       console.log('=======================================================================');
     });
-    mongoClient.on("open", (client: MongoClient) => {
+    mongoClient.on("open", () => {
       console.log("Database connection with Mongo successfully connected");
       console.log('=======================================================================');
     }).connect().then(client => {
