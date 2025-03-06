@@ -585,7 +585,6 @@ const addMemberReference = async (wm: WorkspaceMaster, memberRefJson: any[]) => 
         }
     }
 };
-
 const addFileDetails = async (allFiles: string[], lm: LanguageMaster, fileMasterJson: any[]) => {
     const fileTypeMaster = await appService.fileTypeMaster.getDocuments({ lid: lm._id });
     // Normalize path extraction for Windows paths

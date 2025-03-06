@@ -12,7 +12,7 @@ let config: any = {
     auth
 };
 
-let mongoDbBaseOpt: Mongoose.ConnectOptions = {
+let mongoDbOpt: Mongoose.ConnectOptions = {
     dbName: config.databaseName,
     connectTimeoutMS: 10000,
     socketTimeoutMS: 45000,
@@ -22,8 +22,8 @@ let mongoDbBaseOpt: Mongoose.ConnectOptions = {
 }
 
 if (configs.mongoSSL) {
-    mongoDbBaseOpt = {
-        ...mongoDbBaseOpt,
+    mongoDbOpt = {
+        ...mongoDbOpt,
         tls: true,
         tlsCertificateKeyFile: join(config.crtPath, 'mongodb-client.pem'),
         tlsCAFile: join(config.crtPath, 'rootCA.pem'),
@@ -31,24 +31,6 @@ if (configs.mongoSSL) {
         tlsAllowInvalidHostnames: false
     };
 }
-
-const mongoDbOpt: Mongoose.ConnectOptions = {
-    dbName: config.databaseName,
-    connectTimeoutMS: 10000,
-    socketTimeoutMS: 45000,
-    tls: true,
-    tlsCertificateKeyFile: join(config.crtPath, 'mongodb-client.pem'),
-    tlsCAFile: join(config.crtPath, 'rootCA.pem'),
-    tlsAllowInvalidCertificates: true,
-    tlsAllowInvalidHostnames: true,
-    family: 4,
-    readPreference: 'secondary',
-    auth
-};
-
-// if mongodb with tls is not used
-
-
 
 const mongoDbUrl = `mongodb://${config.mongoHost}:${config.mongoPort}/?authSource=admin`;
 

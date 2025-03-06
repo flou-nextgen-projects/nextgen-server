@@ -9,7 +9,7 @@ const swaggerUi = require('swagger-ui-express');
 import { join, resolve } from "path";
 import chalk from "chalk";
 import { AppError } from './common/app-error';
-import { appService } from "./services/app-service";
+// import { appService } from "./services/app-service";
 
 const winstonLogger: WinstonLogger = new WinstonLogger(__filename);
 const app = http2Express(express);
@@ -19,6 +19,11 @@ app.use(Cors());
 app.use(Cors({
     allowedHeaders: ["x-token", "Authorization"]
 }));
+
+app.post("/backend/api/app-db", (request: Request, response: Response) => {
+    console.log(request.body);
+    response.status(200).json({ msg: "OK", data: { id: request.params } }).end();
+});
 
 export default app;
 
@@ -110,6 +115,7 @@ export const setAppRoutes = function (app: express.Application) {
     // GenAI routes
     // all routes are added into gen-ai.routes file under routes folder
 
+    /*
     app.get("/backend/main/api/data-sets", async (request: Request, response: Response) => {
         let collections = <any>request.query.collection;
         let s = collections.map(function (c: string) { return { collection: c } });
@@ -119,7 +125,7 @@ export const setAppRoutes = function (app: express.Application) {
             winstonLogger.error(err, { name: "Error in data-set endpoint", code: "DATA_SET_ENDPOINT" });
         });
     });
-
+    */
     let genAiRoutes = require("./routes/gen-ai.routes");
     app.use("/backend/main/api", genAiRoutes);
 

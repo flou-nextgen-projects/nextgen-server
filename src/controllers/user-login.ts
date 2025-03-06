@@ -2,8 +2,6 @@ import Express, { Request, Response, Router, NextFunction } from "express";
 import Mongoose from "mongoose";
 import { pick } from "lodash";
 import AppService from "../services/app-service";
-import { readFileSync } from "fs";
-import { resolve, join } from "path";
 const appService: AppService = new AppService();
 const loginRouter: Router = Express.Router();
 
