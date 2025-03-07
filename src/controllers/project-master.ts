@@ -364,6 +364,8 @@ pmRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
 
 const addEntitiesAndAttributes = async function (entityJson: any[]) {
     try {
+        let allowedFields = ["entityName", "attributes"];
+        let allowedAttributeFields = ["attributeName", "dataType", "dataLength"];
         for (const element of entityJson) {
             let entity: EntityMaster = {
                 entityName: element.entityName,
@@ -389,6 +391,31 @@ const addEntitiesAndAttributes = async function (entityJson: any[]) {
                 } as EntityAttributes;
                 await appService.entityAttributes.addItem(attribute);
             }
+            let filteredObj = Object.keys(element)
+                .filter(key => allowedFields.includes(key)) // Keep only allowed fields
+                .reduce((acc: any, key) => {
+                    acc[key] = element[key];
+                    return acc;
+                }, {});
+            if (filteredObj.attributes && Array.isArray(filteredObj.attributes)) {
+                filteredObj.attributes = filteredObj.attributes.map((attr: any) =>
+                    Object.keys(attr)
+                        .filter(key => allowedAttributeFields.includes(key))
+                        .reduce((acc: any, key) => {
+                            acc[key] = attr[key];
+                            return acc;
+                        }, {})
+                );
+            }
+            let variableDetails = {
+                type: "Variable & Data Element",
+                promptId: 1001,
+                fid: Mongoose.Types.ObjectId.createFromHexString(element.fid),
+                data: JSON.stringify(filteredObj),
+                formattedData: JSON.stringify(filteredObj),
+                genAIGenerated: false
+            } as any;
+            await appService.mongooseConnection.collection("businessSummaries").insertOne(variableDetails);
         }
     } catch (error) {
         throw error;

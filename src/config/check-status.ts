@@ -89,7 +89,7 @@ const _initDatabaseConfiguration = (dbStatus: any): Promise<{ message: string }>
         let roleMaster = configJson.find((d) => d.collection === "roleMaster").documents;
         await appService.roleMaster.bulkInsert(roleMaster);
         let userMaster = configJson.find((d) => d.collection === "userMaster").documents;
-        userMaster.forEach((d: UserMaster) => d.oid = orgMaster._id.toString());
+        userMaster.forEach((d: UserMaster|any) => d.oid = orgMaster._id);
         await appService.userMaster.bulkInsert(userMaster);
         await appService.mongooseConnection.collection("dbStatus").findOneAndUpdate({ _id: dbStatus?._id }, { $set: { configured: true, enabled: true } }, { upsert: true });
         res({ message: "Database initialization process completed successfully" });

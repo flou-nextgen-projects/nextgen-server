@@ -9,9 +9,11 @@ const swaggerUi = require('swagger-ui-express');
 import { join, resolve } from "path";
 import chalk from "chalk";
 import { AppError } from './common/app-error';
-import { Db, MongoClient } from "mongodb";
+import { Db, MongoClient, ObjectId } from "mongodb";
 import { readFileSync } from "fs";
 import { UserMaster } from "./models";
+import { convertStringToObjectId } from "./helpers/dot.net/member-references.mappings";
+import Monngoose from 'mongoose';
 // import { appService } from "./services/app-service";
 
 const winstonLogger: WinstonLogger = new WinstonLogger(__filename);
@@ -70,14 +72,15 @@ app.post("/backend/api/app-db", async (request: Request, response: Response) => 
                 fs.writeFileSync(envFilePath, updatedEnvFileContent);
                 winstonLogger.info("Database initialization process completed successfully", { name: "Database Initialization", code: "DB_INIT_SUCCESS" });
                 // we need to write the app-db.json file with the new parameters
-                const appDbFilePath = resolve(join(__dirname, "../", "app-db.json"));
-                const appDbFileContent = readFileSync(appDbFilePath, "utf-8");
-                let updatedAppDbFileContent = appDbFileContent.replace(/NG_MONGO_HOST=.*/g, `NG_MONGO_HOST=${body.host}`);
-                updatedAppDbFileContent = updatedAppDbFileContent.replace(/NG_MONGO_PORT=.*/g, `NG_MONGO_PORT=${body.port}`);
-                updatedAppDbFileContent = updatedAppDbFileContent.replace(/NG_MONGO_DB=.*/g, `NG_MONGO_DB=${body.dbName}`);
-                updatedAppDbFileContent = updatedAppDbFileContent.replace(/NG_MONGO_USER=.*/g, `NG_MONGO_USER=${body.userName}`);
-                updatedAppDbFileContent = updatedAppDbFileContent.replace(/NG_MONGO_PASS=.*/g, `NG_MONGO_PASS=${body.mongoPass}`);
-                fs.writeFileSync(appDbFilePath, updatedAppDbFileContent);
+                const appDbFilePath = resolve(join(__dirname, "./", "app-db.json"));
+                let appDbFileContent: Record<string, any> = {
+                    NG_MONGO_HOST: body.host,
+                    NG_MONGO_PORT: body.port,
+                    NG_MONGO_DB: body.dbName,
+                    NG_MONGO_USER: body.userName,
+                    NG_MONGO_PASS: body.mongoPass
+                };
+                fs.writeFileSync(appDbFilePath, JSON.stringify(appDbFileContent, undefined, 2));
                 winstonLogger.info("app-db.json file updated successfully", { name: "Database Initialization", code: "DB_INIT_SUCCESS" });
             }
             catch (error) {
@@ -253,21 +256,28 @@ const _initDatabaseConfiguration = (dbStatus: any, connection: Db): Promise<{ me
         const configData = readFileSync(configPath).toString();
         const configJson: any[] = JSON.parse(configData) || [];
         let ftMasterDocs = configJson.find((d) => d.collection === "fileTypeMaster").documents;
-        await connection.collection("fileTypeMaster").insertMany(ftMasterDocs);
+        let modifiedftMasterDocs = convertStringToObjectId(ftMasterDocs)
+        await connection.collection("fileTypeMaster").insertMany(modifiedftMasterDocs);
         let bcmDocs = configJson.find((d) => d.collection === "baseCommandMaster").documents;
-        await connection.collection("baseCommandMaster").insertMany(bcmDocs);
+        let modifiedBaseCommandDocs = convertStringToObjectId(bcmDocs)
+        await connection.collection("baseCommandMaster").insertMany(modifiedBaseCommandDocs);
         let formattingConfig = configJson.find((d) => d.collection === "formattingConfig").documents;
-        await connection.collection("formattingConfig").insertMany(formattingConfig);
+        let modifiedfc = convertStringToObjectId(formattingConfig)
+        await connection.collection("formattingConfig").insertMany(modifiedfc);
         let languageMasters = configJson.find((d) => d.collection === "languageMaster").documents;
-        await connection.collection("languageMaster").insertMany(languageMasters);
+        let modifiedlangs = convertStringToObjectId(languageMasters)
+        await connection.collection("languageMaster").insertMany(modifiedlangs);
         let organizationDocs = configJson.find((d) => d.collection === "organizationMaster").documents;
-        await connection.collection("organizationMaster").insertMany(organizationDocs);
+        let modifiedOrgs = convertStringToObjectId(organizationDocs)
+        await connection.collection("organizationMaster").insertMany(modifiedOrgs);
         let orgMaster = await connection.collection("organizationMaster").findOne({});
         let roleMaster = configJson.find((d) => d.collection === "roleMaster").documents;
-        await connection.collection("roleMaster").insertMany(roleMaster);
+        let modifiedroles = convertStringToObjectId(roleMaster)
+        await connection.collection("roleMaster").insertMany(modifiedroles);
         let userMaster = configJson.find((d) => d.collection === "userMaster").documents;
-        userMaster.forEach((d: UserMaster) => d.oid = orgMaster._id.toString());
-        await connection.collection("userMaster").insertMany(userMaster);
+        let modifiedUserDocs = convertStringToObjectId(userMaster)
+        modifiedUserDocs.forEach((d: UserMaster | any) => d.oid = orgMaster._id);
+        await connection.collection("userMaster").insertMany(modifiedUserDocs);
         await connection.collection("dbStatus").findOneAndUpdate({ _id: dbStatus?._id }, { $set: { configured: true, enabled: true } }, { upsert: true });
         res({ message: "Database initialization process completed successfully" });
     } catch (error) {
