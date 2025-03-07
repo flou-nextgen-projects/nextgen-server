@@ -9,12 +9,10 @@ const swaggerUi = require('swagger-ui-express');
 import { join, resolve } from "path";
 import chalk from "chalk";
 import { AppError } from './common/app-error';
-import { Db, MongoClient, ObjectId } from "mongodb";
+import { Db, MongoClient } from "mongodb";
 import { readFileSync } from "fs";
 import { UserMaster } from "./models";
 import { convertStringToObjectId } from "./helpers/dot.net/member-references.mappings";
-import Monngoose from 'mongoose';
-// import { appService } from "./services/app-service";
 
 const winstonLogger: WinstonLogger = new WinstonLogger(__filename);
 const app = http2Express(express);
@@ -68,6 +66,7 @@ app.post("/backend/api/app-db", async (request: Request, response: Response) => 
                 updatedEnvFileContent = updatedEnvFileContent.replace(/NG_MONGO_DB=.*/g, `NG_MONGO_DB=${body.dbName}`);
                 updatedEnvFileContent = updatedEnvFileContent.replace(/NG_MONGO_USER=.*/g, `NG_MONGO_USER=${body.userName}`);
                 updatedEnvFileContent = updatedEnvFileContent.replace(/NG_MONGO_PASS=.*/g, `NG_MONGO_PASS=${body.mongoPass}`);
+                updatedEnvFileContent = updatedEnvFileContent.replace(/NG_USE_MONGO_AUTH=.*/g, "NG_USE_MONGO_AUTH=true");
                 const fs = require('fs');
                 fs.writeFileSync(envFilePath, updatedEnvFileContent);
                 winstonLogger.info("Database initialization process completed successfully", { name: "Database Initialization", code: "DB_INIT_SUCCESS" });
@@ -78,7 +77,8 @@ app.post("/backend/api/app-db", async (request: Request, response: Response) => 
                     NG_MONGO_PORT: body.port,
                     NG_MONGO_DB: body.dbName,
                     NG_MONGO_USER: body.userName,
-                    NG_MONGO_PASS: body.mongoPass
+                    NG_MONGO_PASS: body.mongoPass,
+                    NG_USE_MONGO_AUTH: true
                 };
                 fs.writeFileSync(appDbFilePath, JSON.stringify(appDbFileContent, undefined, 2));
                 winstonLogger.info("app-db.json file updated successfully", { name: "Database Initialization", code: "DB_INIT_SUCCESS" });
@@ -102,7 +102,6 @@ app.post("/backend/api/app-db", async (request: Request, response: Response) => 
         await session.endSession();
     }
     // restart the server
-    // process.exit(0);  
     response.status(200).json({ msg: "OK", data: { id: request.params } }).end();
 });
 
@@ -185,28 +184,19 @@ export const setAppRoutes = function (app: express.Application) {
     // db status router
     var dbStatusRouter = require("./config/check-status");
     app.use("/backend/super/admin/db", dbStatusRouter);
+    
     // job processing routers
     /* 
     var cobolProcessRouter = require("./jobs/process-cobol-project");
     var startProcessRouter = require("./jobs/start-processing");
     app.use("/backend/jobs/api/cobol-process", cobolProcessRouter);
     app.use("/backend/jobs/api/csharp-process", startProcessRouter); 
-    */
-
+    */    
+    var dataSetsRouter = require("./controllers/data-sets");
+    app.use("/backend/main/api/data-sets", dataSetsRouter);
+ 
     // GenAI routes
     // all routes are added into gen-ai.routes file under routes folder
-
-    /*
-    app.get("/backend/main/api/data-sets", async (request: Request, response: Response) => {
-        let collections = <any>request.query.collection;
-        let s = collections.map(function (c: string) { return { collection: c } });
-        appService.dataSets(s).then((res) => {
-            response.status(200).json(res).end();
-        }).catch((err) => {
-            winstonLogger.error(err, { name: "Error in data-set endpoint", code: "DATA_SET_ENDPOINT" });
-        });
-    });
-    */
     let genAiRoutes = require("./routes/gen-ai.routes");
     app.use("/backend/main/api", genAiRoutes);
 
@@ -256,24 +246,24 @@ const _initDatabaseConfiguration = (dbStatus: any, connection: Db): Promise<{ me
         const configData = readFileSync(configPath).toString();
         const configJson: any[] = JSON.parse(configData) || [];
         let ftMasterDocs = configJson.find((d) => d.collection === "fileTypeMaster").documents;
-        let modifiedftMasterDocs = convertStringToObjectId(ftMasterDocs)
-        await connection.collection("fileTypeMaster").insertMany(modifiedftMasterDocs);
+        let modifiedFtMasterDocs = convertStringToObjectId(ftMasterDocs)
+        await connection.collection("fileTypeMaster").insertMany(modifiedFtMasterDocs);
         let bcmDocs = configJson.find((d) => d.collection === "baseCommandMaster").documents;
         let modifiedBaseCommandDocs = convertStringToObjectId(bcmDocs)
         await connection.collection("baseCommandMaster").insertMany(modifiedBaseCommandDocs);
         let formattingConfig = configJson.find((d) => d.collection === "formattingConfig").documents;
-        let modifiedfc = convertStringToObjectId(formattingConfig)
-        await connection.collection("formattingConfig").insertMany(modifiedfc);
+        let modifiedFc = convertStringToObjectId(formattingConfig)
+        await connection.collection("formattingConfig").insertMany(modifiedFc);
         let languageMasters = configJson.find((d) => d.collection === "languageMaster").documents;
-        let modifiedlangs = convertStringToObjectId(languageMasters)
-        await connection.collection("languageMaster").insertMany(modifiedlangs);
+        let modifiedLangs = convertStringToObjectId(languageMasters)
+        await connection.collection("languageMaster").insertMany(modifiedLangs);
         let organizationDocs = configJson.find((d) => d.collection === "organizationMaster").documents;
         let modifiedOrgs = convertStringToObjectId(organizationDocs)
         await connection.collection("organizationMaster").insertMany(modifiedOrgs);
         let orgMaster = await connection.collection("organizationMaster").findOne({});
         let roleMaster = configJson.find((d) => d.collection === "roleMaster").documents;
-        let modifiedroles = convertStringToObjectId(roleMaster)
-        await connection.collection("roleMaster").insertMany(modifiedroles);
+        let modifiedRoles = convertStringToObjectId(roleMaster)
+        await connection.collection("roleMaster").insertMany(modifiedRoles);
         let userMaster = configJson.find((d) => d.collection === "userMaster").documents;
         let modifiedUserDocs = convertStringToObjectId(userMaster)
         modifiedUserDocs.forEach((d: UserMaster | any) => d.oid = orgMaster._id);
