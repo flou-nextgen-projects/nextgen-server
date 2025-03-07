@@ -20,24 +20,30 @@
                 <div class="mb-3">
                     <div class="row col-12">
                         <div class="col-md-3">
-                            <label for="text2" class="form-label">Port</label>
-                            <input type="text" class="form-control" id="txtMongoPath" placeholder="Port">
-                        </div>
-                        <div class="col-md-3">
                             <label for="text2" class="form-label">Host Address</label>
-                            <input type="text" class="form-control" id="txtMongoPath" placeholder="Address">
+                            <input type="text" class="form-control" id="txtMongoHost" placeholder="Host Address">
                         </div>
                         <div class="col-md-3">
-                            <label for="text2" class="form-label">Database Path</label>
-                            <input type="text" class="form-control" id="txtMongoPath" placeholder="Database Path">
+                            <label for="text2" class="form-label">Port</label>
+                            <input type="text" class="form-control" id="txtMongoPort" placeholder="Port">
                         </div>
+                        <div class="col-md-3">
+                            <label for="text2" class="form-label">Database Name</label>
+                            <input type="text" class="form-control" id="txtMongoDbName" placeholder="Mongodb Name">
+                        </div>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <div class="row col-12">
                         <div class="col-md-3">
                             <label for="text2" class="form-label">Username</label>
-                            <input type="text" class="form-control" id="txtMongoPath" placeholder="Username">
+                            <input type="text" class="form-control" id="txtMongoUsername" placeholder="Username">
                         </div>
-
+                        <div class="col-md-3">
+                            <label for="text2" class="form-label">Password</label>
+                            <input type="text" class="form-control" id="txtMongoPassword" placeholder="Password">
+                        </div>
                     </div>
-
                 </div>
                 <div class="mb-3">
                     <label for="dropdown1" class="form-label">floGen API</label>
@@ -68,18 +74,20 @@
     <script>
         document.getElementById("btnSubmit").addEventListener("click", function () {
             const license = document.getElementById("txtLicense").value;
-            const port = document.getElementById("txtMongoPath").value;
-            const host = document.getElementById("txtMongoPath").value;
-            const dbPath = document.getElementById("txtMongoPath").value;
-            const username = document.getElementById("txtMongoPath").value;
+            const port = document.getElementById("txtMongoPort").value;
+            const host = document.getElementById("txtMongoHost").value;
+            const userName = document.getElementById("txtMongoUsername").value;
+            const mongoPass = document.getElementById("txtMongoPassword").value;
+            const dbName = document.getElementById("txtMongoDbName").value;
             const api = document.getElementById("dropdown1").value;
             const model = document.getElementById("dropdown2").value;
             const data = {
                 license,
                 port,
                 host,
-                dbPath,
-                username,
+                userName,
+                mongoPass,
+                dbName,
                 api,
                 model
             };

@@ -27,3 +27,4 @@ uploaded-projects
 extracted-projects
 certs
 mongod.conf
+app-db.json
