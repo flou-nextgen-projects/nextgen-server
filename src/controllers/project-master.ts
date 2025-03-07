@@ -7,7 +7,7 @@ import { extractProjectZip, Upload, FileExtensions, formatData, readJsonFile, sl
 import { existsSync } from "fs";
 import { AppError } from "../common/app-error";
 import { prepareNodes, prepareLinks, prepareDotNetLinks } from "../models";
-import { convertMemberReferencesArray } from "../helpers";
+import { convertStringToObjectId } from "../helpers";
 import { isEmpty } from "lodash";
 import ProgressBar from "progress";
 
@@ -397,7 +397,7 @@ const addStatementReferences = async function addStatementReferences(wm: Workspa
         let collection = appService.mongooseConnection.collection("statementMaster");
         await collection.deleteMany({ wid: wm._id });
         statementMastersJson.filter((d) => isEmpty(d.wid)).forEach((d) => d.wid = wm._id);
-        let modifiedStatementMasters = convertMemberReferencesArray(statementMastersJson);
+        let modifiedStatementMasters = convertStringToObjectId(statementMastersJson);
         const totalRecords = modifiedStatementMasters.length;
         let bar: ProgressBar = logger.showProgress(totalRecords);
         // we'll report back progress, as this is time consuming process
@@ -426,7 +426,7 @@ const addDotNetFieldAndPropertiesDetails = async function addDotNetFieldAndPrope
         if (!(wm.languageMaster.name === "C#")) return;
         let collection = appService.mongooseConnection.collection("fieldAndPropertiesDetails");
         await collection.deleteMany({ wid: wm._id });
-        let modifiedFieldAndProperties = convertMemberReferencesArray(fieldAndPropertiesJson);
+        let modifiedFieldAndProperties = convertStringToObjectId(fieldAndPropertiesJson);
         for (const fieldAndProperty of modifiedFieldAndProperties) {
             await collection.insertOne(fieldAndProperty);
         }
@@ -439,7 +439,7 @@ const addDotNetMemberReferences = async function addDotNetMemberReferences(wm: W
         if (!(wm.languageMaster.name === "C#")) return;
         let collection = appService.mongooseConnection.collection("memberReferences");
         await collection.deleteMany({ wid: wm._id });
-        let modifiedReferences = convertMemberReferencesArray(memberReferencesJson);
+        let modifiedReferences = convertStringToObjectId(memberReferencesJson);
         for (const memberReference of modifiedReferences) {
             await collection.insertOne(memberReference);
         }
@@ -451,7 +451,7 @@ const addMethodDetails = async function addMethodDetails(wm: WorkspaceMaster, me
     try {
         let collection = appService.mongooseConnection.collection("methodDetails");
         await collection.deleteMany({ wid: wm._id });
-        let modifiedMethodDetails = convertMemberReferencesArray(methodDetailsJson);
+        let modifiedMethodDetails = convertStringToObjectId(methodDetailsJson);
         for (const methodDetails of modifiedMethodDetails) {
             await collection.insertOne(methodDetails);
         }
@@ -504,7 +504,7 @@ const processFileContents = async (wm: WorkspaceMaster) => {
 const processActionWorkflows = async function processActionWorkflows(wm: WorkspaceMaster, actionsJson: any[]) {
     let collection = appService.mongooseConnection.collection("actionWorkflows");
     await collection.deleteMany({ wid: wm._id });
-    let actionWorkflows = convertMemberReferencesArray(actionsJson);
+    let actionWorkflows = convertStringToObjectId(actionsJson);
     for (let aw of actionWorkflows) {
         await collection.insertOne(aw);
     }

@@ -19,9 +19,9 @@ export default {
     }, get kafkaTopics() {
         return process.env.KAFKA_TOPICS
     }, get useHttps() {
-        return process.env.USE_HTTPS || true;
+        return process.env.USE_HTTPS === "true" ? true : false;
     }, get mongoSSL() {
-        return process.env.NG_MONGO_SSL || false;
+        return process.env.NG_MONGO_SSL === "true" ? true : false;
     }, get mongoDb() {
         return process.env.NG_MONGO_DB;
     }, get mongoUser() {
