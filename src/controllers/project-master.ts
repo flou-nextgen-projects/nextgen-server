@@ -182,9 +182,11 @@ pmRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
             response.write(formatData({ message: "Started process for adding action workflows to repository." }), "utf-8", checkWrite);
 
             let actionsJson = await readJsonFile(join(extractPath, "action-workflows", "action-workflows.json"));
-            let workConnectJson = await readJsonFile(join(extractPath, "workflow-connectivities", "workflow-connectivities.json"));
-            if (actionsJson.code === 200 && workConnectJson.code === 200) {
+            if (actionsJson.code === 200) {
                 await processActionWorkflows(workspace, actionsJson.data);
+            }
+            let workConnectJson = await readJsonFile(join(extractPath, "workflow-connectivities", "workflow-connectivities.json"));
+            if (workConnectJson.code === 200) {
                 await processActionsAndConnectivities(workspace, actionsJson.data, workConnectJson.data);
             }
 
@@ -490,11 +492,14 @@ const processFileContents = async (wm: WorkspaceMaster) => {
         for (let file of allFiles) {
             // in case of COBOL language, we need to store sourceFilePath (original) contents as original 
             // and filePath contents are modified. We'll as this field only in case of COBOL
-            let path = wm.languageMaster.name === "COBOL" ? file.sourceFilePath : file.filePath;
+            let path = wm.languageMaster.name === "COBOL" || wm.languageMaster.name === "PLSQL" ? file.sourceFilePath : file.filePath;
             let content = fileExtensions.readTextFile(path);
             if (content === "") continue;
             // if COBOL then read filePath's contents and store this as modified
             let modified = wm.languageMaster.name === "COBOL" && file.fileTypeMaster.fileTypeName === "COBOL" ? fileExtensions.readTextFile(file.filePath) : "";
+            if (wm.languageMaster.name === "PLSQL") {
+                modified = fileExtensions.readTextFile(file.filePath);
+            }
             let fcm = { fid: file._id, pid: file.pid, original: content, formatted: modified } as FileContentMaster;
             if (isEmpty(modified)) delete fcm.formatted;
             await appService.fileContentMaster.addItem(fcm);
@@ -551,7 +556,7 @@ const processNetworkConnectivity = async (lm: LanguageMaster, wm: WorkspaceMaste
     }
 };
 const addMemberReference = async (wm: WorkspaceMaster, memberRefJson: any[]) => {
-    if (wm.languageMaster.name !== "COBOL") return;
+    if (wm.languageMaster.name === "C#") return;
     for (const member of memberRefJson) {
         let fileType = await appService.fileTypeMaster.getItem({ fileTypeName: { $regex: new RegExp(`^${member.FileTypeName}$`, 'i') } });
         try {
