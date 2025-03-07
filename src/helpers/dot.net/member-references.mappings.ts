@@ -1,4 +1,5 @@
 import { ObjectId } from "mongodb";
+import Mongoose from "mongoose";
 
 export enum memberType {
     field = 1,
@@ -13,11 +14,8 @@ function convertProperties(obj: any, fields: Array<string>): any {
                 obj[key] = obj[key].map((item: any) => convertProperties(item, fields));
             } else if (typeof obj[key] === 'object' && obj[key] !== null) {
                 obj[key] = convertProperties(obj[key], fields);
-            } else if (fields.includes(key) && typeof obj[key] === 'string') {
-                // we want to make id dynamic if it is a string and it's valid ObjectId or hexadecimal string
-                if (obj[key].length === 24 && /^[0-9a-fA-F]{24}$/.test(obj[key]) && ObjectId.isValid(obj[key])) {
-                    (obj[key] = new ObjectId(obj[key]));
-                }
+            } else if (obj[key].length === 24 && /^[0-9a-fA-F]{24}$/.test(obj[key]) && ObjectId.isValid(obj[key])) {
+                (obj[key] = Mongoose.Types.ObjectId.createFromHexString(obj[key]));
             }
         }
     }

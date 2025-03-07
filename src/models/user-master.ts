@@ -22,7 +22,7 @@ class UserMaster extends EntityBase {
     public lastLogin: Date;
     public isActive: boolean;
     public imageId: Mongoose.Schema.Types.ObjectId;
-    public oid: Mongoose.Schema.Types.ObjectId | string;
+    public oid: Mongoose.Schema.Types.ObjectId;
 }
 
 const UserMasterSchema: Mongoose.Schema<UserMaster> = new Mongoose.Schema<UserMaster>({
