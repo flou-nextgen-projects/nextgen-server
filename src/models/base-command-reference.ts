@@ -2,7 +2,7 @@ import Mongoose from "mongoose";
 import { languageMasterVirtuals, fileTypeMasterVirtuals } from "../virtuals";
 import { LanguageMaster, FileTypeMaster, EntityBase } from ".";
 
-var BaseCommandRefSchema: Mongoose.Schema<BaseCommandReference> = new Mongoose.Schema({
+const BaseCommandRefSchema: Mongoose.Schema<BaseCommandReference> = new Mongoose.Schema({
     lid: {
         type: Mongoose.Schema.Types.ObjectId,
         required: true

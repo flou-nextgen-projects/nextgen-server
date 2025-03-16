@@ -9,7 +9,7 @@ import { universeStringExtensions, UniverseStringExtensions } from "./universe-b
 import { universeBasicProcessHelpers, UniVerseBasicProcessHelpers } from "./universe-basic/helpers/universe-basic-process-helpers";
 import { statementReferenceMasterHelper, StatementReferenceMasterHelper } from "./universe-basic/helpers/statement-master-helper-1";
 import { universeMainProcessUtils, UniVerseMainProcessUtils } from "./universe-basic/process-utilities/universe-main-process";
-import { convertStringToObjectId } from "./dot.net/member-references.mappings";
+import { convertStringToObjectId } from "./dotnet/member-references.mappings";
 export {
     universeUtilities,
     UniVerseUtilities,

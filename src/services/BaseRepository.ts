@@ -2,7 +2,7 @@ const globalAny: any = global;
 import IBaseRepository from "./IBaseRepository";
 import Mongoose, { DeleteResult, HydratedDocument, PipelineStage, UpdateQuery } from 'mongoose';
 import { Db, Collection, ObjectId, UpdateResult } from 'mongodb';
-import { PartialObject, isEmpty } from 'lodash';
+import { PartialObject } from 'lodash';
 import { EntityBase } from "../models";
 
 const leanVirtuals = require('mongoose-lean-virtuals');
@@ -141,7 +141,7 @@ export default class BaseRepository<TSource extends EntityBase> implements IBase
         const pLine = pipeLine && pipeLine.length > 0 ? pipeLine : [];
         return await this.mongooseModel.aggregate(pLine).exec();
     };
-    async aggregateOne(pipeLine: Array<PipelineStage>): Promise<TSource | null> {        
+    async aggregateOne(pipeLine: Array<PipelineStage>): Promise<TSource | null> {
         let docs = await this.mongooseModel.aggregate(pipeLine).exec();
         return docs.length > 0 ? docs.shift() : null;
     };

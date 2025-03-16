@@ -29,4 +29,4 @@ const mongoDbServer = () =>
     });
   });
 
-export default mongoDbServer;
+module.exports = mongoDbServer;

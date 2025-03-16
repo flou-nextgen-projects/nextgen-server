@@ -1,18 +1,19 @@
 import { verify } from 'jsonwebtoken';
 import Express, { NextFunction, Request, Response, Router } from 'express';
 import config from "../configurations";
-import AppService from '../services/app-service';
+// import AppService from '../services/app-service';
 import { isEmpty } from 'lodash';
-const appService: AppService = new AppService();
+// const appService: AppService = new AppService();
 
 var genAiToken = "";
 const authRouter: Router = Express.Router();
 
 const knownErrors = ['JsonWebTokenError', 'TokenExpiredError'];
+/*
 appService.mongooseConnection.collection("organizationMaster").findOne({}).then((res) => {
-    genAiToken = res.nextGenToken;
+    genAiToken = res?.nextGenToken;
 });
-
+*/
 authRouter.use("/", (request: Request, response: Response, next: NextFunction) => {
     const token = request.headers.authorization?.replace("Bearer ", "").trim();
     if (!token) {

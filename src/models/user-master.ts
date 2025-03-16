@@ -3,9 +3,7 @@ import { EntityBase } from ".";
 import { roleMasterVirtuals } from "../virtuals";
 var Jwt = require('jsonwebtoken');
 var bcryptJs = require('bcryptjs');
-var { initDatabaseConfig } = require("../config/check-status")
 import config from "../configurations";
-import { appService } from "../services/app-service";
 class UserMaster extends EntityBase {
     public tid: Mongoose.Schema.Types.ObjectId | string;
     public userName: string;
@@ -75,18 +73,6 @@ UserMasterSchema.statics.generateAuthTokenOne = function (userMaster: any) {
 }
 
 UserMasterSchema.statics.findByCredentials = async function (userName: string, password: string) {
-    // if username is super-admin-user, then we need to check if database (golden configurations) is initialized or not
-    if (userName === "super-admin-user" && password === "superAdmin!$Y@2303") {
-        let dbStatus = await appService.mongooseConnection.collection("dbStatus").findOne();
-        
-        if (dbStatus && dbStatus.configured) return Promise.reject("Unauthorized");
-        
-        let collection = await appService.mongooseConnection.createCollection("dbStatus");
-        await collection.insertOne({ configured: false, enabled: false });
-        dbStatus = await appService.mongooseConnection.collection("dbStatus").findOne();
-        await initDatabaseConfig(dbStatus);
-        return Promise.reject("DB configuration initialized successfully");
-    }
     const user = await this.aggregate([{ $match: { userName: userName } }]);
     if (!user || user.length == 0) {
         return Promise.reject('User not found');

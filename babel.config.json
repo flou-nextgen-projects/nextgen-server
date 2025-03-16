@@ -1,0 +1,27 @@
+{
+    "presets": [
+        [
+            "@babel/preset-env",
+            {
+                "targets": {
+                    "node": "10"
+                },
+                "useBuiltIns": "entry",
+                "corejs": 3
+            }
+        ],
+        "@babel/preset-typescript"
+    ],
+    "plugins": [
+        [
+            "babel-plugin-minify-dead-code-elimination"
+        ],
+        [
+            "babel-plugin-transform-remove-console"
+        ],
+        [
+            "babel-plugin-minify-mangle-names"
+        ]
+    ],
+    "sourceMaps": true
+}
