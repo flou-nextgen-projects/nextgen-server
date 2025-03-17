@@ -34,7 +34,6 @@ const CobolDataSetSchema: Schema<CobolDataSet> = new Schema({
         type: String, required: true
     }
 });
-
 class BmsMapMaster extends EntityBase {
     public fid: Mongoose.Types.ObjectId | string;
     public pid: Mongoose.Types.ObjectId | string;
@@ -111,4 +110,4 @@ const ExternalCallsSchema: Schema<ExternalCalls> = new Schema({
     }
 });
 
-export {ExternalCalls, ExternalCallsSchema, CobolDataSetSchema, CobolDataSet, BmsMapMaster, BmsMapMasterSchema, BmsMapControl, BmsMapControlSchema };
+export { ExternalCalls, ExternalCallsSchema, CobolDataSetSchema, CobolDataSet, BmsMapMaster, BmsMapMasterSchema, BmsMapControl, BmsMapControlSchema };

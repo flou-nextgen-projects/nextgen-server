@@ -9,31 +9,15 @@ import { existsSync, mkdirSync, readFileSync } from "fs";
 import app, { setAppRoutes } from "./express-app";
 import config from "./configurations";
 import { ConsoleLogger } from "nextgen-utilities";
+require("./database/mongoose-config");
+const mongoDbServer = require("./database/mongodb-config");
 
 const logger: ConsoleLogger = new ConsoleLogger(__filename);
 process.on("unhandledRejection", (reason, _) => {
     logger.error("Unhandled Rejection at:", { reason });
 });
 
-app.use(Express.static(join(__dirname, "../", "html")));
 
-if (!existsSync(join(__dirname, "./", "app-db.json"))) {
-    console.log("=======================================================================");
-    console.log("app-db.json file is missing!");
-    console.log("=======================================================================");
-    app.listen(config.port, function () {
-        console.log("=======================================================================");
-        console.log(`Server Host application is running on port: ${config.port}`);
-        console.log("=======================================================================");
-    });
-    // @ts-ignore
-    return;
-}
-
-console.log("=======================================================================");
-
-import "./database/mongoose-config";
-import mongoDbServer from "./database/mongodb-config";
 
 async function mongoConnection() {
     globalAny.mongoDbConnection = await mongoDbServer();
@@ -44,6 +28,8 @@ Promise.resolve(mongoConnection()).then(() => {
         const uploadPath = join(__dirname, "../", dir);
         if (!existsSync(uploadPath)) { mkdirSync(uploadPath); }
     });
+
+    app.use(Express.static(join(__dirname, "../", "html")));
 
     setAppRoutes(app);
 

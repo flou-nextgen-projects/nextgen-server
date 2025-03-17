@@ -7,12 +7,16 @@
     "lint": "tslint -c tslint.json 'src/**/*.ts'",
     "tsc": "tsc",
     "start": "node --inspect=0.0.0.0:9229 dist/server-app.js",
+    "start:node": "node --trace-warnings dist/server-app.js",
     "test": "cross-env NODE_ENV=unitTest nyc --reporter=lcov --reporter=text mocha --require ts-node/register --file ./tests/init-token.ts --timeout 99999 --recursive 'tests/**/*.spec.ts' --exit",
     "coverage": "nyc report --reporter=lcov",
     "watch-node": "nodemon --trace-warnings --inspect=0.0.0.0:9229 dist/server-app.js",
     "watch-ts": "tsc --watch",
     "watch-babel": "babel src --out-dir dist --extensions \".ts\" --source-maps --watch",
-    "bash-tsc": "tsc --watch"
+    "bash-tsc": "tsc --watch",
+    "build": "babel dist --out-dir dist-babel --source-maps true --watch",
+    "start:babel": "nodemon --trace-warnings --inspect=127.0.0.1:9229 dist-babel/server-app.js",
+    "start:release": "node --trace-warnings --inspect dist-babel/server-app.js"
   },
   "author": "Yogesh Sonawane",
   "license": "ISC",

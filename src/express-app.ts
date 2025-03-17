@@ -12,7 +12,7 @@ import { AppError } from './common/app-error';
 import { Db, MongoClient } from "mongodb";
 import { readFileSync } from "fs";
 import { UserMaster } from "./models";
-import { convertStringToObjectId } from "./helpers/dot.net/member-references.mappings";
+import { convertStringToObjectId } from "./helpers/dotnet/member-references.mappings";
 
 const winstonLogger: WinstonLogger = new WinstonLogger(__filename);
 const app = http2Express(express);

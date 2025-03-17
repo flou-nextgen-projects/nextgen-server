@@ -7,4 +7,6 @@ PAUSE
 ECHO Waiting for MongoDB server to start...
 START CMD /c "npm run watch-ts"
 PAUSE
+REM START CMD /c "npm run build"
+REM PAUSE
 START CMD /c "npm run watch-node"
