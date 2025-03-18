@@ -1,11 +1,11 @@
 name: "CodeQL Analysis"
 on:
   push:
-    branches: [ main ]
+    branches: [ master, yogeshs ]
   pull_request:
-    branches: [ main ]
+    branches: [ master ]
   schedule:
-    - cron: '0 12 * * 1'  # Weekly scan every Monday
+    - cron: '0 12 * * 1' # Every Monday at 12:00 UTC
 
 jobs:
   analyze:
@@ -18,13 +18,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        language: [ 'javascript', 'typescript', 'python', 'csharp' ]  # Change based on your project
+        language: ['typescript' ]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@v2
+        uses: github/codeql-action/init@v3
         with:
           languages: ${{ matrix.language }}
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v2
+        uses: github/codeql-action/analyze@v3
