@@ -132,16 +132,22 @@ bsRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
         response.status(500).send().end();
     }
 }).get("/get-entities", async (request: Request, response: Response) => {
-    let fid = <string>request.query.fid;
-    appService.entityAttributes.aggregate([
-        { "$match": { fid: new Mongoose.Types.ObjectId(fid) } },
-        { "$group": { "_id": "$entityName", "attributes": { "$addToSet": "$$ROOT" } } },
-        { "$project": { entityName: "$_id", attributes: 1, _id: 0 } }
-    ]).then((result) => {
-        response.status(200).json(result).end();
-    }).catch((err) => {
-        response.status(500).json(err).end();
-    });
+    try {
+        let fid = <string>request.query.fid;
+        let result = await appService.entityAttributes.aggregate([
+            { "$match": { fid: new Mongoose.Types.ObjectId(fid) } },
+            { "$group": { "_id": "$entityName", "attributes": { "$addToSet": "$$ROOT" } } },
+            { "$project": { entityName: "$_id", attributes: 1, _id: 0 } }
+        ]);
+        if (result.length > 0) {
+            response.status(200).json(result).end();
+        } else {
+            let result = await appService.mongooseConnection.collection("businessSummaries").findOne({ fid: new ObjectId(fid), promptId: 1001 });
+            response.status(200).json(result).end()
+        }
+    } catch (error) {
+        response.status(500).json(error).end();
+    }
 }).get("/delete-gen-ai-data/:fid/:promptId", async (request: Request, response: Response) => {
     // this api use for deleting data generated from genAI from businessSummary collection for variable & data elements,pseudo & business summary
     const { fid, promptId } = request.params;
