@@ -155,12 +155,21 @@ const _attachEntityNodes = async (opt: { nodes: Array<Node>, links: Array<Link>,
                         }
                     }
                 );
-                let formattedRes = result.data.response.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ');
-                const cleanedString = formattedRes.replace(/```json|```/g, '').trim();
-                let extractedJson = extractJson(cleanedString);
-                let res = await extractDataEntities(extractedJson, node.pid.toString(), node.fileId.toString());
+                // let formattedRes = result.data.response.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ');
+                /*const cleanedString = formattedRes.replace(/```json|```/g, '').trim();
+                let variableDetails = {
+                    type: "Variable & Data Element",
+                    promptId: 1001,
+                    fid: node.fileId,// mongoose.Types.ObjectId.createFromHexString(node.fileId),
+                    data: JSON.stringify(cleanedString),
+                    formattedData: JSON.stringify(cleanedString),
+                    genAIGenerated: false
+                } as any;
+                await appService.mongooseConnection.collection("businessSummaries").insertOne(variableDetails);*/
+                // let extractedJson = extractJson(cleanedString);
+                // let res = await extractDataEntities(extractedJson, node.pid.toString(), node.fileId.toString());
                 // if res.code==3 means json is invalid we need to handle this situation
-                if (res.success) {
+                if (result.data) {
                     let entityNode: Node = {
                         name: "",
                         group: 3,
