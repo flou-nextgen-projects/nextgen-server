@@ -415,7 +415,7 @@
                     {
                         "id": 1,
                         "type": "prompt",
-                        "value": "What are the main rules or business logic implemented in the given <LANG>code ? Can you describe them?"
+                        "value": "give me the test cases for the <LANG> code below"
                     }
                 ],
                 "promptId": 1002,
