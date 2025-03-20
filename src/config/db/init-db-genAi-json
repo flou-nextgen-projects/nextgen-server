@@ -1,0 +1,590 @@
+[
+    {
+        "collection": "multiPromptConfigs",
+        "documents": [
+            {
+                "_id": "6799ce14bfda8e1d954e6c3b",
+                "menu": "Pseudo",
+                "menuId": "psu",
+                "prompt": [
+                    {
+                        "id": 1,
+                        "type": "prompt",
+                        "value": "Represent each statement in <LANG> code below in PURE plain English. give in HTML format using this • with proper br tags to indent it, without any extra commentary. "
+                    }
+                ],
+                "promptId": 1016,
+                "screen": "pseudo",
+                "contextMenu": "Pseudo"
+            },
+            {
+                "_id": "6799ce14bfda8e1d954e6c2f",
+                "menu": "Summary",
+                "menuId": "GenWS",
+                "prompt": [
+                    {
+                        "id": 1,
+                        "type": "prompt",
+                        "value": "Give me summary for attached code in <LANG>."
+                    }
+                ],
+                "promptId": 1003,
+                "screen": "gen-ws",
+                "contextMenu": "Brief Business Summary"
+            },
+            {
+                "_id": "67ab2c24622f4c3b541e85d1",
+                "menu": "Code Summary",
+                "menuId": "codeSumm",
+                "prompt": [
+                    {
+                        "id": 1,
+                        "value": "Can you summarize the code below in plain English"
+                    }
+                ],
+                "screen": "gen-im",
+                "contextMenu": "Code Summary",
+                "promptId": 1025
+            },
+            {
+                "_id": "6799ce14bfda8e1d954e6c36",
+                "menu": "Business Rules - Computational",
+                "menuId": "BRC",
+                "prompt": [
+                    {
+                        "id": 1,
+                        "type": "prompt",
+                        "value": "What are computational or calculations oriented business rules in <LANG> code below. Include the actual calculations used. Please respond with only the answers and no greetings."
+                    },
+                    {
+                        "id": 2,
+                        "type": "prompt",
+                        "value": "Can you redo above by replacing the variables with plain english terms for easier understanding?"
+                    }
+                ],
+                "promptId": 1010,
+                "screen": "pseudo",
+                "contextMenu": "Business Rules"
+            },
+            {
+                "_id": "6799ce14bfda8e1d954e6c2d",
+                "menu": "Variables (Accordion)",
+                "menuId": "dataEleAcc",
+                "prompt": [
+                    {
+                        "id": 1,
+                        "type": "prompt",
+                        "value": "Can you provide a list of data entities and attributes used in the <LANG> code below without any commentary:"
+                    },
+                    {
+                        "id": 2,
+                        "type": "prompt",
+                        "value": "Can you just give me the data entities and attributes"
+                    }
+                ],
+                "promptId": 1001,
+                "screen": "business-view",
+                "contextMenu": "Variable & Data Element"
+            },
+            {
+                "_id": "6799ce14bfda8e1d954e6c35",
+                "menu": "Business Rules - Summary",
+                "menuId": "BRS",
+                "prompt": [
+                    {
+                        "id": 1,
+                        "type": "prompt",
+                        "value": "Extract core business rules from the <LANG> code below. Please respond with only the answers and no greetings."
+                    },
+                    {
+                        "id": 2,
+                        "type": "prompt",
+                        "value": "Can you regenerate the rules by ensuring that it includes all calculations or computations performed?"
+                    }
+                ],
+                "promptId": 1009,
+                "screen": "pseudo",
+                "contextMenu": "Business Rules"
+            },
+            {
+                "_id": "6799ce14bfda8e1d954e6c39",
+                "menu": "Business Rules - Validation",
+                "menuId": "BRV",
+                "prompt": [
+                    {
+                        "id": 1,
+                        "type": "prompt",
+                        "value": "What are the validation business rules in <LANG> code below. Don't include any greetings in your response."
+                    },
+                    {
+                        "id": 2,
+                        "type": "prompt",
+                        "value": "Can you redo above by replacing the variables with plain english terms for easier understanding?"
+                    }
+                ],
+                "promptId": 1014,
+                "screen": "pseudo",
+                "contextMenu": "Business Rules"
+            },
+            {
+                "_id": "679cfd126371ad6822871a84",
+                "menu": "Error Handling and Reporting Requirements",
+                "menuId": "EHRR",
+                "prompt": [
+                    {
+                        "id": 1,
+                        "type": "prompt",
+                        "value": "Can you generate error handling and or any reporting requirements for the <LANG> code below? Please generate in plain english as bulletted list."
+                    }
+                ],
+                "promptId": 1020,
+                "screen": "N/A",
+                "contextMenu": "Error Handling and Reporting Requirements"
+            },
+            {
+                "_id": "679db1dcb4379f24812891da",
+                "menu": "Extended Summary",
+                "menuId": "BPRD",
+                "prompt": [
+                    {
+                        "id": 1,
+                        "type": "prompt",
+                        "value": "Can you summarize the <LANG> code below in plain English? Represent variables or code items in easy to understand English words."
+                    }
+                ],
+                "promptId": 1021,
+                "screen": "N/A",
+                "contextMenu": "Business Process & Requirements document"
+            },
+            {
+                "_id": "679f36548c2d74cf1b44f129",
+                "menu": "Business Process & Requirements document",
+                "menuId": "BPRD-BS",
+                "prompt": [
+                    {
+                        "id": 1,
+                        "type": "prompt",
+                        "value": "Can you generate brief summary for the <LANG> code below in 5 to 6 sentences? Please use plain English to provide this."
+                    },
+                    {
+                        "id": 2,
+                        "type": "prompt",
+                        "value": "Can you regenerate above summary by removing reference to language used, and in plain English for a business analyst to understand? Also please limit the summary to only 5 or 6 sentences"
+                    }
+                ],
+                "screen": "business-view",
+                "contextMenu": "Brief Summary",
+                "promptId": 1022
+            },
+            {
+                "_id": "679f3faa0bd1e6e70078bfc1",
+                "menu": "Business Process - Extended",
+                "menuId": "BpE",
+                "prompt": [
+                    {
+                        "id": 1,
+                        "type": "prompt",
+                        "value": "Can you summarize the <LANG> code below."
+                    },
+                    {
+                        "id": 2,
+                        "type": "prompt",
+                        "value": "Can you use unordered list to specify this summary?"
+                    },
+                    {
+                        "id": 3,
+                        "type": "prompt",
+                        "value": "Can you regenerate the summary by including calculations and data access performed by simplifying variable names in plain english?"
+                    }
+                ],
+                "screen": "N/A",
+                "contextMenu": "Business Process - Extended",
+                "promptId": 1023
+            },
+            {
+                "_id": "6799ce14bfda8e1d954e6c33",
+                "menu": "Business Requirements - General",
+                "menuId": "BRG",
+                "prompt": [
+                    {
+                        "id": 1,
+                        "type": "prompt",
+                        "value": "Can you extract requirements from the <LANG> code below. Include separate sections for summary, extended summary, and requirements."
+                    },
+                    {
+                        "id": 2,
+                        "value": "give the response using <p>, <b>, <ol>, <ul> HTML tag"
+                    }
+                ],
+                "promptId": 1007,
+                "screen": "N/A",
+                "contextMenu": "Business Requirements"
+            },
+            {
+                "_id": "6799ce14bfda8e1d954e6c34",
+                "menu": "Business Requirements - Functional",
+                "menuId": "BRF",
+                "prompt": [
+                    {
+                        "id": 1,
+                        "type": "prompt",
+                        "value": "Can you derive functional requirements for the <LANG> code below."
+                    },
+                    {
+                        "id": 2,
+                        "value": "give the response using <p>, <b>, <ol>, <ul> HTML tag"
+                    }
+                ],
+                "promptId": 1008,
+                "screen": "N/A",
+                "contextMenu": "Business Requirements"
+            },
+            {
+                "_id": "6799ce14bfda8e1d954e6c3a",
+                "menu": "Business Rules - Error Handling",
+                "menuId": "BREH",
+                "prompt": [
+                    {
+                        "id": 1,
+                        "type": "prompt",
+                        "value": "What are error handling type business rules extracted from the <LANG> code below."
+                    },
+                    {
+                        "id": 2,
+                        "type": "prompt",
+                        "value": "Can you regenerate without stating the input language in the response?"
+                    }
+                ],
+                "promptId": 1015,
+                "screen": "pseudo",
+                "contextMenu": "Business Rules"
+            },
+            {
+                "_id": "679cf8c8b27472191e7b52d8",
+                "menu": "Boundary Value Analysis (BVA) Functional Requirements",
+                "menuId": "BVA",
+                "prompt": [
+                    {
+                        "id": 1,
+                        "type": "prompt",
+                        "value": "Can you assist me in identifying potential Boundary Value Analysis based on the code structure above?"
+                    },
+                    {
+                        "id": 2,
+                        "type": "format",
+                        "value": "give the response using <p>, <b>, <br>, <ol>, <ul> HTML tag"
+                    }
+                ],
+                "promptId": 1018,
+                "screen": "N/A",
+                "contextMenu": "BVA"
+            },
+            {
+                "_id": "6799ce14bfda8e1d954e6c38",
+                "menu": "Business Rules - Data Access",
+                "menuId": "BRDA",
+                "prompt": [
+                    {
+                        "id": 1,
+                        "type": "prompt",
+                        "value": "What are data access type business rules extracted from the <LANG> code below."
+                    },
+                    {
+                        "id": 2,
+                        "type": "prompt",
+                        "value": "Can you regenerate without stating the input language in the response?"
+                    }
+                ],
+                "promptId": 1013,
+                "screen": "pseudo",
+                "contextMenu": "Business Rules"
+            },
+            {
+                "_id": "679cfc4acab55eeee1a67645",
+                "menu": "Edge Case Analysis (ECA) Functional Requirements",
+                "menuId": "ECA",
+                "prompt": [
+                    {
+                        "id": 1,
+                        "type": "prompt",
+                        "value": "Can you assist me in identifying what edge Analysis may entail based on the code structure above?"
+                    },
+                    {
+                        "id": 2,
+                        "type": "format",
+                        "value": "give the response using <p>, <b>, <br>, <ol>, <ul> HTML tag"
+                    }
+                ],
+                "promptId": 1019,
+                "screen": "N/A",
+                "contextMenu": "ECA"
+            },
+            {
+                "_id": "679f505021de5bf459c0c9dc",
+                "menu": "Summarize - General",
+                "menuId": "SG",
+                "prompt": [
+                    {
+                        "id": 1,
+                        "type": "prompt",
+                        "value": "Can you summarize the passage below in brief?"
+                    }
+                ],
+                "screen": "N/A",
+                "contextMenu": "Business Process",
+                "promptId": 1024
+            },
+            {
+                "_id": "6799ce14bfda8e1d954e6c37",
+                "menu": "Business Rules - Control Flow",
+                "menuId": "BRCF",
+                "prompt": [
+                    {
+                        "id": 1,
+                        "type": "prompt",
+                        "value": "What are the conditional type business rules in the <LANG> code below"
+                    }
+                ],
+                "promptId": 1012,
+                "screen": "pseudo",
+                "contextMenu": "Business Rules"
+            },
+            {
+                "_id": "6799ce14bfda8e1d954e6c32",
+                "menu": "User Story",
+                "menuId": "usTitle",
+                "prompt": [
+                    {
+                        "id": 1,
+                        "type": "prompt",
+                        "value": "Can you generate a title in 5-6 words for the code code below?"
+                    },
+                    {
+                        "id": 2,
+                        "value": "List only one possible title with no additional commentary or formatting"
+                    }
+                ],
+                "promptId": 1006,
+                "screen": "N/A",
+                "contextMenu": "N/A"
+            },
+            {
+                "_id": "679ceb45000bfdb135b757f7",
+                "menu": "Data Elements (Accordion)",
+                "menuId": "dataElementAcc",
+                "prompt": [
+                    {
+                        "id": 1,
+                        "type": "prompt",
+                        "value": "Can you provide a list of data entities and attributes used in the <LANG> code below:"
+                    },
+                    {
+                        "id": 2,
+                        "type": "prompt",
+                        "value": "Can you list only the entities that are related to SQL database or flat or VSAM files?"
+                    },
+                    {
+                        "id": 3,
+                        "type": "format",
+                        "value": "Can you generate this in JSON format? provide only JSON without any extra commentary and in below json format\n{\n  \"entities\": {\n    \"entityName\": \"abc\",\n    \"attributes\": [\n      {\n        \"attributeName\": \"pqr\",\n        \"description\": \"test attribute\"\n      }\n    ]\n  }\n}"
+                    }
+                ],
+                "promptId": 1017,
+                "screen": "N/A",
+                "contextMenu": "Data Elements"
+            },
+            {
+                "_id": "67ab2c6b622f4c3b541e85de",
+                "menu": "Business Summary",
+                "menuId": "buSum",
+                "prompt": [
+                    {
+                        "id": 1,
+                        "value": "Summarize the text attached in brief for a business person to understand:"
+                    }
+                ],
+                "screen": "gen-im",
+                "contextMenu": "Business Summary",
+                "promptId": 1026
+            },
+            {
+                "_id": "6799ce14bfda8e1d954e6c2e",
+                "menu": "Test Cases",
+                "menuId": "GenIM",
+                "prompt": [
+                    {
+                        "id": 1,
+                        "type": "prompt",
+                        "value": "What are the main rules or business logic implemented in the given <LANG>code ? Can you describe them?"
+                    }
+                ],
+                "promptId": 1002,
+                "screen": "gen-im",
+                "contextMenu": "Test Cases"
+            },
+            {
+                "_id": "6799ce14bfda8e1d954e6c30",
+                "menu": "Aggregate Logic View",
+                "menuId": "ALV",
+                "prompt": [
+                    {
+                        "id": 1,
+                        "type": "prompt",
+                        "value": "Can you translate each statement in following <LANG> code in plain english?"
+                    },
+                    {
+                        "id": 2,
+                        "type": "prompt",
+                        "value": "Can you redo by including only the english translation and not the original statement?"
+                    },
+                    {
+                        "id": 3,
+                        "type": "prompt",
+                        "value": "Can you redo after expanding the called sections inline?"
+                    },
+                    {
+                        "id": 4,
+                        "value": "give the response using <p>, <b>, <ol>, <ul> HTML tag"
+                    }
+                ],
+                "promptId": 1004,
+                "screen": "N/A",
+                "contextMenu": "N/A"
+            },
+            {
+                "_id": "6799ce14bfda8e1d954e6c31",
+                "menu": "Code Details",
+                "menuId": "codeDet",
+                "prompt": [
+                    {
+                        "id": 1,
+                        "type": "prompt",
+                        "value": "Can you translate each statement in following <LANG> code in plain english?"
+                    },
+                    {
+                        "id": 2,
+                        "type": "prompt",
+                        "value": "Can you redo by including only the english translation and not the original statement?"
+                    }
+                ],
+                "promptId": 1005,
+                "screen": "N/A",
+                "contextMenu": "N/A"
+            },
+            {
+                "_id": "67ca7c0153530a1230eca144",
+                "menu": "Business Rules - Categorized & Consolidated",
+                "menuId": "BR-CC",
+                "prompt": [
+                    {
+                        "id": 1,
+                        "value": "Can you list out main business rules as they occur in the code attached. Please specify category as Validation or Control flow or Calculations or Business Logic in square parentheses for each rule at the beginning of each rule listed, and please list them out in plain English for a business analyst to understand. "
+                    },
+                    {
+                        "id": 2,
+                        "value": "Can you expand the above list with details using plain english in above list for a business analyst to understand? Make sure you list all the possible details mentioned without ignoring anything"
+                    }
+                ],
+                "screen": "N/A",
+                "contextMenu": "Business Rules - Categorized & Consolidated",
+                "promptId": 1027
+            },
+            {
+                "_id": "67cfeabe999ee99472ce4c7f",
+                "menu": "Large File - Business Rule",
+                "menuId": "LF-BR",
+                "prompt": [
+                    {
+                        "id": 1,
+                        "value": "Can you list out main business rules as they occur in the code attached. Please specify category as Validation or Control flow or Calculations or Business Logic in square parentheses for each rule at the beginning of each rule listed, and please list them out in plain English for a business analyst to understand. Also provide references of any PERFORM paragraphs in the rules"
+                    },
+                    {
+                        "id": 2,
+                        "value": "Can you expand the above list with details using plain english in above list for a business analyst to understand? Make sure you list all the possible details mentioned without ignoring anything"
+                    }
+                ],
+                "screen": "N/A",
+                "contextMenu": "Large File - Business Rule",
+                "promptId": 1028
+            },
+            {
+                "_id": "67d01cffd32be31a98e4845f",
+                "menu": "Consolidated Rules",
+                "menuId": "C-BR",
+                "prompt": [
+                    {
+                        "id": 1,
+                        "value": "Can you provide a consolidated list of rules from the segmented rules extracted from each section below? Please maintain the same format of specifying rule category in square parentheses."
+                    }
+                ],
+                "screen": "N/A",
+                "contextMenu": "Consolidated Rules",
+                "promptId": 1029
+            },
+            {
+                "_id": "67d284e89b2403be6a265b17",
+                "menu": "Consolidated Summary",
+                "menuId": "CS",
+                "prompt": [
+                    {
+                        "id": 1,
+                        "value": "Can you summarize the passage below in brief?"
+                    }
+                ],
+                "screen": "N/A",
+                "contextMenu": "Consolidated Summary",
+                "promptId": 1030
+            }
+        ]
+    },
+    {
+        "collection": "llmModelConfigs",
+        "documents": [
+            {
+                "_id": "676a7ce4bfa7c7168b8d398f",
+                "defaultLlm": "llama",
+                "llm": [
+                    "cohere",
+                    "mistral",
+                    "llama"
+                ],
+                "model": {
+                    "cohere": [
+                        "command-r",
+                        "command-r-plus",
+                        "command-r7b-12-2024",
+                        "command-r-plus-08-2024"
+                    ],
+                    "mistral": [
+                        "open-mistral-7b",
+                        "open-codestral-mamba",
+                        "mistral-large-latest",
+                        "open-mistral-nemo",
+                        "codestral-latest",
+                        "open-mixtral-8x7b",
+                        "open-mixtral-8x22b"
+                    ],
+                    "llama": [
+                        "meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo-128K",
+                        "meta-llama/Llama-3.3-70B-Instruct-Turbo"
+                    ]
+                },
+                "defaultModel": "meta-llama/Llama-3.3-70B-Instruct-Turbo",
+                "defaultLoc": 3000,
+                "delayAi": 0
+            }
+        ]
+    },
+    {
+        "collection": "organizationMaster",
+        "documents": [
+            {
+                "_id": "6648800be124055b234a098e",
+                "orgId": 5001,
+                "orgName": "Bluedrop AI",
+                "flouToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOjUwMDEsImFjY2VzcyI6ImF1dGgiLCJzdGFydERhdGUiOiIwMy8wMi8yMDI1IiwicXVlcnlDb3VudCI6MTUwMCwiaWF0IjoxNzQxMDEzMzg3LCJleHAiOjE3NDYxOTczODd9.98-1YL9XU1bytLElshXlHRX5aTiHfHz678DB9Aqxc8I",
+                "genAiToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOjUwMDEsImFjY2VzcyI6ImF1dGgiLCJzdGFydERhdGUiOiIwMy8wMi8yMDI1IiwicXVlcnlDb3VudCI6MTUwMCwiaWF0IjoxNzQxMDEzMzg3LCJleHAiOjE3NDYxOTczODd9.98-1YL9XU1bytLElshXlHRX5aTiHfHz678DB9Aqxc8I"
+            }
+        ]
+    }
+]
