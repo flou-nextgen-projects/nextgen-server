@@ -206,9 +206,11 @@
         "collection": "organizationMaster",
         "documents": [
             {
-                "orgId": 1001,
+                "_id": "67ab7f3383a54eb29cb24fa9",
+                "orgId": 1,
                 "orgName": "NextGen",
-                "tid":"67b709e67a2f1af59a159677"
+                "nextGenToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOjEsImFjY2VzcyI6ImF1dGgiLCJzdGFydERhdGUiOiIwMy0xOC0yMDI1IiwicXVlcnlDb3VudCI6MTAwMCwiaWF0IjoxNzQyMjc5MTkzLCJleHAiOjE3NDQ4NzExOTN9.7SBsqDE7lhXlREqIosXFNbvT5pxtfkJsE8OVga1fmXI",
+                "genAiToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOjEsImFjY2VzcyI6ImF1dGgiLCJzdGFydERhdGUiOiIwMy0xOC0yMDI1IiwicXVlcnlDb3VudCI6MTAwMCwiaWF0IjoxNzQyMjc5MTkzLCJleHAiOjE3NDQ4NzExOTN9.7SBsqDE7lhXlREqIosXFNbvT5pxtfkJsE8OVga1fmXI"
             }
         ]
     },
@@ -216,7 +218,6 @@
         "collection": "userMaster",
         "documents": [
             {
-                "tid": "67b709e67a2f1af59a159677",
                 "userName": "yogeshs",
                 "password": "$2a$10$KUgNdWEfi0goD0zm8uihruRpIUhx.Ljkn4/OHXrKIu1fEpSnr.EIe",
                 "firstName": "Yogesh",
@@ -225,10 +226,10 @@
                 "contact": "+918149497650",
                 "roleId": "67a0aa72e5a8381203fb7e3c",
                 "isActive": true,
-                "oid": "67ab7f3383a54eb29cb24fa9"
+                "oid": "67ab7f3383a54eb29cb24fa9",
+                "tid": "67d9134965a7a01e6639a15a"
             },
             {
-                "tid": "67b709e67a2f1af59a159677",
                 "userName": "admin",
                 "password": "$2a$10$kO1Y6ZjIUb3RT63Vy2HKv.W4ylWHWbWRjWW1z03QJ6.CwGBKSI9Nm",
                 "firstName": "Yogesh",
@@ -237,7 +238,8 @@
                 "contact": "+918149497650",
                 "roleId": "65d09dde2b488f3930d90264",
                 "isActive": true,
-                "oid": "67ab7f3383a54eb29cb24fa9"
+                "oid": "67ab7f3383a54eb29cb24fa9",
+                "tid": "67d9137b65a7a01e6639a15c"
             }
         ]
     },
