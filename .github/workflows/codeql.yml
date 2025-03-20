@@ -51,7 +51,7 @@ jobs:
 
     # Upload SARIF Report as an artifact
     - name: Upload SARIF report
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v2
       with:
         name: sarif-report
         path: sarif-results.sarif
@@ -63,7 +63,7 @@ jobs:
 
     # Upload CSV Report as an artifact
     - name: Upload CSV Report
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v2
       with:
         name: codeql-csv-report
         path: codeql-results.csv
