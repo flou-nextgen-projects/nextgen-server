@@ -47,23 +47,23 @@ jobs:
       uses: github/codeql-action/analyze@v3
       with:
         category: "/language:${{matrix.language}}"
-        output: sarif-results
+        output: results.sarif
 
     # Upload SARIF Report as an artifact
     - name: Upload SARIF report
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: sarif-report
-        path: sarif-results.sarif
+        path: results.sarif
 
     # Convert SARIF to CSV
     - name: Convert SARIF to CSV
       run: |
-        jq -r '.runs[].results[] | [.ruleId, .message.text, .locations[].physicalLocation.artifactLocation.uri] | @csv' sarif-results.sarif > codeql-results.csv
+        jq -r '.runs[].results[] | [.ruleId, .message.text, .locations[].physicalLocation.artifactLocation.uri] | @csv' results.sarif > codeql-results.csv
 
     # Upload CSV Report as an artifact
     - name: Upload CSV Report
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: codeql-csv-report
         path: codeql-results.csv
