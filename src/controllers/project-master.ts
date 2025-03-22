@@ -85,7 +85,6 @@ pmRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
         let rootDir = resolve(join(__dirname, "../", "../"));
         let uploadDetails = request.body;
         request.rootDir = rootDir;
-        let user: UserMaster = request.user;
         winstonLogger.info(`Upload project bundle request received.`, { code: "UPLOAD_PROJECT_BUNDLE_START", name: request.params.pname });
 
         function checkWrite(err: any) {
