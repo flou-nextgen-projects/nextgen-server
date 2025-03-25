@@ -25,12 +25,40 @@
                     {
                         "id": 1,
                         "type": "prompt",
-                        "value": "Give me summary for attached code in <LANG>."
+                        "value": "Given me the brief summary of the given Code"
                     }
                 ],
                 "promptId": 1003,
                 "screen": "gen-ws",
                 "contextMenu": "Brief Business Summary"
+            },
+            {
+                "_id": "67e2452ffde4aa97b34ebeb4",
+                "menu": "Data Elements",
+                "menuId": "SDE",
+                "prompt": [
+                    {
+                        "id": 1,
+                        "value": "Give me the data elements present from the <LANG> code"
+                    }
+                ],
+                "screen": "gen-ws",
+                "contextMenu": "Show Data Elements",
+                "promptId": 1031
+            },
+            {
+                "_id": "67e24582fde4aa97b34ebec7",
+                "menu": "Code in Java",
+                "menuId": "CiJ",
+                "prompt": [
+                    {
+                        "id": 1,
+                        "value": "Can you write the given <LANG> Code in Java"
+                    }
+                ],
+                "screen": "gen-ws",
+                "contextMenu": "Write the output code in Java",
+                "promptId": 1032
             },
             {
                 "_id": "67ab2c24622f4c3b541e85d1",
@@ -415,7 +443,7 @@
                     {
                         "id": 1,
                         "type": "prompt",
-                        "value": "What are the main rules or business logic implemented in the given <LANG>code ? Can you describe them?"
+                        "value": "Can you generate a test case for the attached <LANG> code below? Please provide the test case in plain English."
                     }
                 ],
                 "promptId": 1002,

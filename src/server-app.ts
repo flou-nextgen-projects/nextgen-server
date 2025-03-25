@@ -17,8 +17,6 @@ process.on("unhandledRejection", (reason, _) => {
     logger.error("Unhandled Rejection at:", { reason });
 });
 
-
-
 async function mongoConnection() {
     globalAny.mongoDbConnection = await mongoDbServer();
 }
