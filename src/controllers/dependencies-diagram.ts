@@ -23,6 +23,7 @@ dependencyRouter.use("/", (request: Request, response: Response, next: NextFunct
     try {
         let fid = <string>request.query.fid;
         let populateEntities = request.query.getEntities;
+        let addBusinessSummaries = request.query.business || false;
         let pipeLine: Array<PipelineStage> = [
             { $match: { fid: mongoose.Types.ObjectId.createFromHexString(fid) } },
             { $lookup: { from: 'fileMaster', localField: 'fid', foreignField: '_id', as: 'fileMaster' } },
@@ -49,13 +50,23 @@ dependencyRouter.use("/", (request: Request, response: Response, next: NextFunct
         if (populateEntities === "true") {
             await _attachEntityNodes({ nodes, links, index: nodes.length + 1 }, request.headers.authorization);
         }
+        if (addBusinessSummaries === "true") {
+            await _attachedBusinessSummaries({ nodes, links, index: nodes.length + 1 }, request.headers.authorization);
+        }
         // _assignLinkTexts(links);
         response.status(200).json({ nodes, links }).end();
     } catch (error) {
         return response.status(500).json(error).end();
     }
 });
-
+const _attachedBusinessSummaries = async (opt: { nodes: Array<Node>, links: Array<Link>, index: number }, authToken: string) => {
+    for (const node of opt.nodes) {
+        let summary = await appService.mongooseConnection.collection("businessSummaries").findOne({ fid: new ObjectId(node.fileId), promptId: 1022 });
+        if (summary) {
+            node.summary = summary.formattedData;
+        }
+    }
+}
 const _expandCallExternals = async (callExt: Partial<FileMaster | any>, node: Node, opt: { nodes: Array<Node>, links: Array<Link>, index: number, skipTypes: Array<string> }) => {
     let pipeLine: Array<PipelineStage> = [
         { $match: { fid: callExt.fid } },
