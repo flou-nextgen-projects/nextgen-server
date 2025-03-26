@@ -15,6 +15,7 @@ export class Node {
     public type: NodeLinkType = NodeLinkType.node;
     public filePath: string;
     public fileType: string; public color?: string;
+    public summary?: string;
 };
 export class Link {
     public wid: Mongoose.Types.ObjectId | string;
