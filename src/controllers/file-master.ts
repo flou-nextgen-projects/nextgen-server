@@ -1,6 +1,6 @@
 import Express, { Request, Response, Router, NextFunction } from "express";
 import { appService } from "../services/app-service";
-import mongoose from "mongoose";
+import mongoose, { mongo } from "mongoose";
 const fmRouter: Router = Express.Router();
 
 fmRouter.use("/", (request: Request, response: Response, next: NextFunction) => {
@@ -60,5 +60,33 @@ fmRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
     }).catch((err) => {
         response.status(500).json(err).end();
     });
+}).get("/get-inventory-data/:pid", async (request: Request, response: Response) => {
+    var pid = request.params.pid;
+    try {
+        let pipeline = [
+            { $match: { pid: mongoose.Types.ObjectId.createFromHexString(pid) } },
+            { $lookup: { from: "memberReferences", localField: "_id", foreignField: "fid", as: "memberReferences" } },
+            { $unwind: { path: "$memberReferences", preserveNullAndEmptyArrays: true } }
+        ];
+        let result: Array<any> = await appService.fileMaster.aggregate(pipeline);
+        let memberRef: Array<any> = await appService.memberReferences.getDocuments({ pid: mongoose.Types.ObjectId.createFromHexString(pid) });
+        for (const element of result) {
+            let statements = await appService.statementMaster.aggregate([
+                { $match: { pid: mongoose.Types.ObjectId.createFromHexString(pid), fid: mongoose.Types.ObjectId.createFromHexString(element._id.toString()), indicators: { $in: [7] } } },
+            ]);
+            element.complexity = statements.length;
+        }
+        for (const element of result) {
+            element.calledFrom = [];
+            for (const ref of memberRef) {
+                let calls = ref.callExternals.filter((x: any) => x.fileName == element.fileNameWithoutExt);
+                if (calls.length == 0) continue;
+                element.calledFrom.push({ fileName: `${ref.fileName}`, type: ref.fileType });
+            }
+        }
+        response.status(200).json(result).end();
+    } catch (error) {
+        response.status(500).json(error).end();
+    }
 });
 module.exports = fmRouter;
