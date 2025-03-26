@@ -24,12 +24,16 @@ class OrganizationMaster extends EntityBase {
     public orgId: number;
     public orgName: string;
     public tid: Mongoose.Schema.Types.ObjectId;
+    public nextGenToken?: string;
+    public genAiToken?: string;
 }
 
 const OrganizationMasterSchema: Mongoose.Schema<OrganizationMaster> = new Mongoose.Schema<OrganizationMaster>({
     orgId: { type: Number, required: true, select: true },
     orgName: { type: String, required: true, select: true },
-    tid: { type: Mongoose.Types.ObjectId, required: true, select: true }
+    tid: { type: Mongoose.Types.ObjectId, required: true, select: true },
+    nextGenToken: { type: String, required: false, select: false },
+    genAiToken: { type: String, required: false, select: false }
 }, { toJSON: { useProjection: true }, toObject: { useProjection: true } });
 
 export { RoleMaster, RoleMasterSchema, UserRoles, OrganizationMaster, OrganizationMasterSchema };

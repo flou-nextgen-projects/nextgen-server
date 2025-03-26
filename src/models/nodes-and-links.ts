@@ -9,7 +9,7 @@ export class Node {
     public name: string;
     public group: number;
     public image: string;
-    public id: string;
+    public id?: string;
     public originalIndex: number;
     public info: { root: string, dir: string, base: string, ext: string, name: string }
     public type: NodeLinkType = NodeLinkType.node;
@@ -31,13 +31,12 @@ export const _createNode = function (fileData: FileMaster, originalIndex: number
     let image = fileData.fileTypeMaster?.img || "object-node.png";
     let color = fileData.fileTypeMaster?.color || '#c0c0c0';
     return {
-        name: fileData.fileName, group: 1,
-        image, id: fileData._id.toString(),
+        name: fileData.fileName, group: 1, image, 
         originalIndex, pid: fileData.pid, wid: fileData.wid,
         fileId: fileData._id.toString(),
         info: parse(fileData.filePath),
         fileType: fileData.fileTypeMaster.fileTypeName, type: NodeLinkType.node,
-        filePath: fileData.filePath, color
+        filePath: fileData.filePath, color, aid: fileData.aid || Mongoose.Types.ObjectId.generate(),
     };
 };
 export const prepareNodes = function (inputData: any[] = []): Array<Node> {

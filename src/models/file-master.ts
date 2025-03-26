@@ -24,6 +24,7 @@ class FileMaster extends EntityBase {
     public fileTypeMaster?: FileTypeMaster;
     public projectMaster?: ProjectMaster;
     public fileStatics: FileStatics;
+    public aid?: string;
 }
 
 const fileStaticsSchema: Schema<FileStatics> = new Schema({
