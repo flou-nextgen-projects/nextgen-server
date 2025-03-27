@@ -374,7 +374,18 @@ const addEntitiesAndAttributes = async function (entityJson: any[]) {
             } as EntityMaster;
 
             let em = await appService.entityMaster.addItem(entity);
-
+            if (element.entityName === "None") {
+                let variableDetails = {
+                    type: "Variable & Data Element",
+                    promptId: 1001,
+                    fid: Mongoose.Types.ObjectId.createFromHexString(element.fid),
+                    data: "None",
+                    formattedData: "None",
+                    genAIGenerated: false
+                } as any;
+                await appService.mongooseConnection.collection("businessSummaries").insertOne(variableDetails);
+                continue;
+            }
             let attributes = element.attributes || [];
             if (attributes.length === 0) continue;
             for (const attr of attributes) {
