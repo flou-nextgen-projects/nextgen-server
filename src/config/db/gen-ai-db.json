@@ -10,7 +10,7 @@
                     {
                         "id": 1,
                         "type": "prompt",
-                        "value": "Represent each statement in <LANG> code below in PURE plain English. give in HTML format using this • with proper br tags to indent it, without any extra commentary. "
+                        "value": "Convert the given <LANG> code in the plan in English, like pseudo code, only using HTML tags like ul, li, and br without any commentary like this 'Here is the COBOL code' and notes"
                     }
                 ],
                 "promptId": 1016,
