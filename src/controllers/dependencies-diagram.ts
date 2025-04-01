@@ -147,7 +147,7 @@ const _attachEntityNodes = async (opt: { nodes: Array<Node>, links: Array<Link>,
     for (const node of opt.nodes) {
         if (node.type == NodeLinkType.entity) continue;
         let entity = await appService.entityMaster.getItem({ fid: mongoose.Types.ObjectId.createFromHexString(node.fileId.toString()) });
-        if (entity.entityName == "None") continue;
+        if (entity && entity.entityName == "None") continue;
         let entities = await appService.entityMaster.getDocuments({ fid: mongoose.Types.ObjectId.createFromHexString(node.fileId.toString()) });
         if (entities.length == 0) {
             // send request to multi-handler-api to get entities and save it into database

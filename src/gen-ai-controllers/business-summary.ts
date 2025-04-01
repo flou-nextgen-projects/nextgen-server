@@ -100,7 +100,7 @@ bsRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
     try {
         let fid = request.params.fid;
         let result = await appService.entityMaster.getItem({ fid: new Mongoose.Types.ObjectId(fid) });
-        if (result.entityName == "None") { // this is mainly done for cobol programs as there are entities extracted from assessment utility for some programs 
+        if (result && result.entityName == "None" ) { // this is mainly done for cobol programs as there are entities extracted from assessment utility for some programs 
             response.status(200).json([ { id:1 , parent: "#", text: result.entityName, icon: "fa fa-folder", state: { selected: true }}]).end();
         } else {
             let entityList: Array<any> = await appService.entityAttributes.aggregate([
