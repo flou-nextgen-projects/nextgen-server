@@ -512,7 +512,7 @@ const addMissingObjects = async (missingJson: any[]) => {
                 pid: Mongoose.Types.ObjectId.createFromHexString(m.ProjectId),
                 wid: Mongoose.Types.ObjectId.createFromHexString(m.WorkspaceId),
                 fileName: m.FileName,
-                fileTypeName: m.FileTypeName
+                fileTypeName: m.FileType
             } as any;
             await appService.mongooseConnection.collection("missingObjects").insertOne(missingObjDetail);
         }
