@@ -161,6 +161,7 @@ export const setAppRoutes = function (app: express.Application) {
     var fmRouter = require('./controllers/file-master');
     var functionalFlowRouter = require('./controllers/functional-flow');
     var dependencyRouter = require('./controllers/dependencies-diagram');
+    var searchRouter = require('./controllers/keyword-search');
     require("./kafka-services/kafka-consumer"); // no need to have routes
     app.use("/backend/api/home", homeRouter);
     app.use("/backend/api/user-login", loginRouter);
@@ -181,6 +182,7 @@ export const setAppRoutes = function (app: express.Application) {
     app.use("/backend/main/api/file-master", fmRouter);
     app.use("/backend/main/api/functional-flow", functionalFlowRouter);
     app.use("/backend/main/api/dependencies", dependencyRouter);
+    app.use("/backend/main/api/keyword-search", searchRouter);
     // db status router
     var dbStatusRouter = require("./config/check-status");
     app.use("/backend/super/admin/db", dbStatusRouter);
