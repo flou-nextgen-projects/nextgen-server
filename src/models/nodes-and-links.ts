@@ -40,10 +40,10 @@ export const _createNode = function (fileData: FileMaster, originalIndex: number
         filePath: fileData.filePath, color
     };
 };
-export const prepareNodes = function (inputData: any[] = []): Array<Node> {
+export const prepareNodes = function (inputData: any[] = [], originalIndex: number): Array<Node> {
     const nodes: Array<Node> = [];
     inputData.forEach((fileData, index) => {
-        const node = _createNode(fileData, index);
+        const node = _createNode(fileData, originalIndex++);
         nodes.push(node);
     });
     return nodes;

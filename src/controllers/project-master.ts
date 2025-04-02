@@ -1,5 +1,5 @@
 import Express, { Request, Response, Router, NextFunction } from "express";
-import Mongoose from "mongoose";
+import Mongoose, { PipelineStage } from "mongoose";
 import { join, resolve } from "path";
 import { writeFileSync } from "fs";
 import { appService } from "../services/app-service";
@@ -11,6 +11,7 @@ import { prepareNodes, prepareLinks, prepareDotNetLinks } from "../models";
 import { convertStringToObjectId } from "../helpers";
 import { isEmpty } from "lodash";
 import ProgressBar from "progress";
+
 
 const pmRouter: Router = Express.Router();
 const fileExtensions = new FileExtensions();
@@ -76,7 +77,19 @@ pmRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
         let project = await appService.projectMaster.findById(pid);
         if (!project) response.status(404).json({ message: 'Project with provided ID not found' }).end();
         let nodesAndLinks = await appService.objectConnectivity.getDocuments({ wid: project.wid }, {}, {}, { _id: 1 });
+        // let nodesAndLinks = await appService.objectConnectivity.getDocuments({ pid: new Mongoose.Types.ObjectId(pid) }, {}, {}, { _id: 1 });
         response.status(200).json(nodesAndLinks).end();
+    } catch (error) {
+        response.status(500).json({ error }).end();
+    }
+}).get("/nodes-and-links/:pid/:level", async function (request: Request, response: Response) {
+    try {
+        let pid: string = <string>request.params.pid;
+        let project = await appService.projectMaster.findById(pid);
+        if (!project) response.status(404).json({ message: 'Project with provided ID not found' }).end();
+        let nodesAndLinks = await appService.objectConnectivity.getDocuments({ wid: project.wid }, {}, {}, { _id: 1 });
+        var result = await projectInterConnectivity(project);
+        response.status(200).json(result).end();
     } catch (error) {
         response.status(500).json({ error }).end();
     }
@@ -435,7 +448,9 @@ pmRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
                 readPrJson.data.forEach((d: any) => { d.Name = isEmpty(name) ? d.Name : name });
                 await addProjectWorkspace(allFiles.length, extractPath, uploadDetails, readPrJson.data, workspace, languageMaster);
             }
-
+            var pid = readPrJson.data[0]._id;
+            let project: ProjectMaster = undefined;
+            project = await appService.projectMaster.getItem({ _id: pid });
             response.write(formatData({ message: "Project and Workspace details added successfully." }), "utf-8", checkWrite);
             await sleep(200);
 
@@ -476,7 +491,7 @@ pmRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
             }
             let workConnectJson = await readJsonFile(join(extractPath, "workflow-connectivities", "workflow-connectivities.json"));
             if (workConnectJson.code === 200) {
-                await processActionsAndConnectivitiesWorkspace(workspace, actionsJson.data, workConnectJson.data);
+                await processActionsAndConnectivitiesWorkspace(workspace, project, actionsJson.data, workConnectJson.data);
             }
 
             // process for method details
@@ -512,12 +527,17 @@ pmRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
             if (missingJson.code === 200) {
                 await addMissingObjects(missingJson.data);
             }
-            //process for entities
+
+            // process for entities            
             response.write(formatData({ message: "Started process for getting  entities." }));
             let entityJson = await readJsonFile(join(extractPath, "entity-master", "entity-master.json"));
             if (entityJson.code === 200) {
                 await addEntitiesAndAttributes(entityJson.data);
             }
+
+            // process for interconnectivity  
+
+            await objectInterConnectivity(project, workspace);
 
             response.write(formatData({ message: "You can start loading project now." }), "utf-8", checkWrite);
             response.end();
@@ -528,6 +548,17 @@ pmRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
     } catch (error) {
         winstonLogger.error(new Error("Error in upload project bundle"), { code: "UPLOAD_PROJECT_BUNDLE_ERROR", name: request.params.pname, extras: error });
         response.end(formatData(error));
+    }
+}).get("/process-inter-connectivity/:pid/:wid", async (request: Request, response: Response) => {
+    try {
+        let _id: Mongoose.Types.ObjectId = new Mongoose.Types.ObjectId(<string>request.params.pid);
+        let wid: Mongoose.Types.ObjectId = new Mongoose.Types.ObjectId(<string>request.params.wid);
+        let projectMaster = await appService.projectMaster.aggregateOne([{ $match: { _id } }]);
+        let workspace = await appService.workspaceMaster.getItem({ _id: wid });
+        await objectInterConnectivity(projectMaster, workspace);
+        response.status(200).json().end();
+    } catch (error) {
+        response.status(500).send().end();
     }
 });
 
@@ -668,10 +699,14 @@ const addMissingObjects = async (missingJson: any[]) => {
         for (const m of distinctMissingList) {
             if (m.FileName == null) continue;
             let missingObjDetail = {
+                fid: m._id,
                 pid: Mongoose.Types.ObjectId.createFromHexString(m.ProjectId),
                 wid: Mongoose.Types.ObjectId.createFromHexString(m.WorkspaceId),
-                fileName: m.FileName,
-                fileTypeName: m.FileTypeName
+                fileName: m.WorkFlowStatus,
+                fileTypeName: m.FileTypeName,
+                missingObjectType: m.FileType,
+                missingFileName: m.FileName,
+                statement: m.SourceFilePath
             } as any;
             await appService.mongooseConnection.collection("missingObjects").insertOne(missingObjDetail);
         }
@@ -706,11 +741,16 @@ const processFileContents = async (wm: WorkspaceMaster) => {
     }
 };
 const processActionWorkflows = async function processActionWorkflows(wm: WorkspaceMaster, actionsJson: any[]) {
-    let collection = appService.mongooseConnection.collection("actionWorkflows");
-    await collection.deleteMany({ wid: wm._id });
-    let actionWorkflows = convertStringToObjectId(actionsJson);
-    for (let aw of actionWorkflows) {
-        await collection.insertOne(aw);
+    try {
+        let collection = appService.mongooseConnection.collection("actionWorkflows");
+        await collection.deleteMany({ wid: wm._id });
+        let actionWorkflows = convertStringToObjectId(actionsJson);
+        for (let aw of actionWorkflows) {
+            await collection.insertOne(aw);
+        }
+    }
+    catch (ex) {
+        console.log("Exception", ex);
     }
 };
 const processActionsAndConnectivities = async function processActionsAndConnectivities(wm: WorkspaceMaster, actionsJson: any[], connectivityJson: any[]) {
@@ -721,10 +761,21 @@ const processActionsAndConnectivities = async function processActionsAndConnecti
         let file = allFiles.find((d) => d._id.toString() === aw.fid.toString());
         networkFiles.push({ ...file, fileName: aw.methodName });
     });
-    let nodes = prepareNodes(networkFiles);
+    let nodes = prepareNodes(networkFiles, 1);
     let links = prepareDotNetLinks(connectivityJson);
     let collection = appService.mongooseConnection.collection("objectConnectivity");
     await collection.deleteMany({ wid: wm._id });
+    var projectMaster = allFiles[0].projectMaster;
+    var projectNode = {
+        name: projectMaster.name,
+        group: 1,
+        image: "system.png",
+        originalIndex: 0,
+        pid: new Mongoose.Types.ObjectId(projectMaster._id),
+        wid: wm._id,
+        type: 1,
+    }
+    await collection.insertOne(projectNode);
     for (let node of nodes) {
         await collection.insertOne(node);
     }
@@ -743,7 +794,7 @@ const processNetworkConnectivity = async (lm: LanguageMaster, wm: WorkspaceMaste
         if (find) return;
         networkFiles.push(file);
     });
-    let nodes = prepareNodes(networkFiles);
+    let nodes = prepareNodes(networkFiles, 0);
     let links: any[] = prepareLinks(networkJson, nodes);
     let collection = appService.mongooseConnection.collection("objectConnectivity");
     await collection.deleteMany({ wid: wm._id });
@@ -917,7 +968,7 @@ const addProjectWorkspace = async (totalObjects: number, extractPath: string, up
     }
 };
 
-const addStatementReferencesWorkspace = async function addStatementReferences(wm: WorkspaceMaster, statementMastersJson: any[], callback: Function): Promise<any> {
+const addStatementReferencesWorkspace = async function addStatementReferencesWorkspace(wm: WorkspaceMaster, statementMastersJson: any[], callback: Function): Promise<any> {
     try {
         let collection = appService.mongooseConnection.collection("statementMaster");
         // await collection.deleteMany({ wid: wm._id });
@@ -983,7 +1034,7 @@ const addMemberReferenceWorkspace = async (wm: WorkspaceMaster, lm: LanguageMast
     }
 };
 
-const processActionWorkflowsWorkspace = async function processActionWorkflows(wm: WorkspaceMaster, actionsJson: any[]) {
+const processActionWorkflowsWorkspace = async function processActionWorkflowsWorkspace(wm: WorkspaceMaster, actionsJson: any[]) {
     let collection = appService.mongooseConnection.collection("actionWorkflows");
     let actionWorkflows = convertStringToObjectId(actionsJson);
     for (let aw of actionWorkflows) {
@@ -991,17 +1042,37 @@ const processActionWorkflowsWorkspace = async function processActionWorkflows(wm
     }
 };
 
-const processActionsAndConnectivitiesWorkspace = async function processActionsAndConnectivities(wm: WorkspaceMaster, actionsJson: any[], connectivityJson: any[]) {
+const processActionsAndConnectivitiesWorkspace = async function processActionsAndConnectivitiesWorkspace(wm: WorkspaceMaster, pm: ProjectMaster, actionsJson: any[], connectivityJson: any[]) {
     // from actionsJson we'll prepare nodes
+    let collection = appService.mongooseConnection.collection("objectConnectivity");
     let allFiles = await appService.fileMaster.aggregate([{ $match: { wid: wm._id } }]);
+
     var networkFiles: any[] = [];
     actionsJson.forEach((aw) => {
         let file = allFiles.find((d) => d._id.toString() === aw.fid.toString());
         networkFiles.push({ ...file, fileName: aw.methodName });
     });
-    let nodes = prepareNodes(networkFiles);
+    var counter: number = 0
+    let existingObjectConnectivity = await appService.objectConnectivity.getDocuments({ wid: wm._id });
+    let filteredRecords = existingObjectConnectivity.filter(record => record.hasOwnProperty('originalIndex'));
+    let lastRecord = filteredRecords.length > 0 ? filteredRecords.at(-1) : undefined;
+
+    if (lastRecord !== "undefined") {
+        counter = lastRecord.originalIndex + 1;
+    }
+    var projectNode = {
+        name: pm.name,
+        group: 1,
+        image: "system.png",
+        originalIndex: counter++,
+        pid: new Mongoose.Types.ObjectId(pm._id),
+        wid: wm._id,
+        type: 1,
+    }
+    await collection.insertOne(projectNode);
+    let nodes = prepareNodes(networkFiles, counter++);
     let links = prepareDotNetLinks(connectivityJson);
-    let collection = appService.mongooseConnection.collection("objectConnectivity");
+
     // await collection.deleteMany({ wid: wm._id });
     for (let node of nodes) {
         await collection.insertOne(node);
@@ -1047,7 +1118,7 @@ const processFileContentsWorkspace = async (lm: LanguageMaster) => {
     }
 };
 
-const addDotNetFieldAndPropertiesDetailsWorkspace = async function addDotNetFieldAndPropertiesDetails(wm: WorkspaceMaster, fieldAndPropertiesJson: any[]): Promise<any> {
+const addDotNetFieldAndPropertiesDetailsWorkspace = async function addDotNetFieldAndPropertiesDetailsWorkspace(wm: WorkspaceMaster, fieldAndPropertiesJson: any[]): Promise<any> {
     try {
         if (!(wm.languageMaster.name === "C#")) return;
         let collection = appService.mongooseConnection.collection("fieldAndPropertiesDetails");
@@ -1080,7 +1151,7 @@ const addWorkspaceIntoJson = async (extractPath: string, workspace: WorkspaceMas
             let jsonData = await readJsonFile(filePath);
 
             if ([500, 404].includes(jsonData.code)) {
-                winstonLogger.error(new Error(`${file} JSON not found`), {   code: "JSON_NOT_FOUND", name: file});
+                winstonLogger.error(new Error(`${file} JSON not found`), { code: "JSON_NOT_FOUND", name: file });
             }
             if (file === "statement-master/statement-master.json") {
                 jsonData.data.forEach((d: Record<string, any>) => { d.wid = workspace._id; });
@@ -1092,6 +1163,94 @@ const addWorkspaceIntoJson = async (extractPath: string, workspace: WorkspaceMas
         } catch (error) {
             console.error(`Error processing file ${file}:`, error);
         }
+    }
+};
+
+const objectInterConnectivity = async (pm: ProjectMaster, wm: WorkspaceMaster) => {
+    try {
+        var missingObjects = await appService.mongooseConnection.collection("missingObjects").aggregate([{ $match: { wid: wm._id } }]).toArray();
+        const projectMaster = await appService.projectMaster.aggregate([{ $match: { _id: { $ne: pm._id } } }]);
+        let pipeLine: Array<PipelineStage> = [
+            { $match: { wid: wm._id } },
+            { $lookup: { from: 'fileMaster', localField: 'fid', foreignField: '_id', as: 'fileMaster' } },
+            { $unwind: { preserveNullAndEmptyArrays: true, path: "$fileMaster" } },
+            { $lookup: { from: 'fileTypeMaster', localField: 'fileTypeId', foreignField: '_id', as: 'fileMaster.fileTypeMaster' } },
+            { $unwind: { preserveNullAndEmptyArrays: true, path: "$fileMaster.fileTypeMaster" } }
+        ];
+        let collection = appService.mongooseConnection.collection("objectConnectivity");
+        const fileMasters = await appService.fileMaster.aggregate(pipeLine);
+        var objectConnectivity = await appService.objectConnectivity.aggregate([{ $match: { wid: wm._id } }]);
+        const links: any[] = [];
+        for (const mo of missingObjects) {
+            const fileTypes = mo.missingObjectType === "COBOL" ? ["COBOL", "ASM File"] : [mo.missingObjectType];
+            var missingFile = Array.isArray(fileMasters) ? fileMasters.find(d => d.fileNameWithoutExt === mo.missingFileName && (Array.isArray(d.fileTypeMaster) ? d.fileTypeMaster.some(ft => fileTypes.includes(ft.fileTypeName)) : fileTypes.includes(d.fileTypeMaster?.fileTypeName))) : undefined;
+            if (!missingFile) continue;
+            var sourceNode = objectConnectivity.find((d) => d?.fileId?.toString() === mo?.fid?.toString() && d?.name === mo?.fileName);
+            var targetNode = objectConnectivity.find((d) => d?.fileId?.toString() === missingFile?._id?.toString() && d?.name === missingFile?.fileName);
+
+            if (!sourceNode || !targetNode) continue;
+            // Project interconnectivity
+            var sPid = sourceNode.pid?.toString();
+            var tPid = targetNode.pid?.toString();
+            if (sPid !== tPid) {
+                var sourceProject = objectConnectivity.find((d) => d.pid?.toString() === sPid?.toString() && d.image === "system.png");
+                var targetProject = objectConnectivity.find((d) => d.pid?.toString() === tPid?.toString() && d.image === "system.png");
+                var linkProject = { wid: mo.wid, pid: mo.pid, source: sourceProject.originalIndex, target: targetProject.originalIndex, weight: 3, linkText: sourceProject.name, type: 2, srcFileId: null as Mongoose.Types.ObjectId | null, tarFileId: null as Mongoose.Types.ObjectId | null };
+                var projectLink = objectConnectivity.find((d) => d?.source === sourceProject.originalIndex && d?.target === targetProject.originalIndex);
+                if (!projectLink) {
+                    links.push(linkProject);
+                    objectConnectivity.push(linkProject);
+                }
+            }
+            var existingLink = objectConnectivity.find((d) => d?.srcFileId?.toString() === sourceNode?.fileId?.toString() && d?.tarFileId?.toString() === targetNode?.fileId?.toString());
+            if (existingLink) continue;
+            var link = {
+                wid: mo.wid,
+                pid: mo.pid,
+                source: sourceNode.originalIndex,
+                target: targetNode.originalIndex,
+                weight: 3,
+                srcFileId: Mongoose.Types.ObjectId.createFromHexString(sourceNode.fileId),
+                tarFileId: Mongoose.Types.ObjectId.createFromHexString(targetNode.fileId),
+                linkText: mo.missingFileName,
+                type: 2
+            };
+            links.push(link);
+            objectConnectivity.push(link);
+        }
+        for (let link of links) {
+            await collection.insertOne(link);
+        }
+    } catch (error) {
+        console.log(error);
+    }
+}
+
+const projectInterConnectivity = async (pm: ProjectMaster) => {
+    try {
+        var objectConnectivity = await appService.objectConnectivity.aggregate([{ $match: { wid: pm.wid } }]);
+        var projectNodes = objectConnectivity.filter((d) => d.pid.toString() === pm._id.toString() && d.type === 1 && d.image !== "system.png");
+        if (!projectNodes.length) { return { node: [], link: [] }; }
+        const links: any[] = [];      
+        for (const p of projectNodes) {                    
+            var allLinks = objectConnectivity.filter((d) => d.source === p.originalIndex || d.target === p.originalIndex);
+            if (allLinks.length === 0) continue; 
+            for(const link of allLinks) {
+                var existLink = links.find((d) => d.source === link.source && d.target === link.target);
+                if (existLink) continue;            
+                links.push(link); 
+            }         
+        }  
+        for (const l of links) {
+            var node = objectConnectivity.find((d) => d.originalIndex.toString() === l.source.toString() || d.originalIndex.toString() === l.target.toString());
+            if (node) {
+                projectNodes.push(node); 
+            }
+        }       
+        var result = {  node: projectNodes,  link: links };
+        return result;        
+    } catch (error) {
+        console.log(error);
     }
 };
 
@@ -1164,5 +1323,13 @@ const projectProcessingStages = async function (pid: Mongoose.Types.ObjectId | s
         await appService.processingStages.addItem(processingStep);
     }
 };
-
+const removeExtension = function (fileName: string) {
+    try {
+        if (!fileName) return fileName;
+        var fileNameWithoutExt = fileName.split('.').slice(0, -1).join('.');
+        return fileNameWithoutExt;
+    } catch (error) {
+        console.log(error);
+    }
+}
 module.exports = pmRouter;
