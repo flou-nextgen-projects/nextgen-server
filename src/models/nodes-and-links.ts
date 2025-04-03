@@ -40,6 +40,15 @@ export const _createNode = function (fileData: FileMaster, originalIndex: number
         filePath: fileData.filePath, color
     };
 };
+export const prepareNodes = function (inputData: any[] = []): Array<Node> {
+    const nodes: Array<Node> = [];
+    inputData.forEach((fileData, index) => {
+        const node = _createNode(fileData, index);
+        nodes.push(node);
+    });
+    return nodes;
+};
+/*
 export const prepareNodes = function (inputData: any[] = [], originalIndex: number): Array<Node> {
     const nodes: Array<Node> = [];
     inputData.forEach((fileData, index) => {
@@ -47,7 +56,7 @@ export const prepareNodes = function (inputData: any[] = [], originalIndex: numb
         nodes.push(node);
     });
     return nodes;
-};
+};*/
 export const prepareDotNetLinks = function (networkJson: any[]) {
     const links: Array<Link> = [];
     networkJson.forEach((nj) => {

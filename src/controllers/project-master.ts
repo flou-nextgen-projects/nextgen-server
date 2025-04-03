@@ -761,7 +761,7 @@ const processActionsAndConnectivities = async function processActionsAndConnecti
         let file = allFiles.find((d) => d._id.toString() === aw.fid.toString());
         networkFiles.push({ ...file, fileName: aw.methodName });
     });
-    let nodes = prepareNodes(networkFiles, 1);
+    let nodes = prepareNodes(networkFiles);
     let links = prepareDotNetLinks(connectivityJson);
     let collection = appService.mongooseConnection.collection("objectConnectivity");
     await collection.deleteMany({ wid: wm._id });
@@ -770,7 +770,7 @@ const processActionsAndConnectivities = async function processActionsAndConnecti
         name: projectMaster.name,
         group: 1,
         image: "system.png",
-        originalIndex: 0,
+        originalIndex: 9999999,
         pid: new Mongoose.Types.ObjectId(projectMaster._id),
         wid: wm._id,
         type: 1,
@@ -794,7 +794,7 @@ const processNetworkConnectivity = async (lm: LanguageMaster, wm: WorkspaceMaste
         if (find) return;
         networkFiles.push(file);
     });
-    let nodes = prepareNodes(networkFiles, 0);
+    let nodes = prepareNodes(networkFiles);
     let links: any[] = prepareLinks(networkJson, nodes);
     let collection = appService.mongooseConnection.collection("objectConnectivity");
     await collection.deleteMany({ wid: wm._id });
@@ -1070,7 +1070,8 @@ const processActionsAndConnectivitiesWorkspace = async function processActionsAn
         type: 1,
     }
     await collection.insertOne(projectNode);
-    let nodes = prepareNodes(networkFiles, counter++);
+    let nodes = prepareNodes(networkFiles);
+    // let nodes = prepareNodes(networkFiles, counter++);
     let links = prepareDotNetLinks(connectivityJson);
 
     // await collection.deleteMany({ wid: wm._id });
@@ -1183,6 +1184,14 @@ const objectInterConnectivity = async (pm: ProjectMaster, wm: WorkspaceMaster) =
         const links: any[] = [];
         for (const mo of missingObjects) {
             const fileTypes = mo.missingObjectType === "COBOL" ? ["COBOL", "ASM File"] : [mo.missingObjectType];
+            /*
+            var missingFile : FileMaster = null;
+            for(const f of fileMasters){
+                var fileTypeMaster = f.fileTypeMaster;
+                if(f.fileNameWithoutExt !== mo.missingFileName) continue;
+                console.log(fileTypeMaster);
+            }
+            */
             var missingFile = Array.isArray(fileMasters) ? fileMasters.find(d => d.fileNameWithoutExt === mo.missingFileName && (Array.isArray(d.fileTypeMaster) ? d.fileTypeMaster.some(ft => fileTypes.includes(ft.fileTypeName)) : fileTypes.includes(d.fileTypeMaster?.fileTypeName))) : undefined;
             if (!missingFile) continue;
             var sourceNode = objectConnectivity.find((d) => d?.fileId?.toString() === mo?.fid?.toString() && d?.name === mo?.fileName);
@@ -1229,26 +1238,47 @@ const objectInterConnectivity = async (pm: ProjectMaster, wm: WorkspaceMaster) =
 const projectInterConnectivity = async (pm: ProjectMaster) => {
     try {
         var objectConnectivity = await appService.objectConnectivity.aggregate([{ $match: { wid: pm.wid } }]);
+        var allLinks = objectConnectivity.filter((d) => d.type === 2);
+        var allNodes = objectConnectivity.filter((d) => d.type === 1);
         var projectNodes = objectConnectivity.filter((d) => d.pid.toString() === pm._id.toString() && d.type === 1 && d.image !== "system.png");
         if (!projectNodes.length) { return { node: [], link: [] }; }
-        const links: any[] = [];      
-        for (const p of projectNodes) {                    
+        const links: any[] = [];
+
+        /*
+        for (const link of allLinks) {
+            var sourceIndex = projectNodes.findIndex((node: any) => node.originalIndex === link.source);
+            var targetIndex = projectNodes.findIndex((node: any) => node.originalIndex === link.target);
+            if (sourceIndex === -1 || targetIndex === -1) continue;
+            links.push({ source: sourceIndex, target: targetIndex, weight: link.weight, linkText: link.linkText });
+        }
+         */
+        for (const p of projectNodes) {
             var allLinks = objectConnectivity.filter((d) => d.source === p.originalIndex || d.target === p.originalIndex);
-            if (allLinks.length === 0) continue; 
-            for(const link of allLinks) {
+            if (allLinks.length === 0) continue;
+            for (const link of allLinks) {
                 var existLink = links.find((d) => d.source === link.source && d.target === link.target);
-                if (existLink) continue;            
-                links.push(link); 
-            }         
-        }  
-        for (const l of links) {
-            var node = objectConnectivity.find((d) => d.originalIndex.toString() === l.source.toString() || d.originalIndex.toString() === l.target.toString());
-            if (node) {
-                projectNodes.push(node); 
+                if (existLink) continue;
+                links.push(link);
             }
-        }       
-        var result = {  node: projectNodes,  link: links };
-        return result;        
+        }
+        for (const l of links) {
+            // var node = objectConnectivity.filter((d) => d.originalIndex.toString() === l.source.toString() || d.originalIndex.toString() === l.target.toString());
+            var node = objectConnectivity.filter((d) => 
+                d.originalIndex !== undefined &&
+                l.source !== undefined &&
+                l.target !== undefined &&
+                (d.originalIndex.toString() === l.source.toString() || 
+                 d.originalIndex.toString() === l.target.toString())
+            );
+            if (!node) continue;
+            for (const n of node) {
+                var existNode = projectNodes.find((d) => d.originalIndex.toString() === n.originalIndex.toString());
+                if (existNode) continue;
+                projectNodes.push(n);
+            }            
+        }
+        var result = { node: projectNodes, link: links };
+        return result;
     } catch (error) {
         console.log(error);
     }
