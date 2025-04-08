@@ -1,6 +1,6 @@
 import Express, { Request, Response, Router, NextFunction } from "express";
 import { appService } from "../services/app-service";
-import mongoose, { mongo,PipelineStage } from "mongoose";
+import mongoose, { mongo, PipelineStage } from "mongoose";
 const fmRouter: Router = Express.Router();
 
 fmRouter.use("/", (request: Request, response: Response, next: NextFunction) => {
@@ -56,23 +56,25 @@ fmRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
     var query: any = request.query;
     var $filter: any = JSON.parse(query.$filter);
     let pipeLine: Array<PipelineStage> = [
-                { $match: { wid: mongoose.Types.ObjectId.createFromHexString($filter.wid)} },
-                { $lookup: { from: 'fileMaster', localField: 'fid', foreignField: '_id', as: 'fileMaster' } },
-                { $unwind: { preserveNullAndEmptyArrays: true, path: "$fileMaster" } },
-                { $lookup: { from: 'fileTypeMaster', localField: 'fileTypeId', foreignField: '_id', as: 'fileMaster.fileTypeMaster' } },
-                { $unwind: { preserveNullAndEmptyArrays: true, path: "$fileMaster.fileTypeMaster" } }
-            ];
-    const fileMasters = await appService.fileMaster.aggregate(pipeLine);  
+        { $match: { wid: mongoose.Types.ObjectId.createFromHexString($filter.wid) } },
+        { $lookup: { from: 'fileMaster', localField: 'fid', foreignField: '_id', as: 'fileMaster' } },
+        { $unwind: { preserveNullAndEmptyArrays: true, path: "$fileMaster" } },
+        { $lookup: { from: 'fileTypeMaster', localField: 'fileTypeId', foreignField: '_id', as: 'fileMaster.fileTypeMaster' } },
+        { $unwind: { preserveNullAndEmptyArrays: true, path: "$fileMaster.fileTypeMaster" } }
+    ];
+    const fileMasters = await appService.fileMaster.aggregate(pipeLine);
     await appService.memberReferences.getDocuments({ fid: mongoose.Types.ObjectId.createFromHexString($filter.fid) }).then((result: any) => {
         for (const element of result) {
             element.callExternals?.forEach((call: any) => {
-                const fileTypes = call.fileTypeName === "COBOL" ? ["COBOL", "ASM File"] : [call.callExternals];
-                const match = Array.isArray(fileMasters) ? fileMasters.find(f => f.fileNameWithoutExt === call.fileName && (Array.isArray(f.fileTypeMaster) ? f.fileTypeMaster.some((ft: { fileTypeName: string }) => fileTypes.includes(ft.fileTypeName)) : fileTypes.includes(f.fileTypeMaster?.fileTypeName)) ): undefined;          
+                const fileTypes = (call.fileTypeName === "COBOL" || call.fileTypeName === "ASM File") ? ["COBOL", "ASM File"] : [call.fileTypeName];
+                const match = Array.isArray(fileMasters) ? fileMasters.find(f => f.fileNameWithoutExt === call.fileName && (Array.isArray(f.fileTypeMaster) ? f.fileTypeMaster.some((ft: { fileTypeName: string }) => fileTypes.includes(ft.fileTypeName)) : fileTypes.includes(f.fileTypeMaster?.fileTypeName))) : undefined;
                 if (match) {
-                  call.fid = match._id;  call.pid = match.pid; call.missing = false;
+                    var fileTypeMaster = match.fileTypeMaster;
+                    if(fileTypeMaster) call.fileTypeName = fileTypeMaster.fileTypeName;
+                    call.fid = match._id; call.pid = match.pid; call.missing = false;
                 }
-              });
-          
+            });
+
         }
         response.status(200).json(result).end();
     }).catch((err) => {

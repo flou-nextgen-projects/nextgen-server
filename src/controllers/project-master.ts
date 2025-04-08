@@ -52,6 +52,16 @@ pmRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
     let $pipeLine = !filter ? [] : [{ $match: filter }];
     var projectMaster: Array<ProjectMaster> = await appService.projectMaster.aggregate($pipeLine);
     response.status(200).json(projectMaster).end();
+})
+.get("/get-project", async function (request: Request, response: Response) {
+    let pid: string = <string>request.query.pid;
+    let projects = await appService.mongooseConnection.collection("projectMaster").aggregate([
+        { $match: { _id: new Mongoose.Types.ObjectId(pid) } },
+        { $lookup: { from: "languageMaster", localField: "lid", foreignField: "_id", as: "languageMaster" } },
+        { $sort: { projects: -1 } }
+    ]).toArray();
+    let project = projects.shift(); // need to check
+    response.status(200).json(project).end();
 }).get("/get-process-stages", async function (request: Request, response: Response) {
     var projectId: string = <string>request.query.pid;
     var processingStages = await appService.processingStages.getDocuments({
@@ -90,8 +100,8 @@ pmRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
         let links = nodesAndLinks.filter((d: any) => d.type === 2);
         // for each link, find the source and target nodes and adjust source and target
         links.forEach((link: any) => {
-            let sourceIndex = nodes.findIndex((node: any) => node.pid.toString() === link.srcFileId);
-            let targetIndex = nodes.findIndex((node: any) => node.pid.toString() === link.tarFileId);
+            let sourceIndex = nodes.findIndex((node: any) => node.pid.toString() === link.srcFileId.toString());
+            let targetIndex = nodes.findIndex((node: any) => node.pid.toString() === link.tarFileId.toString());
             if (sourceIndex === -1 || targetIndex === -1) return;
             // check if link already exists with same source and target
             let exists = links.find((l: any) => l.source === sourceIndex && l.target === targetIndex);
@@ -731,7 +741,8 @@ const addMissingObjects = async (missingJson: any[]) => {
                 fileTypeName: m.FileType,
                 missingObjectType: m.FileType,
                 missingFileName: m.FileName,
-                statement: m.SourceFilePath
+                statement: m.SourceFilePath,
+                isFound: false
             } as any;
             await appService.mongooseConnection.collection("missingObjects").insertOne(missingObjDetail);
         }
@@ -794,7 +805,7 @@ const processActionsAndConnectivities = async function processActionsAndConnecti
     for (let node of updatedNodes) {
         await collection.insertOne(node);
     }
-    for (let link of links) {
+    for (let link of links) {    
         await collection.insertOne(link);
     }
 };
@@ -1161,12 +1172,27 @@ const processObjectInterConnectivity = async (wm: WorkspaceMaster) => {
         let collection = appService.mongooseConnection.collection("objectConnectivity");
         const fileMasters = await appService.fileMaster.aggregate(pipeLine);
         var objectConnectivity = await appService.objectConnectivity.aggregate([{ $match: { wid: wm._id } }]);
+        var memberReferences = await appService.memberReferences.getDocuments({ wid: wm._id });
         const links: any[] = [];
         let projectLinks: any[] = [];
         for (const mo of missingObjects) {
-            const fileTypes = mo.missingObjectType === "COBOL" ? ["COBOL", "ASM File"] : [mo.missingObjectType];
+            const fileTypes = (mo.missingObjectType === "COBOL" || mo.missingObjectType === "ASM File") ? ["COBOL", "ASM File"] : [mo.missingObjectType];
             var missingFile = Array.isArray(fileMasters) ? fileMasters.find(d => d.fileNameWithoutExt === mo.missingFileName && (Array.isArray(d.fileTypeMaster) ? d.fileTypeMaster.some(ft => fileTypes.includes(ft.fileTypeName)) : fileTypes.includes(d.fileTypeMaster?.fileTypeName))) : undefined;
             if (!missingFile) continue;
+            // Update fid and pid in memberReferences callExternals array. 
+            const memberReference = memberReferences.find(d => d.fid.toString() === mo.fid.toString() && d.fileName === mo.fileName);
+            if (memberReference) {
+                for (const mr of memberReference.callExternals) {
+                    if (mr.fileName !== missingFile.fileNameWithoutExt) continue;
+                    const validTypes = (mr.fileTypeName === "COBOL" || mr.fileTypeName === "ASM File") ? ["COBOL", "ASM File"] : [mr.fileTypeName]; 
+                    const fileTypes = validTypes.includes(mr.fileTypeName) ? validTypes : [mr.fileTypeName];
+                    if (!fileTypes.includes(missingFile.fileTypeMaster?.fileTypeName)) continue;
+                    mr.fid = missingFile._id;
+                    mr.pid = missingFile.pid;
+                    await appService.mongooseConnection.collection("memberReferences").updateOne({ _id: memberReference._id }, { $set: { callExternals: memberReference.callExternals } });
+                }
+            }           
+            await appService.mongooseConnection.collection("missingObjects").updateOne({ _id: mo._id }, { $set: { isFound: true } });          
             var sourceNode = objectConnectivity.find((d) => d?.fileId?.toString() === mo?.fid?.toString() && d?.name === mo?.fileName);
             var targetNode = objectConnectivity.find((d) => d?.fileId?.toString() === missingFile?._id?.toString() && d?.name === missingFile?.fileName);
             if (!sourceNode || !targetNode) continue;
@@ -1184,18 +1210,20 @@ const processObjectInterConnectivity = async (wm: WorkspaceMaster) => {
                 tarFileId: targetNode.fileId,
                 linkText: mo.missingFileName,
                 type: 2
-            };
+            };           
             links.push(link);
         }
         // add project links to object connectivity
-        for (let link of projectLinks) {
-            var existLink = objectConnectivity.find((d) => d.source === link.source.toString() && d.target === link.target.toString() && d.type === 2);
+        let updatedPrjLinks = convertStringToObjectId(projectLinks);
+        for (let link of updatedPrjLinks) { 
+            var existLink = objectConnectivity.find((d) => d?.srcFileId?.toString() === link?.srcFileId?.toString() && d?.tarFileId?.toString() === link?.tarFileId?.toString() && d.type === 2              );
             if (existLink) continue;
             await collection.insertOne(link);
         }
         // add links to object connectivity
-        for (let link of links) {
-            var existLink = objectConnectivity.find((d) => d.source === link.srcFileId.toString() && d.target === link.tarFileId.toString() && d.type === 2);
+        let updatedLinks = convertStringToObjectId(links);
+        for (let link of updatedLinks) {
+            var existLink = objectConnectivity.find((d) => d?.srcFileId?.toString() === link?.srcFileId?.toString() && d?.tarFileId?.toString() === link?.tarFileId?.toString() && d.type === 2              );
             if (existLink) continue;
             await collection.insertOne(link);
         }

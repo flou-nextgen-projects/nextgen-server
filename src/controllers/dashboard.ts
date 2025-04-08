@@ -2,6 +2,7 @@ import Express, { Request, Response, Router, NextFunction } from "express";
 import { ObjectId } from "mongodb";
 const dashBoardRouter: Router = Express.Router();
 import { appService } from "../services/app-service";
+import { MissingObjects } from "src/models";
 dashBoardRouter.use("/", (request: Request, response: Response, next: NextFunction) => {
     try {
         next();
@@ -47,7 +48,15 @@ dashBoardRouter.use("/", (request: Request, response: Response, next: NextFuncti
     });
 }).get("/get-missing-objects", (request: Request, response: Response) => {
     let pid = <string>request.query.pid;
-    appService.mongooseConnection.collection("missingObjects").find({ pid: new ObjectId(pid) }).toArray().then((data: any) => {
+    let wid = <string>request.query.wid;   
+    // var memberReferences = appService.memberReferences.getDocuments({ wid: new ObjectId(wid) });
+    // var missingObjects : MissingObjects =  [];
+    appService.mongooseConnection.collection("missingObjects").find({ pid: new ObjectId(pid), isFound: false }).toArray().then((data: any) => {
+        /*
+        for(const m in data){           
+            let memberReference = memberReferences.find((d) => d.callExternals.fid.toString() === m.fi);           
+        }
+        */
         response.status(200).json(data).end();
     }).catch(() => {
         response.status(500).send().end();

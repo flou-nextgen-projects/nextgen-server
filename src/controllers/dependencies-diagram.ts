@@ -20,7 +20,7 @@ dependencyRouter.use("/", (request: Request, response: Response, next: NextFunct
 }).get("/", async (request: Request, response: Response) => {
     try {
         let fid = <string>request.query.fid;
-        let wid = <string>request.query.wid;
+        // let wid = <string>request.query.wid;
         let populateEntities = request.query.getEntities;
         let addBusinessSummaries = request.query.business || false;
         let pipeLine: Array<PipelineStage> = [
@@ -31,6 +31,7 @@ dependencyRouter.use("/", (request: Request, response: Response, next: NextFunct
             { $unwind: { preserveNullAndEmptyArrays: true, path: "$fileMaster.fileTypeMaster" } }
         ];
         const member = await appService.memberReferences.aggregateOne(pipeLine);
+        /*
         if (!member) return response.status(404).json({ message: 'Not found' }).send().end();
         let pipeLineFileMaster: Array<PipelineStage> = [
             { $match: { wid: mongoose.Types.ObjectId.createFromHexString(wid) } },
@@ -40,14 +41,15 @@ dependencyRouter.use("/", (request: Request, response: Response, next: NextFunct
             { $unwind: { preserveNullAndEmptyArrays: true, path: "$fileMaster.fileTypeMaster" } }
         ];
         const fileMasters = await appService.fileMaster.aggregate(pipeLineFileMaster);
+        
         member.callExternals?.forEach((call: any) => {
-            const fileTypes = call.fileTypeName === "COBOL" ? ["COBOL", "ASM File"] : [call.callExternals];
+            const fileTypes = (call.fileTypeName === "COBOL" ||  call.fileTypeName === "ASM File") ? ["COBOL", "ASM File"] : [call.fileTypeName];
             const match = Array.isArray(fileMasters) ? fileMasters.find(f => f.fileNameWithoutExt === call.fileName && (Array.isArray(f.fileTypeMaster) ? f.fileTypeMaster.some((ft: { fileTypeName: string }) => fileTypes.includes(ft.fileTypeName)) : fileTypes.includes(f.fileTypeMaster?.fileTypeName))) : undefined;
             if (match) {
                 call.fid = match._id; call.pid = match.pid; call.missing = false;
             }
         });
-
+        */
 
         // if member reference is present, then we need to get all call externals and loop through all elements        
         // since, this data is going for d3 network, we'll prepare elements in that way
@@ -211,6 +213,5 @@ const _attachEntityNodes = async (opt: { nodes: Array<Node>, links: Array<Link>,
         }
     };
 }
-
 
 module.exports = dependencyRouter;
