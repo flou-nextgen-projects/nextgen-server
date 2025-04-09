@@ -61,6 +61,20 @@ export const prepareDotNetLinks = function (networkJson: any[]) {
     });
     return links;
 };
+export const resetNodeAndLinkIndex = (nodes: Array<Node | any>, links: Array<Link | any>) => {
+    // set original index of each node
+    nodes.forEach((node, index) => { node.originalIndex = index; });
+    // we need to set source and target index for each link depending on the node index
+    links.forEach((link) => {
+        const sourceNode = nodes.find((node) => node.fileId.toString() === link.srcFileId.toString());
+        const targetNode = nodes.find((node) => node.fileId.toString() === link.tarFileId.toString());
+        if (sourceNode.originalIndex === targetNode.originalIndex) return;
+        if (!sourceNode || !targetNode) return;
+        link.source = sourceNode.originalIndex;
+        link.target = targetNode.originalIndex;
+    });
+    return { nodes, links };
+}
 export enum NodeLinkType {
     node = 1, link = 2, entity = 3
 }

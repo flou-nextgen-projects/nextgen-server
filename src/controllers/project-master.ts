@@ -3,15 +3,13 @@ import Mongoose, { PipelineStage } from "mongoose";
 import { join, resolve } from "path";
 import { writeFileSync } from "fs";
 import { appService } from "../services/app-service";
-import { EntityAttributes, EntityMaster, FileContentMaster, FileMaster, LanguageMaster, NodeLinkType, ProcessingStatus, ProjectMaster, UserMaster, WorkspaceMaster } from "../models";
+import { prepareNodes, prepareDotNetLinks, resetNodeAndLinkIndex, EntityAttributes, EntityMaster, FileContentMaster, FileMaster, LanguageMaster, ProcessingStatus, ProjectMaster, WorkspaceMaster } from "../models";
 import { extractProjectZip, Upload, FileExtensions, formatData, readJsonFile, sleep, ConsoleLogger, WinstonLogger } from "nextgen-utilities";
 import { existsSync } from "fs";
 import { AppError } from "../common/app-error";
-import { prepareNodes, prepareDotNetLinks } from "../models";
 import { convertStringToObjectId } from "../helpers";
 import { isEmpty, isEqual } from "lodash";
 import ProgressBar from "progress";
-
 
 const pmRouter: Router = Express.Router();
 const fileExtensions = new FileExtensions();
@@ -79,6 +77,9 @@ pmRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
         if (projects.length === 0) return response.status(404).json({ message: 'Project with provided ID not found' }).end();
         if (projects.length === 1) {
             let nodesAndLinks = await appService.objectConnectivity.getDocuments({ pid: new Mongoose.Types.ObjectId(pid) }, {}, {}, { _id: 1 });
+            let { nodes, links } = resetNodeAndLinkIndex(nodesAndLinks.filter((d: any) => d.type === 1), nodesAndLinks.filter((d: any) => d.type === 2));
+            // concatenate nodes and links
+            nodesAndLinks = nodes.concat(links);
             return response.status(200).json({ data: nodesAndLinks, level: 0 }).end();
         }
         // this is for multiple projects

@@ -16,10 +16,11 @@ statementRouter.use("/", (request: Request, response: Response, next: NextFuncti
     response.status(200).json(statements).end();
 }).get("/expand-workflow/:fid/:methodNo", async (request: Request, response: Response, next: NextFunction) => {
     let fid: string = <string>request.params.fid;
+    let member = await appService.memberReferences.getItem({ _id: new ObjectId(fid) });
     let methodNo: number = parseInt(request.params.methodNo);
     winstonLogger.info("Started execution of expanding workflow.", { extras: { fid, methodNo }, code: "sr-0002", name: "expand-workflow" });
     let collection = appService.mongooseConnection.collection("statementMaster");
-    let statements = await collection.find({ fid: new ObjectId(fid), methodNo, indicators: { $nin: [1001, 1002] } }, { sort: { _id: 1 } }).toArray();
+    let statements = await collection.find({ fid: member.fid, methodNo, indicators: { $nin: [1001, 1002] } }, { sort: { _id: 1 } }).toArray();
     if (statements.length === 0) {
         response.status(200).json([]).end();
     }
@@ -41,7 +42,27 @@ statementRouter.use("/", (request: Request, response: Response, next: NextFuncti
     }
     progress.terminate();
     winstonLogger.info(`There were total '${progress.curr}' call/s made to expand this workflow.`);
-    response.status(200).json(statements).end();
+    // statements array is actually the expanded array in which each element has children array of statements.
+    // we need to take all the children and push them to the expanded array at root of the array.
+    // we need a utility type function which we can call recursively to flatten the array.
+    var flatten = function (statements: any[], result: any[] = []): any[] {
+        for (var i = 0; i < statements.length; i++) {
+            var statement = statements[i];
+            if (statement.children && statement.children.length > 0) {
+                flatten(statement.children, result);
+            } else {
+                result.push(statement);
+            }
+        }
+        return result;
+    };
+    var flatStatements = flatten(statements);
+    // now concatenate the expanded array to the flat statements array.
+    let formatted = flatStatements.map((d: any) => {
+        let originalLine = d.originalLine.replace(/^[\s]+/gi, "");
+        return originalLine;
+    }).join("\n");
+    response.status(200).json({ formatted }).end();
 });
 const _expandBlock = async (callExt: any, sps: string, options: { progress: ProgressBar, counter: number, expanded: Array<string> }) => {
     const statements: any[] = await _getBlock(callExt.references.shift().memberId);

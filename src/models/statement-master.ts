@@ -16,6 +16,8 @@ class StatementMaster extends EntityBase {
     public classCalled: string;
     public methodCalled: string;
     public businessName: string;
+    public methodNo: number;
+    public references: Array<{ memberId: Mongoose.Types.ObjectId | string, fid: Mongoose.Types.ObjectId | string, memberName: string, lineIndex: number, methodNo: number }>
 }
 const StatementSchema: Mongoose.Schema<StatementMaster> = new Mongoose.Schema<StatementMaster>({
     fid: { required: true, type: Mongoose.Schema.Types.ObjectId, select: true },
@@ -27,6 +29,7 @@ const StatementSchema: Mongoose.Schema<StatementMaster> = new Mongoose.Schema<St
     modifiedLine: { type: String, required: true, select: true },
     alternateName: { type: String, required: false, select: true, sparse: true },
     methodName: { type: String, required: false, select: true, sparse: true },
+    methodNo: { type: Number, required: false, select: true, sparse: true },
     methodCalled: { type: String, required: false, select: true, sparse: true },
     classNameDeclared: { type: String, required: false, select: true, sparse: true },
     classCalled: { type: String, required: false, select: true, sparse: true },
