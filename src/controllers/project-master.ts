@@ -832,8 +832,6 @@ const addMemberReference = async (wm: WorkspaceMaster, memberRefJson: any[]) => 
                 callExternals: callExts
             } as any;
             await appService.mongooseConnection.collection("memberReferences").insertOne(memberDetails);
-        } catch (ex) {
-            console.log("Exception", ex);
         }
     } catch (ex) {
         console.log("Exception", ex);
