@@ -46,22 +46,41 @@ bsRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
     response.status(200).json(({ message: `${data.type} Update Successfully`, data })).end();
 }).get("/get-call-externals", async (request: Request, response: Response) => {
     try {
-        let fid = <string>request.query.fid;
-        let member = await appService.memberReferences.getItem({ fid: new ObjectId(fid) });
-        response.status(200).json(member).end();
+        let mid = <string>request.query.mid;
+        let member = await appService.memberReferences.getItem({ _id: new ObjectId(mid) });
+        if (!member) {
+            return response.status(404).json({ message: 'There is no existing member generated for this document. Please generate it.' }).end();
+        }
+        // take this member fid and methodNo and go to statementReference collection and get the data for this fid and methodNo
+        let statementReference = await appService.statementMaster.getDocuments({ fid: member.fid, methodNo: member.methodNo, references: { $exists: true } as any });
+        if (!statementReference) {
+            return response.status(404).json({ message: 'There is no existing statement reference generated for this document. Please generate it.' }).end();
+        }
+        // now collect all memberNames from references array
+        let memberNames: any[] = [];
+        for (const element of statementReference) {
+            if (element.references && element.references.length > 0) {
+                for (const ref of element.references) {
+                    memberNames.push({ fileName: ref.memberName });
+                }
+            }
+        }
+        response.status(200).json({ callExternals: memberNames }).end();
     } catch (error) {
         response.status(500).send().end();
     }
 }).get("/get-called-by", async (request: Request, response: Response) => {
     try {
-        let fid = <string>request.query.fid;
-        let calledBy: Array<any> = [];
-        let members = await appService.memberReferences.getAllDocuments();
-        for (const element of members) {
-            if (element.callExternals.length == 0) continue;
-            if (element.callExternals.filter((x: any) => x.fid.toString() === fid).length > 0) {
-                calledBy.push(element);
-            }
+        let mid = <string>request.query.mid;
+        let member = await appService.memberReferences.getItem({ _id: new ObjectId(mid) });
+        let callers = member.callExternals || member.callers || [];
+        if (callers.length === 0) {
+            return response.status(200).json([]).end();
+        }
+        // collect all methodName as fileName into array of this callers
+        let calledBy: any[] = [];
+        for (const element of callers.filter((item: any) => !/.ctor/i.test(item.callingMethod))) {
+            calledBy.push({ fileName: element.callingMethod });
         }
         response.status(200).json(calledBy).end();
     } catch (error) {
@@ -99,34 +118,39 @@ bsRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
 }).get("/get-data-element-tree/:fid", async (request: Request, response: Response) => {
     try {
         let fid = request.params.fid;
-        let entityList: Array<any> = await appService.entityAttributes.aggregate([
-            { "$match": { fid: new Mongoose.Types.ObjectId(fid) } },
-            { "$group": { "_id": "$entityName", "attributes": { "$addToSet": "$$ROOT" } } },
-            { "$project": { entityName: "$_id", attributes: 1, _id: 0 } }
-        ]);
-        // let entityList = await appService.entityMaster.getDocuments({ fid: new Mongoose.Types.ObjectId(fid) });
-        let jsonData: Array<any> = [];
-        let i: number = 0;
-        if (entityList.length == 0) {
-            response.status(200).json(jsonData).end();
+        let result = await appService.entityMaster.getItem({ fid: new Mongoose.Types.ObjectId(fid) });
+        if (result && result.entityName == "None") { // this is mainly done for cobol programs as there are entities extracted from assessment utility for some programs 
+            response.status(200).json([{ id: 1, parent: "#", text: result.entityName, icon: "fa fa-folder", state: { selected: true } }]).end();
         } else {
-            let rootNode = { id: i++, parent: "#", text: "Entities", icon: "fa fa-folder", state: { selected: true } };
-            jsonData.push(rootNode);
-            for (const entity of entityList) {
-                let entityNode = { id: i++, parent: 0, text: entity.entityName, icon: "fa fa-folder", state: { selected: false } };
-                //if (entity.attributes && entity.attributes.length > 0) {
-                for (const attribute of entity.attributes) {
-                    // If 'attributeName' exists, return it; otherwise, use the first key
-                    // let attrName = attribute.hasOwnProperty("attributeName") ? attribute["attributeName"] : Object.keys(attribute)[0] || "";
-                    // let description = attribute.hasOwnProperty("description") ? attribute["description"] : Object.keys(attribute)[0] || "";
-                    let attrName = attribute.attributeName;
-                    let attributeNode = { id: i++, parent: entityNode.id, icon: "fa fa-file", text: ` ${attrName}`, state: { selected: false } };
-                    jsonData.push(attributeNode);
+            let entityList: Array<any> = await appService.entityAttributes.aggregate([
+                { "$match": { fid: new Mongoose.Types.ObjectId(fid) } },
+                { "$group": { "_id": "$entityName", "attributes": { "$addToSet": "$$ROOT" } } },
+                { "$project": { entityName: "$_id", attributes: 1, _id: 0 } }
+            ]);
+            // let entityList = await appService.entityMaster.getDocuments({ fid: new Mongoose.Types.ObjectId(fid) });
+            let jsonData: Array<any> = [];
+            let i: number = 0;
+            if (entityList.length == 0) {
+                response.status(200).json(jsonData).end();
+            } else {
+                let rootNode = { id: i++, parent: "#", text: "Entities", icon: "fa fa-folder", state: { selected: true } };
+                jsonData.push(rootNode);
+                for (const entity of entityList) {
+                    let entityNode = { id: i++, parent: 0, text: entity.entityName, icon: "fa fa-folder", state: { selected: false } };
+                    //if (entity.attributes && entity.attributes.length > 0) {
+                    for (const attribute of entity.attributes) {
+                        // If 'attributeName' exists, return it; otherwise, use the first key
+                        // let attrName = attribute.hasOwnProperty("attributeName") ? attribute["attributeName"] : Object.keys(attribute)[0] || "";
+                        // let description = attribute.hasOwnProperty("description") ? attribute["description"] : Object.keys(attribute)[0] || "";
+                        let attrName = attribute.attributeName;
+                        let attributeNode = { id: i++, parent: entityNode.id, icon: "fa fa-file", text: ` ${attrName}`, state: { selected: false } };
+                        jsonData.push(attributeNode);
+                    }
+                    // }
+                    jsonData.push(entityNode);
                 }
-                // }
-                jsonData.push(entityNode);
+                response.status(200).json(jsonData).end();
             }
-            response.status(200).json(jsonData).end();
         }
     } catch (error) {
         response.status(500).send().end();

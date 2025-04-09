@@ -1,11 +1,9 @@
 import Express, { Request, Response, Router, NextFunction } from "express";
 import { appService } from "../services/app-service";
 import { FileMaster, Link, Node, NodeLinkType, _createNode } from "../models";
-import mongoose, { Mongoose, PipelineStage } from "mongoose";
+import mongoose, { PipelineStage } from "mongoose";
 import { ObjectId } from "mongodb";
 import configs from "../configurations";
-import extractDataEntities from "../helpers/common/entity-master-helper";
-
 import axios from "axios";
 import { Agent } from 'https';
 
@@ -38,7 +36,7 @@ dependencyRouter.use("/", (request: Request, response: Response, next: NextFunct
         // this will be a focal node and all node elements will be of type Node and links will be of type Link
         let links: Array<Link> = [];
         let nodes: Array<Node> = [];
-        let node: Node = _createNode(member.fileMaster, 0);
+        let node: Node = _createNode(member.fileMaster);
         nodes.push({ ...node, image: 'focal-node.png', color: member.fileMaster.fileTypeMaster.color });
         let skipTypes: Array<string> = ["BMS", "COPYBOOK", "INCLUDE", "INPUTLIB"].map((d) => d.toLowerCase());
         for (const callExt of member.callExternals) {
@@ -84,7 +82,7 @@ const _expandCallExternals = async (callExt: Partial<FileMaster | any>, node: No
         opt.links.push({ source: srcIdx, target: existsIndex, weight: 3, linkText: node.name } as any);
         return;
     }
-    let nd: Node = _createNode(member.fileMaster, ++opt.index);
+    let nd: Node = _createNode(member.fileMaster);
     opt.nodes.push(nd);
     let targetIdx: number = opt.nodes.findIndex(x => x.name === nd.name);
     let srcIdx = opt.nodes.findIndex((x) => x.name === node.name);
@@ -110,7 +108,7 @@ const _expandParentCalls = async (opt: { nodes: Array<Node>, links: Array<Link>,
             if (callExts.length <= 0) continue;
             let findEle = opt.nodes.find((y) => y.name === element.fileMaster.fileName);
             if (!findEle) {
-                var parentNode: Node = _createNode(element.fileMaster, ++opt.index);
+                var parentNode: Node = _createNode(element.fileMaster);
                 opt.nodes.push(parentNode);
             }
             let parentIdx = opt.nodes.findIndex((y) => y.name === element.fileMaster.fileName);
@@ -122,30 +120,11 @@ const _expandParentCalls = async (opt: { nodes: Array<Node>, links: Array<Link>,
     }
 };
 
-const _assignLinkTexts = function (links: Array<Link>) {
-    const linkMap = new Map<number, Array<Link>>();
-    links.forEach(link => {
-        if (!linkMap.has(link.source)) {
-            linkMap.set(link.source, []);
-        }
-        linkMap.get(link.source).push(link);
-    });
-
-    const dfs = (source: number, prefix: string) => {
-        const children = linkMap.get(source) || [];
-        children.forEach((link, index) => {
-            const linkText = prefix ? `${prefix}.${index + 1}` : `${index + 1}`;
-            link.linkText = linkText;
-            dfs(link.target, linkText);
-        });
-    };
-
-    dfs(0, "");
-};
-
 const _attachEntityNodes = async (opt: { nodes: Array<Node>, links: Array<Link>, index: number }, authToken: string) => {
     for (const node of opt.nodes) {
         if (node.type == NodeLinkType.entity) continue;
+        let entity = await appService.entityMaster.getItem({ fid: mongoose.Types.ObjectId.createFromHexString(node.fileId.toString()) });
+        if (entity && entity.entityName == "None") continue;
         let entities = await appService.entityMaster.getDocuments({ fid: mongoose.Types.ObjectId.createFromHexString(node.fileId.toString()) });
         if (entities.length == 0) {
             // send request to multi-handler-api to get entities and save it into database
@@ -166,27 +145,12 @@ const _attachEntityNodes = async (opt: { nodes: Array<Node>, links: Array<Link>,
                         }
                     }
                 );
-                // let formattedRes = result.data.response.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ');
-                /*const cleanedString = formattedRes.replace(/```json|```/g, '').trim();
-                let variableDetails = {
-                    type: "Variable & Data Element",
-                    promptId: 1001,
-                    fid: node.fileId,// mongoose.Types.ObjectId.createFromHexString(node.fileId),
-                    data: JSON.stringify(cleanedString),
-                    formattedData: JSON.stringify(cleanedString),
-                    genAIGenerated: false
-                } as any;
-                await appService.mongooseConnection.collection("businessSummaries").insertOne(variableDetails);*/
-                // let extractedJson = extractJson(cleanedString);
-                // let res = await extractDataEntities(extractedJson, node.pid.toString(), node.fileId.toString());
-                // if res.code==3 means json is invalid we need to handle this situation
                 if (result.data) {
                     let entityNode: Node = {
                         name: "",
                         group: 3,
                         image: "sql.png",
                         id: `entity-${node.fileId.toString()}`,
-                        originalIndex: opt.index++,
                         pid: node.pid,
                         wid: node.wid,
                         fileId: node.fileId.toString(),
@@ -207,7 +171,6 @@ const _attachEntityNodes = async (opt: { nodes: Array<Node>, links: Array<Link>,
                 group: 3,
                 image: "sql.png",
                 id: `entity-${node.fileId.toString()}`,
-                originalIndex: opt.index++,
                 pid: node.pid,
                 wid: node.wid,
                 fileId: node.fileId.toString(),

@@ -203,6 +203,33 @@
                 ],
                 "lid" : "67dd0f47945d9c3c16f8cd16",
                 "img" : "copybook.png"
+            },
+            {
+                "_id" : "67e984a5283b5c1ecf776b90",
+                "fileTypeName" : "PROC",
+                "fileTypeExtension" : ".proc",
+                "delimiter" : ".",
+                "color" : "#ffcc00",
+                "folderNames" : [
+                    "proc",
+                    "PROC"
+                ],
+                "lid" : "67dd0f47945d9c3c16f8cd16",
+                "img" : "proc.png"
+            },
+            {
+                "_id" : "67e984f3283b5c1ecf776b91",
+                "fileTypeName" : "JCL",
+                "fileTypeExtension" : ".jcl",
+                "delimiter" : ".",
+                "color" : "#5e7c96",
+                "folderNames" : [
+                    "proto",
+                    "jcl",
+                    "JCL"
+                ],
+                "lid" : "67dd0f47945d9c3c16f8cd16",
+                "img" : "jcl.png"
             }
         ]
     },

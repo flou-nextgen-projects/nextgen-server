@@ -38,6 +38,7 @@ checkDbStatusRouter.use("/", (_: Request, __: Response, next: NextFunction) => {
     }
 }).get("/restore-database", async function (_: Request, response: Response) {
     await appService.mongooseConnection.dropCollection("actionWorkflows");
+    await appService.mongooseConnection.dropCollection("businessRules");
     await appService.mongooseConnection.dropCollection("businessSummaries");
     await appService.mongooseConnection.dropCollection("cobolDataSets");
     await appService.mongooseConnection.dropCollection("entityMaster");
