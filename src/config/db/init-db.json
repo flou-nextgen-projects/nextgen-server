@@ -166,43 +166,103 @@
                 "img": "sql.png"
             },
             {
-                "_id" : "67e28495b815245af4e6def7",
-                "fileTypeName" : "ASM File",
-                "fileTypeExtension" : ".asm",
-                "delimiter" : "",
-                "color" : "#33cccc",
-                "folderNames" : [
+                "_id": "67e28495b815245af4e6def7",
+                "fileTypeName": "ASM File",
+                "fileTypeExtension": ".asm",
+                "delimiter": "",
+                "color": "#33cccc",
+                "folderNames": [
                     "asm"
                 ],
-                "lid" : "67dd0f47945d9c3c16f8cd16",
-                "img" : "cobol.png"
+                "lid": "67dd0f47945d9c3c16f8cd16",
+                "img": "cobol.png"
             },
             {
-                "_id" : "67dd184a945d9c3c16f8cd27",
-                "fileTypeName" : "MACROS",
-                "fileTypeExtension" : ".mac",
-                "delimiter" : "",
-                "color" : "#ffcc00",
-                "folderNames" : [
+                "_id": "67dd184a945d9c3c16f8cd27",
+                "fileTypeName": "MACROS",
+                "fileTypeExtension": ".mac",
+                "delimiter": "",
+                "color": "#ffcc00",
+                "folderNames": [
                     "macros"
                 ],
-                "lid" : "67dd0f47945d9c3c16f8cd16",
-                "img" : "proc.png"
+                "lid": "67dd0f47945d9c3c16f8cd16",
+                "img": "proc.png"
             },
             {
-                "_id" : "67dd188d945d9c3c16f8cd28",
-                "fileTypeName" : "COPYBOOK",
-                "fileTypeExtension" : ".copy",
-                "delimiter" : ".",
-                "color" : "#A6C600",
-                "folderNames" : [
+                "_id": "67dd188d945d9c3c16f8cd28",
+                "fileTypeName": "COPYBOOK",
+                "fileTypeExtension": ".copy",
+                "delimiter": ".",
+                "color": "#A6C600",
+                "folderNames": [
                     "copy",
                     "copybook",
                     "CopyBook",
                     "COPYBOOK"
                 ],
-                "lid" : "67dd0f47945d9c3c16f8cd16",
-                "img" : "copybook.png"
+                "lid": "67dd0f47945d9c3c16f8cd16",
+                "img": "copybook.png"
+            },
+            {
+                "_id" : "67f4dc6e802fd448c45662cb",
+                "fileTypeName" : "P File",
+                "fileTypeExtension" : ".p",
+                "delimiter" : ".",
+                "color" : "#A6C600",
+                "folderNames" : [
+            
+                ],
+                "lid" : "67f4ca7c802fd448c45662c6",
+                "img" : "p.png"
+            },
+            {
+                "_id" : "67f4dc6e802fd448c45662cc",
+                "fileTypeName" : "Class File",
+                "fileTypeExtension" : ".cls",
+                "delimiter" : ".",
+                "color" : "#ffcc00",
+                "folderNames" : [
+            
+                ],
+                "lid" : "67f4ca7c802fd448c45662c6",
+                "img" : "object-node.png"
+            },
+            {
+                "_id" : "67f4dc6e802fd448c45662cd",
+                "fileTypeName" : "W File",
+                "fileTypeExtension" : ".w",
+                "delimiter" : ".",
+                "color" : "#33cccc",
+                "folderNames" : [
+            
+                ],
+                "lid" : "67f4ca7c802fd448c45662c6",
+                "img" : "w-file.png"
+            },
+            {
+                "_id" : "67f4dc6e802fd448c45662ce",
+                "fileTypeName" : "R File",
+                "fileTypeExtension" : ".r",
+                "delimiter" : ".",
+                "color" : "#A6C600",
+                "folderNames" : [
+            
+                ],
+                "lid" : "67f4ca7c802fd448c45662c6",
+                "img" : "r.png"
+            },
+            {
+                "_id" : "67f4dc6e802fd448c45662cf",
+                "fileTypeName" : "DF File",
+                "fileTypeExtension" : ".df",
+                "delimiter" : ".",
+                "color" : "#A6C600",
+                "folderNames" : [
+            
+                ],
+                "lid" : "67f4ca7c802fd448c45662c6",
+                "img" : "df.png"
             }
         ]
     },
@@ -394,9 +454,14 @@
                 "description": "This is PLSQL Language"
             },
             {
-                "_id" : "67dd0f47945d9c3c16f8cd16",
-                "name" : "Assembler",
-                "description" : "This is Assembler Language"
+                "_id": "67dd0f47945d9c3c16f8cd16",
+                "name": "Assembler",
+                "description": "This is Assembler Language"
+            },
+            {
+                "_id": "67f4ca7c802fd448c45662c6",
+                "name": "Progress",
+                "description": "This is Progress 4GL Language"
             }
         ]
     },
