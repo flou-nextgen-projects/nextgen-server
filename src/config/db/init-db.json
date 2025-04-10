@@ -7,7 +7,7 @@
                 "fileTypeName": "PROC",
                 "fileTypeExtension": ".proc",
                 "delimiter": ".",
-                "color": "#ffcc00",
+                "color": "#cc99ff",
                 "folderNames": [
                     "proc",
                     "PROC"
@@ -89,7 +89,7 @@
                 "fileTypeName": "COBOL",
                 "fileTypeExtension": ".cbl",
                 "delimiter": ".",
-                "color": "#33cccc",
+                "color": "#ffcc00",
                 "folderNames": [
                     "source",
                     "cobol",
@@ -104,7 +104,7 @@
                 "fileTypeName": "JCL",
                 "fileTypeExtension": ".jcl",
                 "delimiter": ".",
-                "color": "#5e7c96",
+                "color": "#99ccff",
                 "folderNames": [
                     "proto",
                     "jcl",
@@ -170,7 +170,7 @@
                 "fileTypeName" : "ASM File",
                 "fileTypeExtension" : ".asm",
                 "delimiter" : "",
-                "color" : "#33cccc",
+                "color" : "#ffcc00",
                 "folderNames" : [
                     "asm"
                 ],
@@ -209,7 +209,7 @@
                 "fileTypeName" : "PROC",
                 "fileTypeExtension" : ".proc",
                 "delimiter" : ".",
-                "color" : "#ffcc00",
+                "color" : "#cc99ff",
                 "folderNames" : [
                     "proc",
                     "PROC"
@@ -222,7 +222,7 @@
                 "fileTypeName" : "JCL",
                 "fileTypeExtension" : ".jcl",
                 "delimiter" : ".",
-                "color" : "#5e7c96",
+                "color" : "#99ccff",
                 "folderNames" : [
                     "proto",
                     "jcl",
