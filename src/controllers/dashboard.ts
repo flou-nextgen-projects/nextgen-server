@@ -25,8 +25,9 @@ dashBoardRouter.use("/", (request: Request, response: Response, next: NextFuncti
     }).catch((e) => {
         response.status(500).json(e).end();
     });
-}).get("/get-dashboard-tickers", (request: Request, response: Response) => {
+}).get("/get-dashboard-tickers", async (request: Request, response: Response) => {
     var pid = <string>request.query.pid;
+    var project = await appService.projectMaster.getItem({ _id: new ObjectId(pid) });
     var pipeLine = [
         { $match: { pid: new ObjectId(pid) } },
         { $group: { _id: "$fileTypeId", totalLineCount: { $sum: "$linesCount" }, fileCount: { $sum: 1 } } },
@@ -34,11 +35,13 @@ dashBoardRouter.use("/", (request: Request, response: Response, next: NextFuncti
         { $unwind: { path: "$fileTypeMaster", preserveNullAndEmptyArrays: true } },
         { $project: { fileTypeid: "$_id", totalLineCount: 1, fileCount: 1, color: "$fileTypeMaster.color", fileTypeName: "$fileTypeMaster.fileTypeName" } }
     ];
-    appService.mongooseConnection.collection("fileMaster").aggregate(pipeLine).toArray().then((data: any) => {
-        response.status(200).json(data).end();
-    }).catch((e) => {
-        response.status(500).json(e).end();
-    });
+    var workflows = await appService.mongooseConnection.collection("actionWorkflows").find({ pid: new ObjectId(pid) }).toArray();
+    appService.mongooseConnection.collection("fileMaster").aggregate(pipeLine).toArray()
+        .then((data: any) => {
+            response.status(200).json({ data, workflows }).end();
+        }).catch((e) => {
+            response.status(500).json(e).end();
+        });
 }).get("/get-prompts", (request: Request, response: Response) => {
     appService.mongooseConnection.collection("promptConfig").find().toArray().then((data: any) => {
         response.status(200).json(data).end();
