@@ -615,20 +615,15 @@ const addEntitiesAndAttributes = async function (entityJson: any[]) {
                 } as EntityAttributes;
                 await appService.entityAttributes.addItem(attribute);
             }
-            let filteredObj = Object.keys(element)
-                .filter(key => allowedFields.includes(key)) // Keep only allowed fields
-                .reduce((acc: any, key) => {
-                    acc[key] = element[key];
-                    return acc;
-                }, {});
+            let filteredObj = Object.keys(element).filter(key => allowedFields.includes(key)).reduce((acc: any, key) => {
+                acc[key] = element[key];
+                return acc;
+            }, {});
             if (filteredObj.attributes && Array.isArray(filteredObj.attributes)) {
-                filteredObj.attributes = filteredObj.attributes.map((attr: any) =>
-                    Object.keys(attr)
-                        .filter(key => allowedAttributeFields.includes(key))
-                        .reduce((acc: any, key) => {
-                            acc[key] = attr[key];
-                            return acc;
-                        }, {})
+                filteredObj.attributes = filteredObj.attributes.map((attr: any) => Object.keys(attr).filter(key => allowedAttributeFields.includes(key)).reduce((acc: any, key) => {
+                    acc[key] = attr[key];
+                    return acc;
+                }, {})
                 );
             }
             let variableDetails = {
@@ -689,7 +684,7 @@ const addDotNetFieldAndPropertiesDetails = async function addDotNetFieldAndPrope
 };
 const addDotNetMemberReferences = async function addDotNetMemberReferences(wm: WorkspaceMaster, memberReferencesJson: any[]): Promise<any> {
     try {
-        if (!(wm.languageMaster.name === "C#")) return;
+        if (!["C#", "COBOL"].includes(wm.languageMaster.name)) return;
         let collection = appService.mongooseConnection.collection("memberReferences");
         await collection.deleteMany({ wid: wm._id });
         let modifiedReferences = convertStringToObjectId(memberReferencesJson);
@@ -798,14 +793,16 @@ const processActionsAndConnectivities = async function processActionsAndConnecti
     }
 };
 const addMemberReference = async (wm: WorkspaceMaster, memberRefJson: any[]) => {
-    if (wm.languageMaster.name === "C#") return;
+    if (["C#", "COBOL"].includes(wm.languageMaster.name)) return;
 
     try {
         let collection = appService.mongooseConnection.collection("memberReferences");
         // remove existing member references for the workspace
+        let allFileTypes = await appService.fileTypeMaster.getDocuments({ _id: wm.languageMaster._id });
         await collection.deleteMany({ wid: wm._id });
         for (const member of memberRefJson) {
-            let fileType = await appService.fileTypeMaster.getItem({ fileTypeName: { $regex: new RegExp(`^${member.FileTypeName}$`, 'i') } });
+            let regEx = new RegExp(`^${member.FileTypeName}$`, 'i');
+            let fileType = allFileTypes.find((d) => regEx.test(d.fileTypeName));  //  await appService.fileTypeMaster.getItem({ fileTypeName: { $regex: new RegExp(`^${member.FileTypeName}$`, 'i') } });
             let callExts: Array<any> = [];
             for (const ce of member.CallExternals) {
                 callExts.push({
@@ -829,7 +826,8 @@ const addMemberReference = async (wm: WorkspaceMaster, memberRefJson: any[]) => 
                 folderName: member.FolderName,
                 methodNo: 0,
                 location: 0,
-                callExternals: callExts
+                callExternals: callExts,
+                callers: member.callers,
             } as any;
             await appService.mongooseConnection.collection("memberReferences").insertOne(memberDetails);
         }
@@ -1283,5 +1281,5 @@ const removeExtension = function (fileName: string) {
     } catch (error) {
         console.log(error);
     }
-}
+};
 module.exports = pmRouter;

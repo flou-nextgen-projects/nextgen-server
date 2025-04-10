@@ -23,10 +23,10 @@ dependencyRouter.use("/", (request: Request, response: Response, next: NextFunct
         let populateEntities = request.query.getEntities;
         let addBusinessSummaries = request.query.business || false;
         let pipeLine: Array<PipelineStage> = [
-            { $match: { fid: mongoose.Types.ObjectId.createFromHexString(fid) } },
+            { $match: { _id: mongoose.Types.ObjectId.createFromHexString(fid) } },
             { $lookup: { from: 'fileMaster', localField: 'fid', foreignField: '_id', as: 'fileMaster' } },
             { $unwind: { preserveNullAndEmptyArrays: true, path: "$fileMaster" } },
-            { $lookup: { from: 'fileTypeMaster', localField: 'fileTypeId', foreignField: '_id', as: 'fileMaster.fileTypeMaster' } },
+            { $lookup: { from: 'fileTypeMaster', localField: 'fileMaster.fileTypeId', foreignField: '_id', as: 'fileMaster.fileTypeMaster' } },
             { $unwind: { preserveNullAndEmptyArrays: true, path: "$fileMaster.fileTypeMaster" } }
         ];
         const member = await appService.memberReferences.aggregateOne(pipeLine);
@@ -34,15 +34,14 @@ dependencyRouter.use("/", (request: Request, response: Response, next: NextFunct
         // if member reference is present, then we need to get all call externals and loop through all elements        
         // since, this data is going for d3 network, we'll prepare elements in that way
         // this will be a focal node and all node elements will be of type Node and links will be of type Link
-        let links: Array<Link> = [];
-        let nodes: Array<Node> = [];
         let node: Node = _createNode(member.fileMaster);
-        nodes.push({ ...node, image: 'focal-node.png', color: member.fileMaster.fileTypeMaster.color });
-        let skipTypes: Array<string> = ["BMS", "COPYBOOK", "INCLUDE", "INPUTLIB"].map((d) => d.toLowerCase());
-        for (const callExt of member.callExternals) {
+        let links: Array<Link> = [];
+        let nodes: Array<Node> = [{ ...node, image: 'focal-node.png', color: member.fileMaster.fileTypeMaster.color }];
+        for (const callExt of member?.callExternals) {
             // at this point we'll call separate function which will get called recursively
-            if (skipTypes.includes(callExt.fileTypeName.toLowerCase())) continue;
-            await _expandCallExternals(callExt, node, { nodes, links, index: 0, skipTypes });
+            if (["bms", "copybook", "include", "inputlib"].includes(callExt.fileTypeName.toLowerCase())) continue;
+            let needToSkipTypes = ["bms", "copybook", "include", "inputlib"];
+            await _expandCallExternals(callExt, node, { nodes, links, index: 0, needToSkipTypes });
         }
         await _expandParentCalls({ nodes, links, index: nodes.length + 1 }, node);
         if (populateEntities === "true") {
@@ -65,12 +64,12 @@ const _attachedBusinessSummaries = async (opt: { nodes: Array<Node>, links: Arra
         }
     }
 }
-const _expandCallExternals = async (callExt: Partial<FileMaster | any>, node: Node, opt: { nodes: Array<Node>, links: Array<Link>, index: number, skipTypes: Array<string> }) => {
+const _expandCallExternals = async (callExt: Partial<FileMaster | any>, node: Node, opt: { nodes: Array<Node>, links: Array<Link>, index: number, needToSkipTypes: Array<string> }) => {
     let pipeLine: Array<PipelineStage> = [
         { $match: { fid: callExt.fid } },
         { $lookup: { from: 'fileMaster', localField: 'fid', foreignField: '_id', as: 'fileMaster' } },
         { $unwind: { preserveNullAndEmptyArrays: true, path: "$fileMaster" } },
-        { $lookup: { from: 'fileTypeMaster', localField: 'fileTypeId', foreignField: '_id', as: 'fileMaster.fileTypeMaster' } },
+        { $lookup: { from: 'fileTypeMaster', localField: 'fileMaster.fileTypeId', foreignField: '_id', as: 'fileMaster.fileTypeMaster' } },
         { $unwind: { preserveNullAndEmptyArrays: true, path: "$fileMaster.fileTypeMaster" } }
     ];
     const member = await appService.memberReferences.aggregateOne(pipeLine);
@@ -89,8 +88,8 @@ const _expandCallExternals = async (callExt: Partial<FileMaster | any>, node: No
     opt.links.push({ source: srcIdx, target: targetIdx, weight: 3, linkText: node.name } as any);
     if (member.callExternals.length === 0) return;
     for (const callE of member.callExternals) {
-        if (opt.skipTypes.includes(callE.fileTypeName.toLowerCase())) continue;
-        await _expandCallExternals(callE, nd, { nodes: opt.nodes, links: opt.links, index: opt.index, skipTypes: opt.skipTypes });
+        if (opt.needToSkipTypes.includes(callE.fileTypeName.toLowerCase())) continue;
+        await _expandCallExternals(callE, nd, { nodes: opt.nodes, links: opt.links, index: opt.index, needToSkipTypes: opt.needToSkipTypes });
     }
 };
 
