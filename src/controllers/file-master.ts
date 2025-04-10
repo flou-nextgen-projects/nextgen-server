@@ -88,5 +88,14 @@ fmRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
     } catch (error) {
         response.status(500).json(error).end();
     }
+}).get("/get-action-workflows", (request: Request, response: Response) => {
+    var query: any = request.query;
+    var $filter: any = JSON.parse(query.$filter);
+    appService.memberReferences.getDocuments({ pid: mongoose.Types.ObjectId.createFromHexString($filter.pid), fid: mongoose.Types.ObjectId.createFromHexString($filter.fid) })
+        .then((result: any) => {
+            response.status(200).json(result).end();
+        }).catch((err) => {
+            response.status(500).json(err).end();
+        });
 });
 module.exports = fmRouter;
