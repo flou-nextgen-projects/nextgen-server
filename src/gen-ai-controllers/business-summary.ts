@@ -73,6 +73,9 @@ bsRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
     try {
         let mid = <string>request.query.mid;
         let member = await appService.memberReferences.getItem({ _id: new ObjectId(mid) });
+        if (!member) {
+            return response.status(404).json({ message: 'There is no existing member generated for this document. Please generate it.' }).end();
+        }
         let callers = member.callExternals || member.callers || [];
         if (callers.length === 0) {
             return response.status(200).json([]).end();

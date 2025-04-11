@@ -68,8 +68,8 @@ export const resetNodeAndLinkIndex = (nodes: Array<Node | any>, links: Array<Lin
     links.forEach((link) => {
         const sourceNode = nodes.find((node) => node.fileId.toString() === link.srcFileId.toString());
         const targetNode = nodes.find((node) => node.fileId.toString() === link.tarFileId.toString());
-        if (sourceNode.originalIndex === targetNode.originalIndex) return;
         if (!sourceNode || !targetNode) return;
+        if (sourceNode.originalIndex === targetNode.originalIndex) return;
         link.source = sourceNode.originalIndex;
         link.target = targetNode.originalIndex;
     });
