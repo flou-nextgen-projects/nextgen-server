@@ -205,64 +205,54 @@
                 "img": "copybook.png"
             },
             {
-                "_id" : "67f4dc6e802fd448c45662cb",
-                "fileTypeName" : "P File",
-                "fileTypeExtension" : ".p",
-                "delimiter" : ".",
-                "color" : "#A6C600",
-                "folderNames" : [
-            
-                ],
-                "lid" : "67f4ca7c802fd448c45662c6",
-                "img" : "p.png"
+                "_id": "67f4dc6e802fd448c45662cb",
+                "fileTypeName": "P File",
+                "fileTypeExtension": ".p",
+                "delimiter": ".",
+                "color": "#A6C600",
+                "folderNames": [],
+                "lid": "67f4ca7c802fd448c45662c6",
+                "img": "p.png"
             },
             {
-                "_id" : "67f4dc6e802fd448c45662cc",
-                "fileTypeName" : "Class File",
-                "fileTypeExtension" : ".cls",
-                "delimiter" : ".",
-                "color" : "#ffcc00",
-                "folderNames" : [
-            
-                ],
-                "lid" : "67f4ca7c802fd448c45662c6",
-                "img" : "object-node.png"
+                "_id": "67f4dc6e802fd448c45662cc",
+                "fileTypeName": "Class File",
+                "fileTypeExtension": ".cls",
+                "delimiter": ".",
+                "color": "#ffcc00",
+                "folderNames": [],
+                "lid": "67f4ca7c802fd448c45662c6",
+                "img": "object-node.png"
             },
             {
-                "_id" : "67f4dc6e802fd448c45662cd",
-                "fileTypeName" : "W File",
-                "fileTypeExtension" : ".w",
-                "delimiter" : ".",
-                "color" : "#33cccc",
-                "folderNames" : [
-            
-                ],
-                "lid" : "67f4ca7c802fd448c45662c6",
-                "img" : "w-file.png"
+                "_id": "67f4dc6e802fd448c45662cd",
+                "fileTypeName": "W File",
+                "fileTypeExtension": ".w",
+                "delimiter": ".",
+                "color": "#33cccc",
+                "folderNames": [],
+                "lid": "67f4ca7c802fd448c45662c6",
+                "img": "w-file.png"
             },
             {
-                "_id" : "67f4dc6e802fd448c45662ce",
-                "fileTypeName" : "R File",
-                "fileTypeExtension" : ".r",
-                "delimiter" : ".",
-                "color" : "#A6C600",
-                "folderNames" : [
-            
-                ],
-                "lid" : "67f4ca7c802fd448c45662c6",
-                "img" : "r.png"
+                "_id": "67f4dc6e802fd448c45662ce",
+                "fileTypeName": "R File",
+                "fileTypeExtension": ".r",
+                "delimiter": ".",
+                "color": "#A6C600",
+                "folderNames": [],
+                "lid": "67f4ca7c802fd448c45662c6",
+                "img": "r.png"
             },
             {
-                "_id" : "67f4dc6e802fd448c45662cf",
-                "fileTypeName" : "DF File",
-                "fileTypeExtension" : ".df",
-                "delimiter" : ".",
-                "color" : "#A6C600",
-                "folderNames" : [
-            
-                ],
-                "lid" : "67f4ca7c802fd448c45662c6",
-                "img" : "df.png"
+                "_id": "67f4dc6e802fd448c45662cf",
+                "fileTypeName": "DF File",
+                "fileTypeExtension": ".df",
+                "delimiter": ".",
+                "color": "#A6C600",
+                "folderNames": [],
+                "lid": "67f4ca7c802fd448c45662c6",
+                "img": "df.png"
             }
         ]
     },
@@ -340,6 +330,20 @@
                 "isActive": true,
                 "oid": "67ab7f3383a54eb29cb24fa9",
                 "tid": "67d9134965a7a01e6639a15a"
+            },
+            {
+                "_id": "67fe714d338e19b1c8318b83",
+                "tid": "67d9134965a7a01e6639a15a",
+                "userName": "super_admin",
+                "password": "$2a$10$FdwspOvQzQ7NBC8PHv3exOK9CB6WMKO1pZSUFZIr05dnp41uiyDuy",
+                "firstName": "Aditya",
+                "lastName": "Jadhav",
+                "email": "aditya.jadhav@bluedrop.ai",
+                "contact": "7666691854",
+                "roleId": "67a0aa72e5a8381203fb7e3c",
+                "lastLogin": null,
+                "isActive": true,
+                "oid": "67ab7f3383a54eb29cb24fa9"
             }
         ]
     },
