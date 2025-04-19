@@ -16,7 +16,9 @@ statementRouter.use("/", (request: Request, response: Response, next: NextFuncti
     response.status(200).json(statements).end();
 }).get("/expand-workflow/:fid/:methodNo", async (request: Request, response: Response, next: NextFunction) => {
     let fid: string = <string>request.params.fid;
-    let member = await appService.memberReferences.getItem({ _id: new ObjectId(fid) });
+    // we need to apply filter $or on _id or fid to get the member reference.
+    // we need to get the fid from the member reference and then use it to get the statements.    
+    let member = await appService.memberReferences.getItem({ "$or": [{ "_id": new ObjectId(fid) }, { "fid": new ObjectId(fid) }] });
     let methodNo: number = parseInt(request.params.methodNo);
     winstonLogger.info("Started execution of expanding workflow.", { extras: { fid, methodNo }, code: "sr-0002", name: "expand-workflow" });
     let collection = appService.mongooseConnection.collection("statementMaster");
@@ -62,11 +64,14 @@ statementRouter.use("/", (request: Request, response: Response, next: NextFuncti
         let originalLine = d.originalLine.replace(/^[\s]+/gi, "");
         return originalLine;
     }).join("\n");
-    response.status(200).json({ formatted }).end();
+    // response.status(200).json({ formatted }).end();
+}).get("/expand-dotnet-workflow/:mid", async (request: Request, response: Response, next: NextFunction) => {
+    response.status(200).json({}).end();
 });
 const _expandBlock = async (callExt: any, sps: string, options: { progress: ProgressBar, counter: number, expanded: Array<string> }) => {
     const statements: any[] = await _getBlock(callExt.references.shift().memberId);
     let method = statements.find((d) => d.indicators.includes(5) && d.methodId);
+    if (!method) return;
     let methodId = method._id.toString();
     if (options.expanded.includes(methodId)) return;
     options.expanded.push(methodId);

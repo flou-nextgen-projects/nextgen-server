@@ -1,6 +1,7 @@
 import Express, { Request, Response, Router, NextFunction } from "express";
 import { appService } from "../services/app-service";
 import mongoose, { mongo } from "mongoose";
+import { ObjectId } from "mongodb";
 const fmRouter: Router = Express.Router();
 
 fmRouter.use("/", (request: Request, response: Response, next: NextFunction) => {
@@ -47,24 +48,10 @@ fmRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
 }).get("/get-file-master", (request: Request, response: Response) => {
     var query: any = request.query;
     var $filter: any = JSON.parse(query.$filter);
-    appService.actionWorkflows.aggregate([{
-        $match: {
-            _id: mongoose.Types.ObjectId.createFromHexString($filter._id),
-            pid: mongoose.Types.ObjectId.createFromHexString($filter.pid)
-        }
-    }, {
-        $lookup: {
-            from: "fileMaster",
-            localField: "fid",
-            foreignField: "_id",
-            as: "fileMaster"
-        },
-    }, {
-        $unwind: {
-            path: "$fileMaster",
-            preserveNullAndEmptyArrays: true
-        }
-    }]).then((workflows) => {
+    let _id = $filter._id || $filter.fileId;
+    appService.actionWorkflows.aggregate([{ $match: { $or: [{ fid: new ObjectId(_id as string) }, { _id: new ObjectId(_id as string) }], pid: new ObjectId($filter.pid as string) } },
+    { $lookup: { from: "fileMaster", localField: "fid", foreignField: "_id", as: "fileMaster" }, },
+    { $unwind: { path: "$fileMaster", preserveNullAndEmptyArrays: true } }, { $limit: 1 }]).then((workflows) => {
         if (workflows.length == 0) {
             return response.status(404).json({ message: "No workflows found" }).end();
         }

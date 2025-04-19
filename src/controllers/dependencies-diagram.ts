@@ -30,7 +30,7 @@ dependencyRouter.use("/", (request: Request, response: Response, next: NextFunct
         // if member reference is present, then we need to get all call externals and loop through all elements        
         // since, this data is going for d3 network, we'll prepare elements in that way
         // this will be a focal node and all node elements will be of type Node and links will be of type Link
-        let node: any = { ...member, fileId: member.fid.toString(), aid: member._id.toString() };
+        let node: any = { ..._createNode(member.fileMaster), callers: member.callers, name: member.memberName, fileId: member.fid.toString(), aid: member._id.toString() };
         let links: Array<Link> = [];
         let nodes: Array<Node | any> = [{ ...node, image: 'focal-node.png', color: member.fileMaster.fileTypeMaster.color }];
         for (const callExt of member?.callExternals) {
@@ -58,23 +58,20 @@ dependencyRouter.use("/", (request: Request, response: Response, next: NextFunct
 const _expandCallers = async (node: any, opt: { nodes: Array<Node | any>, links: Array<Link>, index: number }) => {
     try {
         for (const caller of node.callers) {
-            let pipeLine = [{ $match: { fid: new ObjectId(caller.fid.toString() as string), location: caller.location, callingMethod: caller.callingMethod } },
+            let pipeLine = [{ $match: { fid: new ObjectId(caller.fid.toString() as string), memberName: caller.callingMethod } },
             { $lookup: { from: "fileMaster", localField: "fid", foreignField: "_id", as: "fileMaster" } },
             { $unwind: { path: "$fileMaster", preserveNullAndEmptyArrays: true } },
             { $lookup: { from: "fileTypeMaster", localField: "fileMaster.fileTypeId", foreignField: "_id", as: "fileMaster.fileTypeMaster" } },
             { $unwind: { path: "$fileMaster.fileTypeMaster", preserveNullAndEmptyArrays: true } }];
-            let members = await appService.memberReferences.aggregate(pipeLine);
-            for (const member of members) {
-                // again member will have caller, so if it is, then we need to add a node and link and call this function again
-                let findEle = opt.nodes.find((y) => y.memberName === member.memberName);
-                if (!findEle) {
-                    var parentNode: Node = { ...member, fileId: member.fid.toString(), aid: member._id.toString() };
-                    opt.nodes.push(parentNode);
-                }
-                let parentIdx = opt.nodes.findIndex((y) => y.memberName === member.memberName);
-                let nodeIdx: number = opt.nodes.findIndex((x) => x.memberName === node.memberName);
-                opt.links.push({ source: parentIdx, target: nodeIdx, weight: 3, linkText: node.name } as any);
+            let member = await appService.memberReferences.aggregateOne(pipeLine);
+            let findMember = opt.nodes.find((y) => (y.memberName === member.memberName || y.name === member.memberName) && y.fileId === caller.fid.toString());
+            if (!findMember) {
+                var parentNode: Node = { ..._createNode(member.fileMaster), name: member.memberName, fileId: member.fid.toString(), aid: member._id.toString() } as Node;
+                opt.nodes.push(parentNode);
             }
+            let parentIdx = opt.nodes.findIndex((y) => y.name === member.memberName);
+            let nodeIdx: number = opt.nodes.findIndex((x) => x.name === node.name);
+            opt.links.push({ source: parentIdx, target: nodeIdx, weight: 3, linkText: node.name } as any);
         }
     } catch (error) {
         console.log(error);
@@ -91,13 +88,13 @@ const _expandCallExternals = async (callExt: Partial<FileMaster | any>, node: No
     const member = await appService.memberReferences.aggregateOne(pipeLine);
     // if member is null, simply means - missing object
     if (!member) return;
-    if ((opt.nodes.findIndex((x) => x.name == member.fileMaster.fileName) >= 0)) {
-        let existsIndex: number = opt.nodes.findIndex((x) => x.name === member.fileMaster.fileName);
+    if ((opt.nodes.findIndex((x) => x.name == member.memberName) >= 0)) {
+        let existsIndex: number = opt.nodes.findIndex((x) => x.name === member.memberName);
         let srcIdx = opt.nodes.findIndex((x) => x.name === node.name);
         opt.links.push({ source: srcIdx, target: existsIndex, weight: 3, linkText: node.name } as any);
         return;
     }
-    let nd: any = { ...member, fileId: member.fid.toString(), aid: member._id.toString() };
+    let nd: any = { ..._createNode(member.fileMaster), callers: member.callers, name: member.memberName, fileId: member.fid.toString(), aid: member._id.toString() };
     opt.nodes.push(nd);
     let targetIdx: number = opt.nodes.findIndex(x => x.name === nd.name);
     let srcIdx = opt.nodes.findIndex((x) => x.name === node.name);
@@ -120,12 +117,12 @@ const _expandParentCalls = async (opt: { nodes: Array<Node>, links: Array<Link>,
             if (member.callExternals.length == 0) continue;
             let callExts = member.callExternals.filter((x: any) => { return x.fid.toString() == node.fileId });
             if (callExts.length <= 0) continue;
-            let findEle = opt.nodes.find((y) => y.name === member.fileMaster.fileName);
-            if (!findEle) {
-                var parentNode: Node = { ...member, fileId: member.fid.toString(), aid: member._id.toString() };
+            let findMember = opt.nodes.find((y) => y.name === member.memberName);
+            if (!findMember) {
+                var parentNode = { ..._createNode(member.fileMaster), callers: member.callers, name: member.memberName, fileId: member.fid.toString(), aid: member._id.toString() };
                 opt.nodes.push(parentNode);
             }
-            let parentIdx = opt.nodes.findIndex((y) => y.name === member.fileMaster.fileName);
+            let parentIdx = opt.nodes.findIndex((y) => y.name === member.memberName);
             let nodeIdx: number = opt.nodes.findIndex((x) => x.name === node.name);
             opt.links.push({ source: parentIdx, target: nodeIdx, weight: 3, linkText: node.name } as any);
         }
