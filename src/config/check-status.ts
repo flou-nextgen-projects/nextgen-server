@@ -55,6 +55,7 @@ checkDbStatusRouter.use("/", (_: Request, __: Response, next: NextFunction) => {
     await appService.mongooseConnection.dropCollection("statementMaster");
     await appService.mongooseConnection.dropCollection("objectConnectivity");
     await appService.mongooseConnection.dropCollection("workspaceMaster");
+    await appService.mongooseConnection.dropCollection("userStory");
     response.status(200).end();
 }).post("/generate-token", async function (_: Request, response: Response) {
     try {

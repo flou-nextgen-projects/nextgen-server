@@ -1,6 +1,7 @@
 import Mongoose from "mongoose";
 import { parse } from "path";
 import { FileMaster } from "./file-master";
+import _ from "lodash";
 
 export class Node {
     public wid: Mongoose.Types.ObjectId | string;
@@ -24,6 +25,7 @@ export class Link {
     public type: NodeLinkType = NodeLinkType.link;
     public srcFileId?: Mongoose.Types.ObjectId | string;
     public tarFileId?: Mongoose.Types.ObjectId | string;
+    public source?: number; public target?: number;
 };
 export const _createNode = function (fileData: FileMaster) {
     let image = fileData.fileTypeMaster?.img || "object-node.png";
@@ -35,7 +37,8 @@ export const _createNode = function (fileData: FileMaster) {
         fileId: fileData._id.toString(),
         info: parse(fileData.filePath),
         fileType: fileData.fileTypeMaster.fileTypeName, type: NodeLinkType.node,
-        filePath: fileData.filePath, color, aid: fileData.aid || Mongoose.Types.ObjectId.generate(),
+        filePath: fileData.filePath, color, 
+        aid: fileData.aid
     };
 };
 export const prepareNodes = function (inputData: any[] = []): Array<Node> {
@@ -56,7 +59,8 @@ export const prepareDotNetLinks = function (networkJson: any[]) {
             srcFileId: Mongoose.Types.ObjectId.createFromHexString(nj.srcFileId),
             tarFileId: Mongoose.Types.ObjectId.createFromHexString(nj.tarFileId),
             linkText: nj.linkText,
-            type: NodeLinkType.link
+            type: NodeLinkType.link,
+            source: nj.source, target: nj.target
         });
     });
     return links;
@@ -66,8 +70,8 @@ export const resetNodeAndLinkIndex = (nodes: Array<Node | any>, links: Array<Lin
     nodes.forEach((node, index) => { node.originalIndex = index; });
     // we need to set source and target index for each link depending on the node index
     links.forEach((link) => {
-        const sourceNode = nodes.find((node) => node.fileId.toString() === link.srcFileId.toString());
-        const targetNode = nodes.find((node) => node.fileId.toString() === link.tarFileId.toString());
+        const sourceNode = nodes.find((node) => node._id.toString() === link.srcFileId.toString());
+        const targetNode = nodes.find((node) => node._id.toString() === link.tarFileId.toString());
         if (!sourceNode || !targetNode) return;
         if (sourceNode.originalIndex === targetNode.originalIndex) return;
         link.source = sourceNode.originalIndex;

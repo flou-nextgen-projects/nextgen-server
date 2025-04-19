@@ -47,15 +47,67 @@ fmRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
 }).get("/get-file-master", (request: Request, response: Response) => {
     var query: any = request.query;
     var $filter: any = JSON.parse(query.$filter);
-    appService.fileMaster.getItem({ _id: mongoose.Types.ObjectId.createFromHexString($filter.fileId), pid: mongoose.Types.ObjectId.createFromHexString($filter.pid) }).then((workflows) => {
-        response.status(200).json(workflows).end();
+    appService.actionWorkflows.aggregate([{
+        $match: {
+            _id: mongoose.Types.ObjectId.createFromHexString($filter._id),
+            pid: mongoose.Types.ObjectId.createFromHexString($filter.pid)
+        }
+    }, {
+        $lookup: {
+            from: "fileMaster",
+            localField: "fid",
+            foreignField: "_id",
+            as: "fileMaster"
+        },
+    }, {
+        $unwind: {
+            path: "$fileMaster",
+            preserveNullAndEmptyArrays: true
+        }
+    }]).then((workflows) => {
+        if (workflows.length == 0) {
+            return response.status(404).json({ message: "No workflows found" }).end();
+        }
+        let fm = workflows.shift().fileMaster;
+        response.status(200).json(fm).end();
     }).catch((err) => {
         response.status(500).json(err).end();
     });
 }).get("/get-workflows-by-fileId", (request: Request, response: Response) => {
     var query: any = request.query;
     var $filter: any = JSON.parse(query.$filter);
-    appService.memberReferences.getDocuments({ fid: mongoose.Types.ObjectId.createFromHexString($filter.fid) }).then((result: any) => {
+    appService.memberReferences.aggregate([
+        // Get the fid value from the first document
+        {
+            $facet: {
+                targetDoc: [
+                    { $match: { _id: mongoose.Types.ObjectId.createFromHexString($filter._id) } },
+                    { $limit: 1 },
+                    { $project: { fid: 1, _id: 0 } }
+                ]
+            }
+        },
+
+        // Unwind the single document array
+        { $unwind: "$targetDoc" },
+
+        // Use that fid to find all matching documents
+        {
+            $lookup: {
+                from: "memberReferences",  // Use your actual collection name here
+                let: { docFid: "$targetDoc.fid" },
+                pipeline: [
+                    { $match: { $expr: { $eq: ["$fid", "$$docFid"] } } }
+                ],
+                as: "matchingDocuments"
+            }
+        },
+
+        // Output just the matching documents
+        { $project: { matchingDocuments: 1, _id: 0 } },
+        { $unwind: "$matchingDocuments" },
+        { $replaceRoot: { newRoot: "$matchingDocuments" } }
+    ]).then((result: any) => {
         response.status(200).json(result).end();
     }).catch((err) => {
         response.status(500).json(err).end();
@@ -91,11 +143,13 @@ fmRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
 }).get("/get-action-workflows", (request: Request, response: Response) => {
     var query: any = request.query;
     var $filter: any = JSON.parse(query.$filter);
-    appService.memberReferences.getDocuments({ pid: mongoose.Types.ObjectId.createFromHexString($filter.pid), fid: mongoose.Types.ObjectId.createFromHexString($filter.fid) })
-        .then((result: any) => {
-            response.status(200).json(result).end();
-        }).catch((err) => {
-            response.status(500).json(err).end();
-        });
+    appService.memberReferences.getDocuments({
+        pid: mongoose.Types.ObjectId.createFromHexString($filter.pid),
+        fid: mongoose.Types.ObjectId.createFromHexString($filter.fid)
+    }).then((result: any) => {
+        response.status(200).json(result).end();
+    }).catch((err) => {
+        response.status(500).json(err).end();
+    });
 });
 module.exports = fmRouter;

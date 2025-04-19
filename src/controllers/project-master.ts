@@ -76,10 +76,16 @@ pmRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
         let projects = await appService.projectMaster.getDocuments({ wid: new Mongoose.Types.ObjectId(wid) }, {}, {}, { _id: 1 });
         if (projects.length === 0) return response.status(404).json({ message: 'Project with provided ID not found' }).end();
         if (projects.length === 1) {
-            let nodesAndLinks = await appService.objectConnectivity.getDocuments({ pid: new Mongoose.Types.ObjectId(pid) }, {}, {}, { _id: 1 });
-            let { nodes, links } = resetNodeAndLinkIndex(nodesAndLinks.filter((d: any) => d.type === 1), nodesAndLinks.filter((d: any) => d.type === 2));
+            let nodesAndLinks = await appService.objectConnectivity.aggregate([
+                { $match: { pid: new Mongoose.Types.ObjectId(pid) } },
+                { $lookup: { from: "fileMaster", foreignField: "_id", localField: "fileId", as: "fileMaster" } },
+                { $unwind: { path: "$fileMaster", preserveNullAndEmptyArrays: true } }
+            ]);
+            // set originalIndex for each node
+            nodesAndLinks.filter((d) => d.type === 1).forEach((node: any, index: number) => { node.originalIndex = index; });
+            // let { nodes, links } = resetNodeAndLinkIndex(nodesAndLinks.filter((d: any) => d.type === 1), nodesAndLinks.filter((d: any) => d.type === 2));
             // concatenate nodes and links
-            nodesAndLinks = nodes.concat(links);
+            // let data = nodes.concat(links);
             return response.status(200).json({ data: nodesAndLinks, level: 0 }).end();
         }
         // this is for multiple projects
