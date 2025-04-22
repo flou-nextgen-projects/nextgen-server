@@ -475,7 +475,7 @@ const addDotNetFieldAndPropertiesDetails = async function addDotNetFieldAndPrope
 };
 const addDotNetMemberReferences = async function addDotNetMemberReferences(wm: WorkspaceMaster, memberReferencesJson: any[]): Promise<any> {
     try {
-        if (!(wm.languageMaster.name === "C#")) return;
+        if (!(wm.languageMaster.name === "C#" || wm.languageMaster.name === "COBOL" )) return;
         let collection = appService.mongooseConnection.collection("memberReferences");
         await collection.deleteMany({ wid: wm._id });
         let modifiedReferences = convertStringToObjectId(memberReferencesJson);

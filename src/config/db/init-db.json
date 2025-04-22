@@ -298,8 +298,8 @@
                 "_id": "67ab7f3383a54eb29cb24fa9",
                 "orgId": 1,
                 "orgName": "NextGen",
-                "nextGenToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOjEsImFjY2VzcyI6ImF1dGgiLCJzdGFydERhdGUiOiIwMy0xOC0yMDI1IiwicXVlcnlDb3VudCI6MTAwMCwiaWF0IjoxNzQyMjc5MTkzLCJleHAiOjE3NDQ4NzExOTN9.7SBsqDE7lhXlREqIosXFNbvT5pxtfkJsE8OVga1fmXI",
-                "genAiToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOjEsImFjY2VzcyI6ImF1dGgiLCJzdGFydERhdGUiOiIwMy0xOC0yMDI1IiwicXVlcnlDb3VudCI6MTAwMCwiaWF0IjoxNzQyMjc5MTkzLCJleHAiOjE3NDQ4NzExOTN9.7SBsqDE7lhXlREqIosXFNbvT5pxtfkJsE8OVga1fmXI",
+                "nextGenToken":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOjEsImFjY2VzcyI6ImF1dGgiLCJzdGFydERhdGUiOiIwNC0wMS0yMDI1IiwicXVlcnlDb3VudCI6MTAwMCwiaWF0IjoxNzQ0NzMwNDQ5LCJleHAiOjE3NDczMjI0NDl9.c8STPXT4nC8xR1C3cUuxuLMi63s9opRa7-ADQVqT_Y8",
+                "genAiToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOjEsImFjY2VzcyI6ImF1dGgiLCJzdGFydERhdGUiOiIwNC0wMS0yMDI1IiwicXVlcnlDb3VudCI6MTAwMCwiaWF0IjoxNzQ0NzMwNDQ5LCJleHAiOjE3NDczMjI0NDl9.c8STPXT4nC8xR1C3cUuxuLMi63s9opRa7-ADQVqT_Y8",
                 "tid": "67d9134965a7a01e6639a15a"
             }
         ]
