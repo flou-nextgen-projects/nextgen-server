@@ -28,7 +28,7 @@ dependencyRouter.use("/", (request: Request, response: Response, next: NextFunct
             { $match: { fid: mongoose.Types.ObjectId.createFromHexString(fid) } },
             { $lookup: { from: 'fileMaster', localField: 'fid', foreignField: '_id', as: 'fileMaster' } },
             { $unwind: { preserveNullAndEmptyArrays: true, path: "$fileMaster" } },
-            { $lookup: { from: 'fileTypeMaster', localField: 'fileTypeId', foreignField: '_id', as: 'fileMaster.fileTypeMaster' } },
+            { $lookup: { from: 'fileTypeMaster', localField: 'fileMaster.fileTypeId', foreignField: '_id', as: 'fileMaster.fileTypeMaster' } },
             { $unwind: { preserveNullAndEmptyArrays: true, path: "$fileMaster.fileTypeMaster" } }
         ];
         const member = await appService.memberReferences.aggregateOne(pipeLine);
@@ -72,7 +72,7 @@ const _expandCallExternals = async (callExt: Partial<FileMaster | any>, node: No
         { $match: { fid: callExt.fid } },
         { $lookup: { from: 'fileMaster', localField: 'fid', foreignField: '_id', as: 'fileMaster' } },
         { $unwind: { preserveNullAndEmptyArrays: true, path: "$fileMaster" } },
-        { $lookup: { from: 'fileTypeMaster', localField: 'fileTypeId', foreignField: '_id', as: 'fileMaster.fileTypeMaster' } },
+        { $lookup: { from: 'fileTypeMaster', localField: 'fileMaster.fileTypeId', foreignField: '_id', as: 'fileMaster.fileTypeMaster' } },
         { $unwind: { preserveNullAndEmptyArrays: true, path: "$fileMaster.fileTypeMaster" } }
     ];
     const member = await appService.memberReferences.aggregateOne(pipeLine);

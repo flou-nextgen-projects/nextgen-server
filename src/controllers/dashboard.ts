@@ -28,12 +28,12 @@ dashBoardRouter.use("/", (request: Request, response: Response, next: NextFuncti
 }).get("/get-dashboard-tickers", async (request: Request, response: Response) => {
     var pid = <string>request.query.pid;
     var project = await appService.projectMaster.getItem({ _id: new ObjectId(pid) });
-    var pipeLine = [
+    const pipeLine = [
         { $match: { pid: new ObjectId(pid) } },
-        { $group: { _id: "$fileTypeId", totalLineCount: { $sum: "$linesCount" }, fileCount: { $sum: 1 } } },
+        { $group: { _id: "$fileTypeId", totalLineCount: { $sum: "$linesCount" }, totalCommentedLines: { $sum: "$fileStatics.commentedLines" }, fileCount: { $sum: 1 } } },
         { $lookup: { from: "fileTypeMaster", localField: "_id", foreignField: "_id", as: "fileTypeMaster" } },
         { $unwind: { path: "$fileTypeMaster", preserveNullAndEmptyArrays: true } },
-        { $project: { fileTypeid: "$_id", totalLineCount: 1, fileCount: 1, color: "$fileTypeMaster.color", fileTypeName: "$fileTypeMaster.fileTypeName" } }
+        { $project: { fileTypeId: "$_id", totalLineCount: 1, totalCommentedLines: 1, fileCount: 1, color: "$fileTypeMaster.color", fileTypeName: "$fileTypeMaster.fileTypeName" } }
     ];
     var workflows = await appService.mongooseConnection.collection("actionWorkflows").find({ pid: new ObjectId(pid) }).toArray();
     appService.mongooseConnection.collection("fileMaster").aggregate(pipeLine).toArray()
