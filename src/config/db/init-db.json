@@ -253,6 +253,18 @@
                 "folderNames": [],
                 "lid": "67f4ca7c802fd448c45662c6",
                 "img": "df.png"
+            },
+            {
+                "_id" : "6809e45c95c1a0101700b37e",
+                "fileTypeName" : "RPG",
+                "fileTypeExtension" : ".rpg",
+                "delimiter" : ".",
+                "color" : "#257ebb",
+                "folderNames" : [
+                    "RPG"
+                ],
+                "lid" : "6809e34895c1a0101700b374",
+                "img" : "cobol.png"
             }
         ]
     },
@@ -466,6 +478,11 @@
                 "_id": "67f4ca7c802fd448c45662c6",
                 "name": "Progress",
                 "description": "This is Progress 4GL Language"
+            },
+            {
+                "_id" : "6809e34895c1a0101700b374",
+                "name" : "RPG",
+                "description" : "This is RPG Language"
             }
         ]
     },
