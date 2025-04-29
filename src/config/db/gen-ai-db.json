@@ -44,7 +44,7 @@
                 ],
                 "screen": "gen-ws",
                 "contextMenu": "Show Data Elements",
-                "promptId": 1031
+                "promptId": 1034
             },
             {
                 "_id": "67e24582fde4aa97b34ebec7",
@@ -58,7 +58,35 @@
                 ],
                 "screen": "gen-ws",
                 "contextMenu": "Write the output code in Java",
-                "promptId": 1032
+                "promptId": 1033
+            },
+            {
+                "_id" : "680c7bb138d40867977eb8d7",
+                "menu" : "Input Datasets",
+                "menuId" : "ID",
+                "prompt" : [
+                    {
+                        "id" : 1,
+                        "value" : "List the input files or datasets, with their descriptions, used by the code below? List out only the end result with no commentary or summary at the end. Also no need to specify where they are in the original code."
+                    }
+                ],
+                "screen" : "N/A",
+                "contextMenu" : "Input Datasets",
+                "promptId" : 1031
+            },
+            {
+                "_id" : "680c7bff38d40867977eb8ec",
+                "menu" : "Output Datasets",
+                "menuId" : "OD",
+                "prompt" : [
+                    {
+                        "id" : 1,
+                        "value" : "List the output files or datasets, with their descriptions, used by the code below? List out only the end result with no commentary or summary at the end. Also no need to specify where they are in the original code."
+                    }
+                ],
+                "screen" : "N/A",
+                "contextMenu" : "Output Datasets",
+                "promptId" : 1032
             },
             {
                 "_id": "67ab2c24622f4c3b541e85d1",
