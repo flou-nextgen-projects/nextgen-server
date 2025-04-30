@@ -2,7 +2,7 @@ import Express, { Request, Response, Router, NextFunction } from "express";
 import { appService } from "../services/app-service";
 import { Link, Node, _createNode } from "../models";
 import { ObjectId } from "mongodb";
-import Mongoose from "mongoose";
+import Mongoose, { PipelineStage } from "mongoose";
 import { forEach } from "lodash";
 
 const brRouter: Router = Express.Router();
@@ -65,8 +65,22 @@ brRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
     try {
         const { fid, promptId } = request.params;
         // const promptid = parseInt(promptId);
-        const res = await appService.mongooseConnection.collection("businessRules").findOne({ fid: Mongoose.Types.ObjectId.createFromHexString(fid) /*, promptId: promptid*/ });
+        let pipeLine: Array<PipelineStage> = [
+            { $match: { fid: Mongoose.Types.ObjectId.createFromHexString(fid) } },
+            { $lookup: { from: 'fileMaster', localField: 'fid', foreignField: '_id', as: 'fileMaster' } },
+            { $unwind: { preserveNullAndEmptyArrays: true, path: "$fileMaster" } }
+        ];
+        const businessRules = await appService.mongooseConnection.collection("businessRules").aggregate(pipeLine);
+
+        const results = await businessRules.toArray();
+
+        if (!results.length) {
+            return response.status(404).json({ error: "Data not found" }).end();
+        }
+        const res = results[0];
+        // const res = await appService.mongooseConnection.collection("businessRules").findOne({ fid: Mongoose.Types.ObjectId.createFromHexString(fid) /*, promptId: promptid*/ });
         if (!res) { return response.status(404).json({ error: "Data not found" }).end(); }
+        var fileName = res.fileMaster.fileNameWithoutExt;
         const links: Array<Link> = [];
         let nodes: Array<Node> = [];
         const startNode: Node = {
@@ -116,7 +130,7 @@ brRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
             finalLinks.push(link);
         }
         // let finalLinks = removeLinks(links, finalNodes);
-        response.status(200).json({ nodes: finalNodes, links: finalLinks }).end();
+        response.status(200).json({ nodes: finalNodes, links: finalLinks, fileName: fileName }).end();
     } catch (error) {
         return response.status(500).json(error).end();
     }
@@ -217,7 +231,12 @@ const createIndividualNodes = async (data: any[], lastNode: any): Promise<{ node
         }
         else {
             const newData: string = data;
-            const lines = newData.split("\n");
+            var modifiedLines = appendLines(newData);
+            let lines = newData.split("\n");
+            if (modifiedLines) {
+                lines = modifiedLines.split("\n");
+            }
+            var methodName = "";
             const ruleSet: string[] = [];
             for (const line of lines) {
                 if (line === "") continue;
