@@ -100,8 +100,8 @@ bsRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
     try {
         let fid = request.params.fid;
         let result = await appService.entityMaster.getItem({ fid: new Mongoose.Types.ObjectId(fid) });
-        if (result && result.entityName == "None" ) { // this is mainly done for cobol programs as there are entities extracted from assessment utility for some programs 
-            response.status(200).json([ { id:1 , parent: "#", text: result.entityName, icon: "fa fa-folder", state: { selected: true }}]).end();
+        if (result && result.entityName == "None") { // this is mainly done for cobol programs as there are entities extracted from assessment utility for some programs 
+            response.status(200).json([{ id: 1, parent: "#", text: result.entityName, icon: "fa fa-folder", state: { selected: true } }]).end();
         } else {
             let entityList: Array<any> = await appService.entityAttributes.aggregate([
                 { "$match": { fid: new Mongoose.Types.ObjectId(fid) } },
@@ -194,6 +194,16 @@ bsRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
         }).catch((err) => {
             response.status(500).json(err).end();
         })
+}).get("/get-input-output-dataset/:fid", (request: Request, response: Response) => {
+    const { fid } = request.params;
+    appService.mongooseConnection.collection("businessSummaries").aggregate([
+        { $match: { promptId: { $in: [1031, 1032] } } },
+        { $match: { fid: new ObjectId(fid) } }]).toArray()
+        .then((res) => {
+            response.status(200).json(res).end();
+        }).catch((err) => {
+            response.status(500).json(err).end();
+        });
 });
 
 module.exports = bsRouter;

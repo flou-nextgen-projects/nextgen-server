@@ -16,6 +16,9 @@ export class Node {
     public filePath: string;
     public fileType: string; public color?: string;
     public summary?: string;
+    public Entities?: Array<any>;
+    public inputDataSet?: string;
+    public outputDataSet?: string;
 };
 export class Link {
     public wid: Mongoose.Types.ObjectId | string;
@@ -87,5 +90,5 @@ export const prepareLinks = function (inputData: any[], nodes: Array<Node>): Arr
     return links;
 };
 export enum NodeLinkType {
-    node = 1, link = 2, entity = 3
+    node = 1, link = 2, entity = 3, InputOutputInterface = 4
 }
