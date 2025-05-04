@@ -81,7 +81,7 @@ pmRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
     }
 }).post("/upload-project-bundle/:pname", async function (request: Request | any, response: Response) {
     try {
-        response.writeHead(200, { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', Connection: 'keep-alive', 'X-Accel-Buffering': 'no' });
+        response.writeHead(200, { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', 'X-Accel-Buffering': 'no' });
         let rootDir = resolve(join(__dirname, "../", "../"));
         let uploadDetails = request.body;
         request.rootDir = rootDir;
@@ -156,6 +156,12 @@ pmRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
                 await addFileDetails(allFiles, languageMaster, readFmJson.data);
             }
 
+            // get updated file-master data
+            let readUpdatedFmJson = await readJsonFile(join(extractPath, "updated-file-master", "file-master.json"));
+            if (readUpdatedFmJson.code === 200) {
+                response.write(formatData({ message: "Started adding updated file master details to repository." }), "utf-8", checkWrite);
+                await addFileDetails(allFiles, languageMaster, readUpdatedFmJson.data);
+            }
             response.write(formatData({ extra: { totalFiles: allFiles.length }, message: `File details are added successfully to repository.` }), "utf-8", checkWrite);
 
             // process for network connectivity
@@ -184,6 +190,9 @@ pmRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
             if (actionsJson.code === 200) {
                 await processActionWorkflows(workspace, actionsJson.data);
             }
+
+            // process for workflow connectivities
+            response.write(formatData({ message: "Started process for adding workflow connectivities to repository." }), "utf-8", checkWrite);
             let workConnectJson = await readJsonFile(join(extractPath, "workflow-connectivities", "workflow-connectivities.json"));
             if (workConnectJson.code === 200) {
                 await processActionsAndConnectivities(workspace, actionsJson.data, workConnectJson.data);
@@ -212,6 +221,20 @@ pmRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
                 });
             }
 
+            // these are additional details for statement references
+            // this is for dotnet and similar languages only
+            response.write(formatData({ message: "Started process for additional statement references to repository." }), "utf-8", checkWrite);
+            let expandedWorkflowFiles = fileExtensions.getAllFilesFromPath(join(extractPath, "project-files", "expanded-workflows"), [], true);
+            if (expandedWorkflowFiles.length > 0) {
+                for (const ew of expandedWorkflowFiles) {
+                    let workflowJson = await readJsonFile(ew);
+                    if (workflowJson.code === 200) {
+                        await addStatementReferences(workspace, workflowJson.data, (progress: string) => {
+                            response.write(formatData({ message: progress }), "utf-8", checkWrite);
+                        });
+                    }
+                }
+            }
             // process for file contents...
             response.write(formatData({ message: "Started processing file contents to repository." }), "utf-8", checkWrite);
             await processFileContents(workspace);
@@ -319,6 +342,8 @@ pmRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
             winstonLogger.error(new Error("Error occurred during extraction"), { code: "EXTRACTION_ERROR", name: request.params.pname, extras: err });
             response.json({ message: "Error occurred during extraction", error: err }).end();
         }
+        let collection = appService.mongooseConnection.collection("statementMaster");
+        await collection.deleteMany({ wid: workspace._id });
         response.writeHead(200, { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', Connection: 'keep-alive', 'X-Accel-Buffering': 'no' });
         let extractPath: string = <string>workspace.dirPath;
         let statementReferencesJson: any = await readJsonFile(join(extractPath, "statement-master", "statement-master.json"));
@@ -328,6 +353,18 @@ pmRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
                 response.write(formatData({ message: progress }), "utf-8", checkWrite);
             });
         }
+        let expandedWorkflowFiles = fileExtensions.getAllFilesFromPath(join(extractPath, "project-files", "expanded-workflows"), [], true);
+        if (expandedWorkflowFiles.length > 0) {
+            for (const ew of expandedWorkflowFiles) {
+                let workflowJson = await readJsonFile(ew);
+                if (workflowJson.code === 200) {
+                    await addStatementReferences(workspace, workflowJson.data, (progress: string) => {
+                        response.write(formatData({ message: progress }), "utf-8", checkWrite);
+                    });
+                }
+            }
+        }
+
         response.status(200).json().end();
     } catch (error) {
         response.status(400).send(error).end();
@@ -434,7 +471,7 @@ const addEntitiesAndAttributes = async function (entityJson: any[]) {
 const addStatementReferences = async function addStatementReferences(wm: WorkspaceMaster, statementMastersJson: any[], callback: Function): Promise<any> {
     try {
         let collection = appService.mongooseConnection.collection("statementMaster");
-        await collection.deleteMany({ wid: wm._id });
+        // await collection.deleteMany({ wid: wm._id });
         statementMastersJson.filter((d) => isEmpty(d.wid)).forEach((d) => d.wid = wm._id);
         let modifiedStatementMasters = convertStringToObjectId(statementMastersJson);
         const totalRecords = modifiedStatementMasters.length;
@@ -475,7 +512,7 @@ const addDotNetFieldAndPropertiesDetails = async function addDotNetFieldAndPrope
 };
 const addDotNetMemberReferences = async function addDotNetMemberReferences(wm: WorkspaceMaster, memberReferencesJson: any[]): Promise<any> {
     try {
-        if (!(wm.languageMaster.name === "C#" || wm.languageMaster.name === "COBOL" || wm.languageMaster.name === "RPG"  )) return;
+        if (!(wm.languageMaster.name === "C#" || wm.languageMaster.name === "COBOL" || wm.languageMaster.name === "RPG")) return;
         let collection = appService.mongooseConnection.collection("memberReferences");
         await collection.deleteMany({ wid: wm._id });
         let modifiedReferences = convertStringToObjectId(memberReferencesJson);
