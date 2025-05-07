@@ -7,6 +7,8 @@ import AppService from "../services/app-service";
 import { UserMaster } from "../models";
 import { ObjectId } from "mongodb";
 const bcrypt = require('bcryptjs');
+var Jwt = require('jsonwebtoken');
+import config from "../configurations";
 
 const appService: AppService = new AppService();
 
@@ -117,22 +119,26 @@ userRouter.use("/", (request: Request, response: Response, next: NextFunction) =
     });
 }).post("/change-password", async (request: Request, response: Response) => {
     try {
-        const { userName, oldPassword, newPassword } = request.body;
-        const user = await appService.userMaster.getItem({ userName });
+        const { current, newPwd, confirm } = request.body;
+        let authHeader = request.headers['authorization'];
+        const token = authHeader && authHeader.split(' ')[1];
+        if (!token) {
+            return response.status(401).json({ code: 401, message: 'Token missing', data: null });
+        }
+        const user = await Jwt.verify(token, config.secretKey)
         if (!user) {
             return response.status(404).json({ code: 404, message: "User not found", data: null });
         }
-        const isOldPasswordValid = await bcrypt.compare(oldPassword, user.password);
+        let userDetails=await appService.userMaster.getItem({userName:user.user.userName});
+        const isOldPasswordValid = await bcrypt.compare(current, userDetails.password);
         if (!isOldPasswordValid) {
             return response.status(401).json({ code: 401, message: "Old password is incorrect", data: null });
         }
-
-        const hashedNewPassword = await bcrypt.hash(newPassword, 10);
-        await appService.userMaster.updateDocument({ userName }, { password: hashedNewPassword });
-
+        const hashedNewPassword = await bcrypt.hash(newPwd, 10);
+        await appService.userMaster.updateDocument({ userName: userDetails.userName }, { password: hashedNewPassword });
         response.status(200).json({ message: "Password changed successfully" });
     } catch (err) {
-        response.status(500).end();
+        response.status(500).json(err).end();
     }
 });
 
