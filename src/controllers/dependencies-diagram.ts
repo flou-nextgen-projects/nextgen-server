@@ -54,6 +54,7 @@ dependencyRouter.use("/", (request: Request, response: Response, next: NextFunct
         }
         if (addBusinessSummaries === "true") {
             await _attachedBusinessSummaries({ nodes, links, index: nodes.length + 1 }, request.headers.authorization);
+            await _attachInputOutputInterface({ nodes, links, index: nodes.length + 1 }, request.headers.authorization);
         }
         // _assignLinkTexts(links);
         response.status(200).json({ nodes, links }).end();
@@ -61,6 +62,7 @@ dependencyRouter.use("/", (request: Request, response: Response, next: NextFunct
         return response.status(500).json(error).end();
     }
 });
+
 const _attachInputOutputInterface = async (opt: { nodes: Array<Node>, links: Array<Link>, index: number }, authToken: string) => {
     for (const node of opt.nodes) {
         if (node.group == 3 || node.group == 4) continue;
