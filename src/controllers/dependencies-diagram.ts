@@ -54,7 +54,6 @@ dependencyRouter.use("/", (request: Request, response: Response, next: NextFunct
         }
         if (addBusinessSummaries === "true") {
             await _attachedBusinessSummaries({ nodes, links, index: nodes.length + 1 }, request.headers.authorization);
-            await _attachInputOutputInterface({ nodes, links, index: nodes.length + 1 }, request.headers.authorization);
         }
         // _assignLinkTexts(links);
         response.status(200).json({ nodes, links }).end();
@@ -259,6 +258,7 @@ const _attachEntityNodes = async (opt: { nodes: Array<Node>, links: Array<Link>,
                         fileId: node.fileId.toString(),
                         type: NodeLinkType.entity,
                     } as Node;
+                    node.Entities = result.data.response;
                     opt.nodes.push(entityNode);
                     let parentIdx = opt.nodes.findIndex((x) => x.name === node.name);;
                     let targetIdx = opt.nodes.findIndex((x) => x.id === `entity-${node.fileId.toString()}`);;
