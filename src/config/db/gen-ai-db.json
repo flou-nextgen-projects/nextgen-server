@@ -70,7 +70,7 @@
                         "value": "List the input files or datasets, with their descriptions, used by the code below? List out only the end result with no commentary or summary at the end. Also no need to specify where they are in the original code."
                     }
                 ],
-                "screen": "N/A",
+                "screen": "business-view",
                 "contextMenu": "Input Datasets",
                 "promptId": 1031
             },
@@ -84,7 +84,7 @@
                         "value": "List the output files or datasets, with their descriptions, used by the code below? List out only the end result with no commentary or summary at the end. Also no need to specify where they are in the original code."
                     }
                 ],
-                "screen": "N/A",
+                "screen": "business-view",
                 "contextMenu": "Output Datasets",
                 "promptId": 1032
             },
@@ -584,18 +584,48 @@
                 "promptId": 1030
             },
             {
-                "_id" : "680f33b8b142807fb3f34392",
-                "menu" : "Download Diagram",
-                "menuId" : "downloadDig",
-                "prompt" : [ 
+                "_id": "680f33b8b142807fb3f34392",
+                "menu": "Download Diagram",
+                "menuId": "downloadDig",
+                "prompt": [
                     {
-                        "id" : 1,
-                        "value" : "none"
+                        "id": 1,
+                        "value": "none"
                     }
                 ],
-                "screen" : "pseudo",
-                "contextMenu" : "Download Diagram",
-                "promptId" : 0
+                "screen": "pseudo",
+                "contextMenu": "Download Diagram",
+                "promptId": 0
+            },
+            {
+                "_id": "681b90932670375db65cfc00",
+                "menu": "Output-C#",
+                "menuId": "outputc#",
+                "prompt": [
+                    {
+                        "id": "1",
+                        "type": "prompt",
+                        "value": "Write Output Code in C#"
+                    }
+                ],
+                "promptId": "1035",
+                "screen": "gen-ws",
+                "contextMenu": "Write Output Code in C#"
+            },
+            {
+                "_id": "681b90f62670375db65cfc02",
+                "menu": "Output-NodeJs",
+                "menuId": "output-nodejs",
+                "prompt": [
+                    {
+                        "id": 1,
+                        "type": "prompt",
+                        "value": "Write Output Code in NodeJs"
+                    }
+                ],
+                "promptId": 1036,
+                "screen": "gen-ws",
+                "contextMenu": "Write Output Code in NodeJs"
             }
         ]
     },
