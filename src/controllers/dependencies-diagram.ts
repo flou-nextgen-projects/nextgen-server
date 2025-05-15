@@ -65,13 +65,15 @@ dependencyRouter.use("/", (request: Request, response: Response, next: NextFunct
 const _attachInputOutputInterface = async (opt: { nodes: Array<Node>, links: Array<Link>, index: number }, authToken: string) => {
     for (const node of opt.nodes) {
         if (node.group == 3 || node.group == 4) continue;
+        let project = await appService.projectMaster.getItem({ _id: new ObjectId(node.pid) });
+        let lang = await appService.languageMaster.getItem({ _id: project.lid });
         var interfaceRes = await appService.mongooseConnection.collection("businessSummaries").aggregate([
             { $match: { promptId: { $in: [1031, 1032] } } },
             { $match: { fid: new ObjectId(node.fileId) } }]).toArray();
         if (interfaceRes.length == 0) {
             var result = await axiosInstance.post(`${genAiAddress}get-io-data`, {
                 fid: node.fileId,
-                language: "COBOL"
+                language: lang.name,
             }, {
                 headers: {
                     Authorization: `${authToken}`
@@ -216,13 +218,15 @@ const _attachEntityNodes = async (opt: { nodes: Array<Node>, links: Array<Link>,
         if (entities.length == 0) {
             // send request to multi-handler-api to get entities and save it into database
             let fileContents = await appService.fileContentMaster.getItem({ fid: new ObjectId(node.fileId) });
+            let project = await appService.projectMaster.getItem({ _id: new ObjectId(fileContents.pid) });
+            let lang = await appService.languageMaster.getItem({ _id: project.lid });
             try {
                 const result = await axiosInstance.post(
                     `${genAiAddress}multi-model-handler`,
                     {
                         promptId: 1001,
-                        fileData: fileContents.formatted,
-                        language: "COBOL",
+                        fileData: fileContents.formatted ?? fileContents.original,
+                        language: lang.name,
                         fid: node.fileId,
                         reGen: false
                     },
