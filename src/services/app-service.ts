@@ -53,6 +53,7 @@ class AppService {
     public promptConfig = new BaseRepository<PromptConfigMaster>({ collectionName: "promptConfigMaster", schema: PromptConfigMasterSchema });
     public objectConnectivity = new BaseRepository<any>({ collectionName: "objectConnectivity", schema: new Mongoose.Schema<any>() });
     public memberReferences = new BaseRepository<any>({ collectionName: "memberReferences", schema: new Mongoose.Schema<any>() });
+    public methodDetails = new BaseRepository<any>({ collectionName: "methodDetails", schema: new Mongoose.Schema<any>() });
     public actionWorkflows = new BaseRepository<any>({ collectionName: "actionWorkflows", schema: new Mongoose.Schema<any>() });
     public organizationMaster = new BaseRepository<OrganizationMaster>({ collectionName: "organizationMaster", schema: OrganizationMasterSchema });
     get = function <T extends EntityBase>(propertyName: string): BaseRepository<T> { return this[propertyName]; };

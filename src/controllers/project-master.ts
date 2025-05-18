@@ -45,11 +45,22 @@ pmRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
     }).catch((err: any) => {
         response.status(500).json(err).end();
     });
-}).get("/get-all", async function (request: Request, response: Response) {
+}).get("/get-all-projects", async function (request: Request, response: Response) {
     let filter = JSON.parse(<string>request.query.filter || null) || null;
     let $pipeLine = !filter ? [] : [{ $match: filter }];
     var projectMaster: Array<ProjectMaster> = await appService.projectMaster.aggregate($pipeLine);
     response.status(200).json(projectMaster).end();
+}).get("/get-all", async function (request: Request, response: Response) {
+    let collection = appService.mongooseConnection.collection("fileMaster");
+    let pipeLine = [{ $group: { _id: "$wid", totalObjects: { $sum: 1 } } },
+    { $lookup: { from: "workspaceMaster", localField: "_id", foreignField: "_id", as: "workspace" } },
+    { $unwind: "$workspace" },
+    { $lookup: { from: "languageMaster", localField: "workspace.lid", foreignField: "_id", as: "languageMaster" } },
+    { $unwind: "$languageMaster" },
+    { $project: { uploadedOn: { $literal: Date.now() }, processedOn: { $literal: Date.now() }, languageMaster: "$languageMaster", _id: "$workspace._id", workspaceId: "$_id", name: "$workspace.name", workspace: "$workspace", totalObjects: "$totalObjects", processingStatus: { $literal: 2 } } },
+    { $setWindowFields: { sortBy: { _id: 1 }, output: { seqNo: { $documentNumber: {} } } } }];
+    var workspaces = await collection.aggregate(pipeLine).toArray();
+    response.status(200).json(workspaces).end();
 }).get("/get-process-stages", async function (request: Request, response: Response) {
     var projectId: string = <string>request.query.pid;
     var processingStages = await appService.processingStages.getDocuments({
@@ -69,15 +80,45 @@ pmRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
             }));
         }
     });
-}).get("/nodes-and-links/:pid", async function (request: Request, response: Response) {
+}).get("/project-nodes-and-links/:pid", async function (request: Request, response: Response) {
     try {
         let pid: string = <string>request.params.pid;
-        let project = await appService.projectMaster.findById(pid);
-        if (!project) response.status(404).json({ message: 'Project with provided ID not found' }).end();
-        let nodesAndLinks = await appService.objectConnectivity.getDocuments({ wid: project.wid }, {}, {}, { _id: 1 });
-        response.status(200).json(nodesAndLinks).end();
+        let project = await appService.projectMaster.getItem({ _id: new Mongoose.Types.ObjectId(pid) });
+        if (!project) return response.status(404).json({ message: 'Project with provided ID not found' }).end();
+        let nodesAndLinks = await appService.objectConnectivity.getDocuments({ pid: project._id }, {}, {}, { _id: 1 });
+        let workflowNodes = await appService.mongooseConnection.collection("workflowNodes").find({ pid: project._id }, {}).toArray();
+        let finalNodesAndLinks = nodesAndLinks.concat(workflowNodes);
+        response.status(200).json({ data: finalNodesAndLinks, graphLevel: 0 }).end();
     } catch (error) {
-        response.status(500).json({ error }).end();
+        response.status(500).json({ data: [] }).end();
+    }
+}).get("/nodes-and-links/:wid", async function (request: Request, response: Response) {
+    try {
+        let wid: string = <string>request.params.wid;
+        // we'll first select all projects for workspace, and if there is only one project, then we'll get the details for that project
+        let projects = await appService.actionWorkflows.aggregate([
+            { $match: { wid: new Mongoose.Types.ObjectId(wid) } },
+            { $lookup: { from: "projectMaster", localField: "pid", foreignField: "_id", as: "projectMaster" } },
+            { $unwind: { path: "$projectMaster", preserveNullAndEmptyArrays: false } },
+            { $group: { _id: "$projectMaster._id", projectMaster: { $first: "$projectMaster" } } },
+            { $replaceRoot: { newRoot: "$projectMaster" } }
+        ]);
+        // let projects = await appService.projectMaster.getDocuments({ wid: new Mongoose.Types.ObjectId(wid) });
+        if (projects.length === 0) return response.status(404).json({ message: 'Project with provided ID not found' }).end();
+        if (projects.length === 1) {
+            let project = projects.shift();
+            let nodesAndLinks = await appService.objectConnectivity.getDocuments({ pid: project._id }, {}, {}, { _id: 1 });
+            let workflowNodes = await appService.mongooseConnection.collection("workflowNodes").find({ pid: project._id }, {}).toArray();
+            let finalNodesAndLinks = nodesAndLinks.concat(workflowNodes);
+            return response.status(200).json({ data: finalNodesAndLinks, graphLevel: 0 }).end();
+        }
+        // since there are multiple projects, we'll prepare nodes and links for all projects
+        let nodes = projects.map(function (p: ProjectMaster) {
+            return { ...p, name: p.name, pid: p._id, wid: p.wid, image: "csharp.png", type: 1 };
+        });
+        response.status(200).json({ data: nodes, graphLevel: 1 }).end();
+    } catch (error) {
+        response.status(500).json({ data: [] }).end();
     }
 }).post("/upload-project-bundle/:pname", async function (request: Request | any, response: Response) {
     try {
@@ -206,6 +247,7 @@ pmRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
             }
 
             // process for method details
+            // this is special case for dot net repositories
             response.write(formatData({ message: "Started process for adding field and properties details to repository." }), "utf-8", checkWrite);
             let fieldAndPropertiesJson: any = await readJsonFile(join(extractPath, "field-and-properties", "field-and-properties.json"));
             if (fieldAndPropertiesJson.code === 200) {
