@@ -52,14 +52,27 @@ fmRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
     }).catch((err) => {
         response.status(500).json(err).end();
     });
-}).get("/get-workflows-by-fileId", (request: Request, response: Response) => {
+}).get("/get-workflows-by-fileId", async (request: Request, response: Response) => {
     var query: any = request.query;
     var $filter: any = JSON.parse(query.$filter);
-    appService.memberReferences.getDocuments({ fid: mongoose.Types.ObjectId.createFromHexString($filter.fid) }).then((result: any) => {
-        response.status(200).json(result).end();
-    }).catch((err) => {
-        response.status(500).json(err).end();
-    });
+    let member = await appService.memberReferences.aggregateOne([
+        { $match: { fid: mongoose.Types.ObjectId.createFromHexString($filter.fid) } },
+        { $lookup: { from: "projectMaster", localField: "pid", foreignField: "_id", as: "projectMaster" } },
+        { $unwind: { preserveNullAndEmptyArrays: true, path: "$projectMaster" } },
+        { $lookup: { from: "languageMaster", localField: "projectMaster.lid", foreignField: "_id", as: "languageMaster" } },
+        { $unwind: { preserveNullAndEmptyArrays: true, path: "$languageMaster" } },
+    ]);
+    if (!member) {
+        return response.status(404).json([]).end();
+    }
+    if (member.languageMaster.name === "COBOL") {
+        return response.status(200).json([member]).end();
+    }
+    // we need to delete other callExternals from the memberReference if workflowStatus is not actualWorkflow
+    let workflowStatus = member.callExternals.filter((x: any) => x.workFlowStatus == "actualWorkflow");
+    workflowStatus.forEach((e: any) => { e.missing = false; });
+    member.callExternals = workflowStatus;
+    response.status(200).json([member]).end();
 }).get("/get-inventory-data/:pid", async (request: Request, response: Response) => {
     var pid = request.params.pid;
     try {

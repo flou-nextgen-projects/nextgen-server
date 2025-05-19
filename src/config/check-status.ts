@@ -39,6 +39,7 @@ checkDbStatusRouter.use("/", (_: Request, __: Response, next: NextFunction) => {
 }).get("/restore-database", async function (_: Request, response: Response) {
     await appService.mongooseConnection.dropCollection("actionWorkflows");
     await appService.mongooseConnection.dropCollection("businessSummaries");
+    await appService.mongooseConnection.dropCollection("businessRules");
     await appService.mongooseConnection.dropCollection("cobolDataSets");
     await appService.mongooseConnection.dropCollection("entityMaster");
     await appService.mongooseConnection.dropCollection("entityAttributes");
@@ -54,6 +55,8 @@ checkDbStatusRouter.use("/", (_: Request, __: Response, next: NextFunction) => {
     await appService.mongooseConnection.dropCollection("statementMaster");
     await appService.mongooseConnection.dropCollection("objectConnectivity");
     await appService.mongooseConnection.dropCollection("workspaceMaster");
+    await appService.mongooseConnection.dropCollection("workflowNodes");
+    await appService.mongooseConnection.dropCollection("userStory");
     response.status(200).end();
 }).post("/generate-token", async function (_: Request, response: Response) {
     try {
