@@ -33,7 +33,7 @@ functionalFlowRouter.use("/", (request: Request, response: Response, next: NextF
     var jsonData: Array<any> = [];
     var i: number = 0;
     try {
-        var project = await appService.projectMaster.getItem({ _id: new ObjectId(pid) });
+        var project = await appService.projectMaster.getItem({ wid: new ObjectId(pid) });
         var name = project.name;
         var rootNode = { id: i++, parent: "#", text: "Epics", state: { selected: true }, data: { type: "epicNode", level: 0 } };
         var epicNameNode = { id: i++, parent: `${i - 2}`, text: `${name}`, state: { selected: true }, data: { type: "epicNodeName", level: 99 } };
