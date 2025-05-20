@@ -6,7 +6,7 @@ dashBoardRouter.use("/", (request: Request, response: Response, next: NextFuncti
     next();
 }).get("/get-systems/:pid", async (request: Request, response: Response, next: NextFunction) => {
     var pid = request.params.pid;
-    let project = await appService.projectMaster.getItem({ _id: new ObjectId(pid) });
+    let project = await appService.workspaceMaster.getItem({ _id: new ObjectId(pid) });
     if (!project) return response.status(200).json([]).end();
     appService.fileTypeMaster.getDocuments({ lid: project.lid }).then((fileTypes) => {
         response.status(200).json(fileTypes).end();
@@ -16,7 +16,7 @@ dashBoardRouter.use("/", (request: Request, response: Response, next: NextFuncti
 }).get("/get-workflows", async (request: Request, response: Response) => {
     let $filter: string = <string>request.query.$filter;
     let { fileTypeId, pid }: { fileTypeId: string, pid: string } = JSON.parse($filter);
-    appService.fileMaster.getDocuments({ fileTypeId: new ObjectId(fileTypeId), pid: new ObjectId(pid) }).then((workflows) => {
+    appService.fileMaster.getDocuments({ fileTypeId: new ObjectId(fileTypeId), wid: new ObjectId(pid) }).then((workflows) => {
         response.status(200).json(workflows).end();
     }).catch((e) => {
         response.status(500).json(e).end();

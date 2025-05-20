@@ -57,7 +57,7 @@ pmRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
     { $unwind: "$workspace" },
     { $lookup: { from: "languageMaster", localField: "workspace.lid", foreignField: "_id", as: "languageMaster" } },
     { $unwind: "$languageMaster" },
-    { $project: { uploadedOn: { $literal: Date.now() }, processedOn: { $literal: Date.now() }, languageMaster: "$languageMaster", _id: "$workspace._id", workspaceId: "$_id", name: "$workspace.name", workspace: "$workspace", totalObjects: "$totalObjects", processingStatus: { $literal: 2 } } },
+    { $project: { uploadedOn: "$workspace.uploadedOn", processedOn: "$workspace.processedOn", languageMaster: "$languageMaster", _id: "$workspace._id", workspaceId: "$_id", name: "$workspace.name", workspace: "$workspace", totalObjects: "$totalObjects", processingStatus: { $literal: 2 } } },
     { $setWindowFields: { sortBy: { _id: 1 }, output: { seqNo: { $documentNumber: {} } } } }];
     var workspaces = await collection.aggregate(pipeLine).toArray();
     response.status(200).json(workspaces).end();

@@ -9,6 +9,8 @@ class WorkspaceMaster extends EntityBase {
     public dirPath?: string;
     public physicalPath?: string;
     public languageMaster?: LanguageMaster;
+    public uploadedOn?: Date;
+    public processedOn?: Date | null;
 }
 
 const WorkspaceMasterSchema: Schema<WorkspaceMaster> = new Schema({
@@ -28,6 +30,31 @@ const WorkspaceMasterSchema: Schema<WorkspaceMaster> = new Schema({
     }, physicalPath: {
         required: false,
         type: String
+    },
+    uploadedOn: {
+        type: Date,
+        required: false,
+        default: new Date(),
+        getDate: function (v: Date): string {
+            if (typeof v === "undefined" || v === null) return null;
+            return v.toLocaleDateString("en-us");
+        },
+        get: function (v: Date | any): string {
+            if (typeof v === "undefined" || v === null) return null;
+            return new Date(v).toLocaleDateString("en-us");
+        }
+    }, processedOn: {
+        type: Date,
+        required: false,
+        default: new Date(),
+        getDate: function (v: Date): string {
+            if (typeof v === "undefined" || v === null) return null;
+            return v.toLocaleDateString("en-us");
+        },
+        get: function (v: Date | any): string {
+            if (typeof v === "undefined" || v === null) return null;
+            return new Date(v).toLocaleDateString("en-us");
+        }
     }
 });
 
