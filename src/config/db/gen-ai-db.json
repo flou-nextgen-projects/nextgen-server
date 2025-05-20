@@ -608,7 +608,7 @@
                         "value": "Write Output Code in C#"
                     }
                 ],
-                "promptId": "1035",
+                "promptId": 1035,
                 "screen": "gen-ws",
                 "contextMenu": "Write Output Code in C#"
             },
