@@ -11,7 +11,7 @@ class FileTypeMaster extends EntityBase {
     public delimiter?: string;
     public color: string;
     public folderNames: string[];
-    public lid: Mongoose.Schema.Types.ObjectId | string;
+    public lid: Mongoose.Types.ObjectId | string;
     public languageMaster: LanguageMaster;
 }
 
