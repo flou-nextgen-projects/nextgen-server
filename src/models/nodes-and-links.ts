@@ -89,6 +89,25 @@ export const prepareLinks = function (inputData: any[], nodes: Array<Node>): Arr
     });
     return links;
 };
+export const reAdjustLinks = function (nodes: Array<any>, links: any[]): Array<Link> {
+    const newLinks: Array<Link> = [];
+    links.forEach((link) => {
+        const sourceNodeIndex = nodes.findIndex((node) => node.fileId.toString() === link.srcFileId.toString());
+        const targetNodeIndex = nodes.findIndex((node) => node.fileId.toString() === link.tarFileId.toString());
+        if (targetNodeIndex === -1 || sourceNodeIndex === -1) return;
+        let exists = newLinks.find((link) => link.source === sourceNodeIndex && link.target === targetNodeIndex);
+        if (exists) return;
+        newLinks.push({
+            wid: link.wid,
+            pid: link.pid,
+            source: sourceNodeIndex,
+            target: targetNodeIndex,
+            weight: 3, linkText: link.linkText,
+            type: NodeLinkType.link
+        });
+    });
+    return newLinks;
+};
 export enum NodeLinkType {
     node = 1, link = 2, entity = 3, InputOutputInterface = 4
 }
