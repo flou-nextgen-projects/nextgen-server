@@ -255,16 +255,26 @@
                 "img": "df.png"
             },
             {
-                "_id" : "6809e45c95c1a0101700b37e",
-                "fileTypeName" : "RPG",
-                "fileTypeExtension" : ".rpg",
-                "delimiter" : ".",
-                "color" : "#257ebb",
-                "folderNames" : [
+                "_id": "6809e45c95c1a0101700b37e",
+                "fileTypeName": "RPG",
+                "fileTypeExtension": ".rpg",
+                "delimiter": ".",
+                "color": "#257ebb",
+                "folderNames": [
                     "RPG"
                 ],
-                "lid" : "6809e34895c1a0101700b374",
-                "img" : "cobol.png"
+                "lid": "6809e34895c1a0101700b374",
+                "img": "cobol.png"
+            },
+            {
+                "_id": "682f10dd2425e1e7e4fbb44b",
+                "lid": "66014c8c91051b7bc74fadbc",
+                "fileTypeExtension": ".csproj",
+                "fileTypeName": "CS Project File",
+                "color": "#1acdbc",
+                "folderNames": [],
+                "delimiter": ".",
+                "img": "csharp.png"
             }
         ]
     },
@@ -310,7 +320,7 @@
                 "_id": "67ab7f3383a54eb29cb24fa9",
                 "orgId": 1,
                 "orgName": "NextGen",
-                "nextGenToken":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOjEsImFjY2VzcyI6ImF1dGgiLCJzdGFydERhdGUiOiIwNC0wMS0yMDI1IiwicXVlcnlDb3VudCI6MTAwMCwiaWF0IjoxNzQ0NzMwNDQ5LCJleHAiOjE3NDczMjI0NDl9.c8STPXT4nC8xR1C3cUuxuLMi63s9opRa7-ADQVqT_Y8",
+                "nextGenToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOjEsImFjY2VzcyI6ImF1dGgiLCJzdGFydERhdGUiOiIwNC0wMS0yMDI1IiwicXVlcnlDb3VudCI6MTAwMCwiaWF0IjoxNzQ0NzMwNDQ5LCJleHAiOjE3NDczMjI0NDl9.c8STPXT4nC8xR1C3cUuxuLMi63s9opRa7-ADQVqT_Y8",
                 "genAiToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOjEsImFjY2VzcyI6ImF1dGgiLCJzdGFydERhdGUiOiIwNC0wMS0yMDI1IiwicXVlcnlDb3VudCI6MTAwMCwiaWF0IjoxNzQ0NzMwNDQ5LCJleHAiOjE3NDczMjI0NDl9.c8STPXT4nC8xR1C3cUuxuLMi63s9opRa7-ADQVqT_Y8",
                 "tid": "67d9134965a7a01e6639a15a"
             }
@@ -480,9 +490,9 @@
                 "description": "This is Progress 4GL Language"
             },
             {
-                "_id" : "6809e34895c1a0101700b374",
-                "name" : "RPG",
-                "description" : "This is RPG Language"
+                "_id": "6809e34895c1a0101700b374",
+                "name": "RPG",
+                "description": "This is RPG Language"
             }
         ]
     },

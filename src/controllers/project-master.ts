@@ -10,6 +10,7 @@ import { prepareNodes, prepareLinks, prepareDotNetLinks } from "../models";
 import { convertStringToObjectId } from "../helpers";
 import { isEmpty } from "lodash";
 import ProgressBar from "progress";
+import { reAdjustLinks } from "../models/nodes-and-links";
 
 const pmRouter: Router = Express.Router();
 const fileExtensions = new FileExtensions();
@@ -85,9 +86,10 @@ pmRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
         let pid: string = <string>request.params.pid;
         let project = await appService.projectMaster.getItem({ _id: new Mongoose.Types.ObjectId(pid) });
         if (!project) return response.status(404).json({ message: 'Project with provided ID not found' }).end();
-        let nodesAndLinks = await appService.objectConnectivity.getDocuments({ pid: project._id }, {}, {}, { _id: 1 });
-        let workflowNodes = await appService.mongooseConnection.collection("workflowNodes").find({ pid: project._id }, {}).toArray();
-        let finalNodesAndLinks = nodesAndLinks.concat(workflowNodes);
+        let nodesAndLinks = await appService.objectConnectivity.getDocuments({ pid: project._id, type: { $in: [1, 2] } }, {}, { _id: 1 });
+        let workflowNodes = await appService.mongooseConnection.collection("workflowNodes").find({ pid: project._id, fileTypeName: { $ne: "csproj" } }, {}).toArray();
+        let adjustedLinks: any = reAdjustLinks(workflowNodes, nodesAndLinks.filter((d => d.type === 2)));
+        let finalNodesAndLinks = adjustedLinks.concat(workflowNodes);
         response.status(200).json({ data: finalNodesAndLinks, graphLevel: 0 }).end();
     } catch (error) {
         response.status(500).json({ data: [] }).end();
@@ -96,12 +98,11 @@ pmRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
     try {
         let wid: string = <string>request.params.wid;
         // we'll first select all projects for workspace, and if there is only one project, then we'll get the details for that project
-        let projects = await appService.actionWorkflows.aggregate([
-            { $match: { wid: new Mongoose.Types.ObjectId(wid) } },
-            { $lookup: { from: "projectMaster", localField: "pid", foreignField: "_id", as: "projectMaster" } },
-            { $unwind: { path: "$projectMaster", preserveNullAndEmptyArrays: false } },
-            { $group: { _id: "$projectMaster._id", projectMaster: { $first: "$projectMaster" } } },
-            { $replaceRoot: { newRoot: "$projectMaster" } }
+        let projects = await appService.projectMaster.aggregate([{ $match: { wid: new Mongoose.Types.ObjectId(wid) } }
+            // { $lookup: { from: "projectMaster", localField: "wid", foreignField: "_id", as: "projectMaster" } },
+            // { $unwind: { path: "$projectMaster", preserveNullAndEmptyArrays: false } },
+            // { $group: { _id: "$projectMaster._id", projectMaster: { $first: "$projectMaster" } } },
+            // { $replaceRoot: { newRoot: "$projectMaster" } }
         ]);
         // let projects = await appService.projectMaster.getDocuments({ wid: new Mongoose.Types.ObjectId(wid) });
         if (projects.length === 0) return response.status(404).json({ message: 'Project with provided ID not found' }).end();
@@ -113,10 +114,12 @@ pmRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
             return response.status(200).json({ data: finalNodesAndLinks, graphLevel: 0 }).end();
         }
         // since there are multiple projects, we'll prepare nodes and links for all projects
-        let nodes = projects.map(function (p: ProjectMaster) {
-            return { ...p, name: p.name, pid: p._id, wid: p.wid, image: "csharp.png", type: 1 };
-        });
-        response.status(200).json({ data: nodes, graphLevel: 1 }).end();
+        // let nodes = projects.map(function (p: ProjectMaster) { return { ...p, name: p.name, pid: p._id, wid: p.wid, image: "csharp.png", type: 1 }; });
+        let projectIds = projects.map(function (p: ProjectMaster) { return p._id; });
+        let nodesAndLinks = await appService.objectConnectivity.getDocuments({ pid: { $in: projectIds }, type: 3 }, {}, {}, { _id: 1 });
+        let workflowNodes = await appService.mongooseConnection.collection("workflowNodes").find({ pid: { $in: projectIds }, fileTypeName: "csproj" }, {}).toArray();
+        let finalNodesAndLinks = nodesAndLinks.concat(workflowNodes);
+        response.status(200).json({ data: finalNodesAndLinks, graphLevel: 1 }).end();
     } catch (error) {
         response.status(500).json({ data: [] }).end();
     }
