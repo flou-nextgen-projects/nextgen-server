@@ -7,6 +7,7 @@ export class Node {
     public pid: Mongoose.Types.ObjectId | string;
     public fileId: Mongoose.Types.ObjectId | string;
     public name: string;
+    public originalName?: string;
     public group: number;
     public image: string;
     public id: string;

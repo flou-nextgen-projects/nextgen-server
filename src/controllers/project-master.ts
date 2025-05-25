@@ -98,11 +98,14 @@ pmRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
     try {
         let wid: string = <string>request.params.wid;
         // we'll first select all projects for workspace, and if there is only one project, then we'll get the details for that project
-        let projects = await appService.projectMaster.aggregate([{ $match: { wid: new Mongoose.Types.ObjectId(wid) } }
-            // { $lookup: { from: "projectMaster", localField: "wid", foreignField: "_id", as: "projectMaster" } },
-            // { $unwind: { path: "$projectMaster", preserveNullAndEmptyArrays: false } },
-            // { $group: { _id: "$projectMaster._id", projectMaster: { $first: "$projectMaster" } } },
-            // { $replaceRoot: { newRoot: "$projectMaster" } }
+        let projects = await appService.projectMaster.aggregate([
+            { $match: { wid: new Mongoose.Types.ObjectId(wid) } },
+            /*
+            { $lookup: { from: "actionWorkflows", localField: "_id", foreignField: "pid", as: "workflows" } },
+            { $addFields: { workflowsCount: { $size: "$workflows" } } },
+            { $set: { hasWorkflows: { $cond: { if: { $gt: [{ $size: "$workflows" }, 0] }, then: true, else: false } } } },
+            { $project: { workflows: 0 } }
+            */
         ]);
         // let projects = await appService.projectMaster.getDocuments({ wid: new Mongoose.Types.ObjectId(wid) });
         if (projects.length === 0) return response.status(404).json({ message: 'Project with provided ID not found' }).end();
@@ -117,7 +120,12 @@ pmRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
         // let nodes = projects.map(function (p: ProjectMaster) { return { ...p, name: p.name, pid: p._id, wid: p.wid, image: "csharp.png", type: 1 }; });
         let projectIds = projects.map(function (p: ProjectMaster) { return p._id; });
         let nodesAndLinks = await appService.objectConnectivity.getDocuments({ pid: { $in: projectIds }, type: 3 }, {}, {}, { _id: 1 });
-        let workflowNodes = await appService.mongooseConnection.collection("workflowNodes").find({ pid: { $in: projectIds }, fileTypeName: "csproj" }, {}).toArray();
+        let workflowNodes = await appService.mongooseConnection.collection("workflowNodes").aggregate([
+            { $match: { pid: { $in: projectIds }, fileTypeName: "csproj" } },
+            { $lookup: { from: "workflowNodes", let: { pidVal: "$pid" }, pipeline: [{ $match: { $expr: { $and: [{ $eq: ["$pid", "$$pidVal"] }, { $ne: ["$fileTypeName", "csproj"] }] } } }], as: "nonCsprojDocs" } },
+            { $addFields: { workflowsCount: { $size: "$nonCsprojDocs" }, hasWorkflows: { $gt: [{ $size: "$nonCsprojDocs" }, 0] } } },
+            { $project: { nonCsprojDocs: 0 } }
+        ]).toArray();
         let finalNodesAndLinks = nodesAndLinks.concat(workflowNodes);
         response.status(200).json({ data: finalNodesAndLinks, graphLevel: 1 }).end();
     } catch (error) {

@@ -1,10 +1,9 @@
-import Express, { Request, Response, Router, NextFunction, application } from "express";
+import Express, { Request, Response, Router, NextFunction } from "express";
 import { appService } from "../services/app-service";
-import { EntityMaster, FileMaster, Link, Node, NodeLinkType, _createNode } from "../models";
-import mongoose, { Mongoose, PipelineStage } from "mongoose";
+import { FileMaster, Link, Node, NodeLinkType, _createNode } from "../models";
+import mongoose, { PipelineStage } from "mongoose";
 import { ObjectId } from "mongodb";
 import configs from "../configurations";
-import extractDataEntities from "../helpers/common/entity-master-helper";
 
 import axios from "axios";
 import { Agent } from 'https';
@@ -133,8 +132,9 @@ const _attachedBusinessSummaries = async (opt: { nodes: Array<Node>, links: Arra
     }
 }
 const _expandCallExternals = async (callExt: Partial<FileMaster | any>, node: Node, opt: { nodes: Array<Node>, links: Array<Link>, index: number, skipTypes: Array<string> }) => {
+    let $match: any = callExt.memberId ? { _id: callExt.memberId } : { fid: callExt.fid };
     let pipeLine: Array<PipelineStage> = [
-        { $match: { fid: callExt.fid } },
+        { $match },
         { $lookup: { from: 'fileMaster', localField: 'fid', foreignField: '_id', as: 'fileMaster' } },
         { $unwind: { preserveNullAndEmptyArrays: true, path: "$fileMaster" } },
         { $lookup: { from: 'fileTypeMaster', localField: 'fileMaster.fileTypeId', foreignField: '_id', as: 'fileMaster.fileTypeMaster' } },
@@ -149,9 +149,9 @@ const _expandCallExternals = async (callExt: Partial<FileMaster | any>, node: No
         opt.links.push({ source: srcIdx, target: existsIndex, weight: 3, linkText: node.name } as any);
         return;
     }
-    let nd: Node = _createNode(member.fileMaster, ++opt.index);
-    opt.nodes.push(nd);
-    let targetIdx: number = opt.nodes.findIndex(x => x.name === nd.name);
+    let nd: Node = { ..._createNode(member.fileMaster, ++opt.index), originalName: member.fileMaster.fileName, pid: member.pid, wid: member.wid, fileId: member.fid.toString(), type: NodeLinkType.node };
+    opt.nodes.push({ ...nd, originalName: nd.name, name: `${nd.name} (${member.memberName})`, color: member.fileMaster.fileTypeMaster.color, image: member.fileMaster.fileTypeMaster.img });
+    let targetIdx: number = opt.nodes.findIndex(x => x.originalName === nd.originalName);
     let srcIdx = opt.nodes.findIndex((x) => x.name === node.name);
     opt.links.push({ source: srcIdx, target: targetIdx, weight: 3, linkText: node.name } as any);
     if (member.callExternals.length === 0) return;

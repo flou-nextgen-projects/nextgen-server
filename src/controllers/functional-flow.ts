@@ -33,7 +33,7 @@ functionalFlowRouter.use("/", (request: Request, response: Response, next: NextF
     var jsonData: Array<any> = [];
     var i: number = 0;
     try {
-        var project = await appService.projectMaster.getItem({ wid: new ObjectId(pid) });
+        var project = await appService.projectMaster.getItem({ _id: new ObjectId(pid) });
         var name = project.name;
         var rootNode = { id: i++, parent: "#", text: "Epics", state: { selected: true }, data: { type: "epicNode", level: 0 } };
         var epicNameNode = { id: i++, parent: `${i - 2}`, text: `${name}`, state: { selected: true }, data: { type: "epicNodeName", level: 99 } };
@@ -57,9 +57,6 @@ functionalFlowRouter.use("/", (request: Request, response: Response, next: NextF
                 id: i++, parent: `${parent}`, text: `${res.fileTypeName}`, state: { selected: true }, data: { pid: project._id, fileTypeId: res.fileTypeId, type: `fileTypeNode-${res.fileTypeName}-${project._id}`, level: 3 }
             };
             jsonData.push(fileTypeNode);
-            //  var functionNodeParent: number = jsonData.find((x) => { return x.data.type === `fileTypeNode-${res.fileTypeName}-${project._id}` }).id;
-            // var functionNode: any = { id: i++, parent: `${functionNodeParent}`, text: "Functions (User Stories)", state: { selected: false }, data: { pid: project._id, fileTypeId: res.fileTypeId, type: `funcNode-${res.fileTypeName}-${project._id}`, level: 4 } };
-            // jsonData.push(functionNode);
         }
         response.status(200).json(jsonData).end();
     } catch (err) {
