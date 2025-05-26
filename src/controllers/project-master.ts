@@ -269,11 +269,12 @@ pmRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
             // these are additional details for statement references
             // this is for dotnet and similar languages only
             response.write(formatData({ message: "Started process for additional statement references to repository." }), "utf-8", checkWrite);
-            let expandedWorkflowFiles = fileExtensions.getAllFilesFromPath(join(extractPath, "project-files", "expanded-workflows"), [], true);
+            let expandedWorkflowFiles = fileExtensions.getAllFilesFromPath(join(extractPath, "", "expanded-workflows"), [], true);
             if (expandedWorkflowFiles.length > 0) {
                 for (const ew of expandedWorkflowFiles) {
+                    console.log("Expanded workflow file: ", ew);
                     let workflowJson = await readJsonFile(ew);
-                    if (workflowJson.code === 200) {
+                    if (workflowJson.code === 200 && workflowJson.data.length > 0) {
                         await addStatementReferences(workspace, workflowJson.data, (progress: string) => {
                             response.write(formatData({ message: progress }), "utf-8", checkWrite);
                         });
