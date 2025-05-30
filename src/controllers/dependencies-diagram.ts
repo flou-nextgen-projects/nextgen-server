@@ -1,7 +1,7 @@
-import Express, { Request, Response, Router, NextFunction } from "express";
+import Express, { Request, Response, Router, NextFunction, application } from "express";
 import { appService } from "../services/app-service";
-import { FileMaster, Link, Node, NodeLinkType, _createNode } from "../models";
-import mongoose, { PipelineStage } from "mongoose";
+import { EntityMaster, FileMaster, Link, Node, NodeLinkType, _createNode } from "../models";
+import mongoose, { Mongoose, PipelineStage } from "mongoose";
 import { ObjectId } from "mongodb";
 import configs from "../configurations";
 import axios from "axios";
@@ -27,7 +27,7 @@ dependencyRouter.use("/", (request: Request, response: Response, next: NextFunct
             { $match: { fid: mongoose.Types.ObjectId.createFromHexString(fid) } },
             { $lookup: { from: 'fileMaster', localField: 'fid', foreignField: '_id', as: 'fileMaster' } },
             { $unwind: { preserveNullAndEmptyArrays: true, path: "$fileMaster" } },
-            { $lookup: { from: 'fileTypeMaster', localField: 'fileTypeId', foreignField: '_id', as: 'fileMaster.fileTypeMaster' } },
+            { $lookup: { from: 'fileTypeMaster', localField: 'fileMaster.fileTypeId', foreignField: '_id', as: 'fileMaster.fileTypeMaster' } },
             { $unwind: { preserveNullAndEmptyArrays: true, path: "$fileMaster.fileTypeMaster" } }
         ];
         const member = await appService.memberReferences.aggregateOne(pipeLine);
@@ -67,6 +67,8 @@ dependencyRouter.use("/", (request: Request, response: Response, next: NextFunct
         await _expandParentCalls({ nodes, links, index: nodes.length + 1 }, node);
         if (populateEntities === "true") {
             await _attachEntityNodes({ nodes, links, index: nodes.length + 1 }, request.headers.authorization);
+            await _attachInputOutputInterface({ nodes, links, index: nodes.length + 1 }, request.headers.authorization);
+
         }
         if (addBusinessSummaries === "true") {
             await _attachedBusinessSummaries({ nodes, links, index: nodes.length + 1 }, request.headers.authorization);
@@ -77,8 +79,77 @@ dependencyRouter.use("/", (request: Request, response: Response, next: NextFunct
         return response.status(500).json(error).end();
     }
 });
+
+const _attachInputOutputInterface = async (opt: { nodes: Array<Node>, links: Array<Link>, index: number }, authToken: string) => {
+    for (const node of opt.nodes) {
+        if (node.group == 3 || node.group == 4) continue;
+        let project = await appService.projectMaster.getItem({ _id: new ObjectId(node.pid) });
+        let lang = await appService.languageMaster.getItem({ _id: project.lid });
+        var interfaceRes = await appService.mongooseConnection.collection("businessSummaries").aggregate([
+            { $match: { promptId: { $in: [1031, 1032] } } },
+            { $match: { fid: new ObjectId(node.fileId) } }]).toArray();
+        if (interfaceRes.length == 0) {
+            var result = await axiosInstance.post(`${genAiAddress}get-io-data`, {
+                fid: node.fileId,
+                language: lang.name,
+            }, {
+                headers: {
+                    Authorization: `${authToken}`
+                }
+            });
+            if (result.data) {
+                /* resolve conflicts
+                let interfaceNode: Node = {
+                    name: "",
+                    group: 4,
+                    image: "interface_icon.png",
+                    id: `input-output-${node.fileId.toString()}`,
+                    originalIndex: opt.index++,
+                    pid: node.pid,
+                    wid: node.wid,
+                    fileId: node.fileId.toString(),
+                    type: NodeLinkType.InputOutputInterface,
+                } as Node;
+                opt.nodes.push(interfaceNode);
+                */
+                var response = await appService.mongooseConnection.collection("businessSummaries").aggregate([
+                    { $match: { promptId: { $in: [1031, 1032] } } },
+                    { $match: { fid: new ObjectId(node.fileId) } }]).toArray();
+                node.inputDataSet = response.find(x => x.promptId == 1031).data;
+                node.outputDataSet = response.find(x => x.promptId == 1032).data;
+                let parentIdx = opt.nodes.findIndex((x) => x.name === node.name);;
+                let targetIdx = opt.nodes.findIndex((x) => x.id === `input-output-${node.fileId.toString()}`);;
+                // resolve conflicts
+                // opt.links.push({ source: parentIdx, target: targetIdx, weight: 3, linkText: interfaceNode.name } as any);
+            }
+        } else {
+            /*  resolve conflicts
+            let interfaceNode: Node = {
+                name: "",
+                group: 4,
+                image: "interface_icon.png",
+                id: `input-output-${node.fileId.toString()}`,
+                originalIndex: opt.index++,
+                pid: node.pid,
+                wid: node.wid,
+                fileId: node.fileId.toString(),
+                type: NodeLinkType.InputOutputInterface,
+            } as Node;
+            opt.nodes.push(interfaceNode);
+            */
+            node.inputDataSet = interfaceRes.find(x => x.promptId == 1031).data;
+            node.outputDataSet = interfaceRes.find(x => x.promptId == 1032).data;
+            let parentIdx = opt.nodes.findIndex((x) => x.name === node.name);;
+            let targetIdx = opt.nodes.findIndex((x) => x.id === `input-output-${node.fileId.toString()}`);;
+            // resolve conflicts
+            // opt.links.push({ source: parentIdx, target: targetIdx, weight: 3, linkText: interfaceNode.name } as any);
+        }
+    }
+}
+
 const _attachedBusinessSummaries = async (opt: { nodes: Array<Node>, links: Array<Link>, index: number }, authToken: string) => {
     for (const node of opt.nodes) {
+        if (node.group == 3 || node.group == 4) continue; // group 3 is for entity node so no need to add summary for entity node
         let summary = await appService.mongooseConnection.collection("businessSummaries").findOne({ fid: new ObjectId(node.fileId), promptId: 1022 });
         if (summary) {
             node.summary = summary.formattedData;
@@ -90,7 +161,7 @@ const _expandCallExternals = async (callExt: Partial<FileMaster | any>, node: No
         { $match: { fid: callExt.fid } },
         { $lookup: { from: 'fileMaster', localField: 'fid', foreignField: '_id', as: 'fileMaster' } },
         { $unwind: { preserveNullAndEmptyArrays: true, path: "$fileMaster" } },
-        { $lookup: { from: 'fileTypeMaster', localField: 'fileTypeId', foreignField: '_id', as: 'fileMaster.fileTypeMaster' } },
+        { $lookup: { from: 'fileTypeMaster', localField: 'fileMaster.fileTypeId', foreignField: '_id', as: 'fileMaster.fileTypeMaster' } },
         { $unwind: { preserveNullAndEmptyArrays: true, path: "$fileMaster.fileTypeMaster" } }
     ];
     const member = await appService.memberReferences.aggregateOne(pipeLine);
@@ -142,6 +213,7 @@ const _expandParentCalls = async (opt: { nodes: Array<Node>, links: Array<Link>,
 
 const _attachEntityNodes = async (opt: { nodes: Array<Node>, links: Array<Link>, index: number }, authToken: string) => {
     for (const node of opt.nodes) {
+        // let entityList: Array<EntityMaster> = []
         if (node.type == NodeLinkType.entity) continue;
         let entity = await appService.entityMaster.getItem({ fid: mongoose.Types.ObjectId.createFromHexString(node.fileId.toString()) });
         if (entity && entity.entityName == "None") continue;
@@ -149,13 +221,15 @@ const _attachEntityNodes = async (opt: { nodes: Array<Node>, links: Array<Link>,
         if (entities.length == 0) {
             // send request to multi-handler-api to get entities and save it into database
             let fileContents = await appService.fileContentMaster.getItem({ fid: new ObjectId(node.fileId) });
+            let project = await appService.projectMaster.getItem({ _id: new ObjectId(fileContents.pid) });
+            let lang = await appService.languageMaster.getItem({ _id: project.lid });
             try {
                 const result = await axiosInstance.post(
                     `${genAiAddress}multi-model-handler`,
                     {
                         promptId: 1001,
-                        fileData: fileContents.formatted,
-                        language: "COBOL",
+                        fileData: fileContents.formatted ?? fileContents.original,
+                        language: lang.name,
                         fid: node.fileId,
                         reGen: false
                     },
@@ -176,6 +250,7 @@ const _attachEntityNodes = async (opt: { nodes: Array<Node>, links: Array<Link>,
                         fileId: node.fileId.toString(),
                         type: NodeLinkType.entity,
                     } as Node;
+                    node.Entities = result.data.response;
                     opt.nodes.push(entityNode);
                     let parentIdx = opt.nodes.findIndex((x) => x.name === node.name);;
                     let targetIdx = opt.nodes.findIndex((x) => x.id === `entity-${node.fileId.toString()}`);;
@@ -196,6 +271,8 @@ const _attachEntityNodes = async (opt: { nodes: Array<Node>, links: Array<Link>,
                 fileId: node.fileId.toString(),
                 type: NodeLinkType.entity,
             } as Node;
+
+            node.Entities = entities;
             opt.nodes.push(entityNode);
             let parentIdx = opt.nodes.findIndex((x) => x.name === node.name);;
             let targetIdx = opt.nodes.findIndex((x) => x.id === `entity-${node.fileId.toString()}`);;

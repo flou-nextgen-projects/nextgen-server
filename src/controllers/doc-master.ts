@@ -18,12 +18,14 @@ docRouter.use("/", (request: Request, response: Response, next: NextFunction) =>
 }).get("/source-contents/:did", async (request: Request, response: Response, next: NextFunction) => {
     let did: string = <string>request.params.did;
     let pipeLine = [
-        { $match: { fid: new ObjectId(did) } },
+        { $match: { $or: [{ fid: new ObjectId(did) }, { _id: new ObjectId(did) }] } },
+        { $lookup: { from: "fileMaster", localField: "_id", foreignField: "_id", as: "fileMaster" } },
+        { $unwind: { path: "$fileMaster", preserveNullAndEmptyArrays: true } },        
         { $lookup: { from: "fileMaster", localField: "fid", foreignField: "_id", as: "fileMaster" } },
         { $unwind: { path: "$fileMaster", preserveNullAndEmptyArrays: true } }
     ];
     let fileContents = await appService.fileContentMaster.aggregate(pipeLine);
-    
+
     if (fileContents.length === 0) return response.status(404).send().end();
 
     let fcm = fileContents.shift();

@@ -15,6 +15,9 @@ export class Node {
     public filePath: string;
     public fileType: string; public color?: string;
     public summary?: string;
+    public Entities?: Array<any>;
+    public inputDataSet?: string;
+    public outputDataSet?: string;
 };
 export class Link {
     public wid: Mongoose.Types.ObjectId | string;
@@ -61,6 +64,51 @@ export const prepareDotNetLinks = function (networkJson: any[]) {
     });
     return links;
 };
+export const prepareLinks = function (inputData: any[], nodes: Array<Node>): Array<Link> {
+    const links: Array<Link> = [];
+    inputData.forEach((fileData) => {
+        if (!fileData.CallExternals || fileData.CallExternals.length <= 0) return;
+        fileData.CallExternals.forEach((externalFile: any) => {
+            const sourceNodeIndex = nodes.findIndex((node) => node.id === fileData._id);
+            const targetNodeIndex = nodes.findIndex((node) => node.id === externalFile._id);
+            if (targetNodeIndex === -1 || sourceNodeIndex === -1) return;
+            /*
+            let exists = links.find((link) => link.source === sourceNodeIndex && link.target === targetNodeIndex);
+            if (exists) return;
+            links.push({
+                wid: Mongoose.Types.ObjectId.createFromHexString(fileData.WorkspaceId),
+                pid: Mongoose.Types.ObjectId.createFromHexString(fileData.ProjectId),
+                source: sourceNodeIndex,
+                target: targetNodeIndex,
+                weight: 3, linkText: externalFile.FileName,
+                type: NodeLinkType.link
+            });
+            */
+        });
+    });
+    return links;
+};
+export const reAdjustLinks = function (nodes: Array<any>, links: any[]): Array<Link> {
+    const newLinks: Array<Link> = [];
+    links.forEach((link) => {
+        const sourceNodeIndex = nodes.findIndex((node) => node.fileId.toString() === link.srcFileId.toString());
+        const targetNodeIndex = nodes.findIndex((node) => node.fileId.toString() === link.tarFileId.toString());
+        if (targetNodeIndex === -1 || sourceNodeIndex === -1) return;
+        /*
+        let exists = newLinks.find((link) => link.source === sourceNodeIndex && link.target === targetNodeIndex);
+        if (exists) return;
+        newLinks.push({
+            wid: link.wid,
+            pid: link.pid,
+            source: sourceNodeIndex,
+            target: targetNodeIndex,
+            weight: 3, linkText: link.linkText,
+            type: NodeLinkType.link
+        });
+        */
+    });
+    return newLinks;
+};
 export enum NodeLinkType {
-    node = 1, link = 2, entity = 3
+    node = 1, link = 2, entity = 3, InputOutputInterface = 4
 }

@@ -50,7 +50,7 @@ Promise.resolve(mongoConnection()).then(() => {
     };
 
     if (config.useHttps) {
-        const crtPath = resolve(__dirname, "certificates");
+        const crtPath = resolve(config.crtPath);
         const httpsOptions: http2.SecureServerOptions = {
             cert: readFileSync(join(crtPath, "device.crt")),
             key: readFileSync(join(crtPath, "device.key")),

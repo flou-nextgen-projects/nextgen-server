@@ -33,19 +33,20 @@ functionalFlowRouter.use("/", (request: Request, response: Response, next: NextF
     var jsonData: Array<any> = [];
     var i: number = 0;
     try {
-        var project = await appService.projectMaster.getItem({ _id: new ObjectId(pid) });
-        var name = project.name;
+        // var project = await appService.projectMaster.getItem({ wid: new ObjectId(pid) });
+        var projects = await appService.projectMaster.getDocuments({ wid: new ObjectId(pid) });
+        var name = projects[0].name;
         var rootNode = { id: i++, parent: "#", text: "Epics", state: { selected: true }, data: { type: "epicNode", level: 0 } };
         var epicNameNode = { id: i++, parent: `${i - 2}`, text: `${name}`, state: { selected: true }, data: { type: "epicNodeName", level: 99 } };
         var featureNode = { id: i++, parent: `${i - 2}`, text: "Features", state: { selected: true }, data: { type: "featureNode", level: 1 } };
         jsonData.push(rootNode); jsonData.push(epicNameNode); jsonData.push(featureNode);
-
+        for (const project of projects) {
         let pipeLine = [
             { $match: { lid: project.lid } },
             { $lookup: { from: "fileMaster", localField: "_id", foreignField: "fileTypeId", as: "fileMaster" } },
             { $unwind: { path: "$fileMaster", preserveNullAndEmptyArrays: true } },
             { $group: { _id: "$fileTypeName", fileTypeName: { $first: "$fileTypeName" }, fileTypeId: { $first: "$_id" }, files: { $push: "$fileMaster" } } },
-            { $match: { fileTypeName: { $in: ["COBOL", "JCL", "PROC", "SQL"] } } }
+            { $match: { fileTypeName: { $in: ["COBOL", "JCL", "PROC", "SQL", "Code", "RPG"] } } }
         ];
         let result = await appService.mongooseConnection.collection("fileTypeMaster").aggregate(pipeLine).toArray();
         var parentId: number = jsonData.find((d) => { return d.data.type === "featureNode" }).id;
@@ -61,6 +62,7 @@ functionalFlowRouter.use("/", (request: Request, response: Response, next: NextF
             // var functionNode: any = { id: i++, parent: `${functionNodeParent}`, text: "Functions (User Stories)", state: { selected: false }, data: { pid: project._id, fileTypeId: res.fileTypeId, type: `funcNode-${res.fileTypeName}-${project._id}`, level: 4 } };
             // jsonData.push(functionNode);
         }
+    }
         response.status(200).json(jsonData).end();
     } catch (err) {
         response.status(500).json(jsonData).end();

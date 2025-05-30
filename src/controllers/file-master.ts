@@ -55,31 +55,24 @@ fmRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
 }).get("/get-workflows-by-fileId", async (request: Request, response: Response) => {
     var query: any = request.query;
     var $filter: any = JSON.parse(query.$filter);
-    let pipeLine: Array<PipelineStage> = [
-        { $match: { wid: mongoose.Types.ObjectId.createFromHexString($filter.wid) } },
-        { $lookup: { from: 'fileMaster', localField: 'fid', foreignField: '_id', as: 'fileMaster' } },
-        { $unwind: { preserveNullAndEmptyArrays: true, path: "$fileMaster" } },
-        { $lookup: { from: 'fileTypeMaster', localField: 'fileTypeId', foreignField: '_id', as: 'fileMaster.fileTypeMaster' } },
-        { $unwind: { preserveNullAndEmptyArrays: true, path: "$fileMaster.fileTypeMaster" } }
-    ];
-    const fileMasters = await appService.fileMaster.aggregate(pipeLine);
-    await appService.memberReferences.getDocuments({ fid: mongoose.Types.ObjectId.createFromHexString($filter.fid) }).then((result: any) => {
-        for (const element of result) {
-            element.callExternals?.forEach((call: any) => {
-                const fileTypes = (call.fileTypeName === "COBOL" || call.fileTypeName === "ASM File") ? ["COBOL", "ASM File"] : [call.fileTypeName];
-                const match = Array.isArray(fileMasters) ? fileMasters.find(f => f.fileNameWithoutExt === call.fileName && (Array.isArray(f.fileTypeMaster) ? f.fileTypeMaster.some((ft: { fileTypeName: string }) => fileTypes.includes(ft.fileTypeName)) : fileTypes.includes(f.fileTypeMaster?.fileTypeName))) : undefined;
-                if (match) {
-                    var fileTypeMaster = match.fileTypeMaster;
-                    if(fileTypeMaster) call.fileTypeName = fileTypeMaster.fileTypeName;
-                    call.fid = match._id; call.pid = match.pid; call.missing = false;
-                }
-            });
-
-        }
-        response.status(200).json(result).end();
-    }).catch((err) => {
-        response.status(500).json(err).end();
-    });
+    let member = await appService.memberReferences.aggregateOne([
+        { $match: { fid: mongoose.Types.ObjectId.createFromHexString($filter.fid) } },
+        { $lookup: { from: "projectMaster", localField: "pid", foreignField: "_id", as: "projectMaster" } },
+        { $unwind: { preserveNullAndEmptyArrays: true, path: "$projectMaster" } },
+        { $lookup: { from: "languageMaster", localField: "projectMaster.lid", foreignField: "_id", as: "languageMaster" } },
+        { $unwind: { preserveNullAndEmptyArrays: true, path: "$languageMaster" } },
+    ]);
+    if (!member) {
+        return response.status(404).json([]).end();
+    }
+    if (member.languageMaster.name === "COBOL") {
+        return response.status(200).json([member]).end();
+    }
+    // we need to delete other callExternals from the memberReference if workflowStatus is not actualWorkflow
+    let workflowStatus = member.callExternals.filter((x: any) => x.workFlowStatus == "actualWorkflow");
+    workflowStatus.forEach((e: any) => { e.missing = false; });
+    member.callExternals = workflowStatus;
+    response.status(200).json([member]).end();
 }).get("/get-inventory-data/:pid", async (request: Request, response: Response) => {
     var pid = request.params.pid;
     try {
