@@ -190,6 +190,19 @@
                 "img": "proc.png"
             },
             {
+                "_id" : "68385b973fe1027257f46106",
+                "fileTypeName" : "JCL",
+                "fileTypeExtension" : ".jcl",
+                "delimiter" : ".",
+                "color" : "#5e7c96",
+                "folderNames" : [
+                    "jcl",
+                    "JCL"
+                ],
+                "lid" : "67dd0f47945d9c3c16f8cd16",
+                "img" : "jcl.png"
+            },
+            {
                 "_id": "67dd188d945d9c3c16f8cd28",
                 "fileTypeName": "COPYBOOK",
                 "fileTypeExtension": ".copy",
