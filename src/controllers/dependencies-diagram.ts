@@ -70,30 +70,14 @@ const _attachInputOutputInterface = async (opt: { nodes: Array<Node>, links: Arr
             { $match: { promptId: { $in: [1031, 1032] } } },
             { $match: { fid: new ObjectId(node.fileId) } }]).toArray();
         if (interfaceRes.length == 0) {
-            var result = await axiosInstance.post(`${genAiAddress}get-io-data`, {
-                fid: node.fileId,
-                language: lang.name,
-            }, {
-                headers: {
-                    Authorization: `${authToken}`
-                }
-            });
+            var result = await axiosInstance.post(`${genAiAddress}get-io-data`, { fid: node.fileId, language: lang.name, }, { headers: { Authorization: `${authToken}` } });
             if (result.data) {
-                let interfaceNode: Node = {
-                    name: "",
-                    group: 4,
-                    image: "interface_icon.png",
-                    id: `input-output-${node.fileId.toString()}`,
-                    originalIndex: opt.index++,
-                    pid: node.pid,
-                    wid: node.wid,
-                    fileId: node.fileId.toString(),
-                    type: NodeLinkType.InputOutputInterface,
-                } as Node;
+                let interfaceNode: Node = { name: "", group: 4, image: "interface_icon.png", id: `input-output-${node.fileId.toString()}`, originalIndex: opt.index++, pid: node.pid, wid: node.wid, fileId: node.fileId.toString(), type: NodeLinkType.InputOutputInterface, } as Node;
                 opt.nodes.push(interfaceNode);
                 var response = await appService.mongooseConnection.collection("businessSummaries").aggregate([
                     { $match: { promptId: { $in: [1031, 1032] } } },
-                    { $match: { fid: new ObjectId(node.fileId) } }]).toArray();
+                    { $match: { fid: new ObjectId(node.fileId) } }
+                ]).toArray();
                 node.inputDataSet = response.find(x => x.promptId == 1031).data;
                 node.outputDataSet = response.find(x => x.promptId == 1032).data;
                 let parentIdx = opt.nodes.findIndex((x) => x.name === node.name);;
@@ -101,17 +85,7 @@ const _attachInputOutputInterface = async (opt: { nodes: Array<Node>, links: Arr
                 opt.links.push({ source: parentIdx, target: targetIdx, weight: 3, linkText: interfaceNode.name } as any);
             }
         } else {
-            let interfaceNode: Node = {
-                name: "",
-                group: 4,
-                image: "interface_icon.png",
-                id: `input-output-${node.fileId.toString()}`,
-                originalIndex: opt.index++,
-                pid: node.pid,
-                wid: node.wid,
-                fileId: node.fileId.toString(),
-                type: NodeLinkType.InputOutputInterface,
-            } as Node;
+            let interfaceNode: Node = { name: "", group: 4, image: "interface_icon.png", id: `input-output-${node.fileId.toString()}`, originalIndex: opt.index++, pid: node.pid, wid: node.wid, fileId: node.fileId.toString(), type: NodeLinkType.InputOutputInterface, } as Node;
             opt.nodes.push(interfaceNode);
             node.inputDataSet = interfaceRes.find(x => x.promptId == 1031).data;
             node.outputDataSet = interfaceRes.find(x => x.promptId == 1032).data;
@@ -221,49 +195,10 @@ const _attachEntityNodes = async (opt: { nodes: Array<Node>, links: Array<Link>,
             let project = await appService.projectMaster.getItem({ _id: new ObjectId(fileContents.pid) });
             let lang = await appService.languageMaster.getItem({ _id: project.lid });
             try {
-                const result = await axiosInstance.post(
-                    `${genAiAddress}multi-model-handler`,
-                    {
-                        promptId: 1001,
-                        fileData: fileContents.formatted ?? fileContents.original,
-                        language: lang.name,
-                        fid: node.fileId,
-                        reGen: false
-                    },
-                    {
-                        headers: {
-                            Authorization: `${authToken}`
-                        }
-                    }
-                );
-                // let formattedRes = result.data.response.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ');
-                /*const cleanedString = formattedRes.replace(/```json|```/g, '').trim();
-                let variableDetails = {
-                    type: "Variable & Data Element",
-                    promptId: 1001,
-                    fid: node.fileId,// mongoose.Types.ObjectId.createFromHexString(node.fileId),
-                    data: JSON.stringify(cleanedString),
-                    formattedData: JSON.stringify(cleanedString),
-                    genAIGenerated: false
-                } as any;
-                await appService.mongooseConnection.collection("businessSummaries").insertOne(variableDetails);*/
-                // let extractedJson = extractJson(cleanedString);
-                // let res = await extractDataEntities(extractedJson, node.pid.toString(), node.fileId.toString());
-                // if res.code==3 means json is invalid we need to handle this situation
+                const result = await axiosInstance.post(`${genAiAddress}multi-model-handler`, { promptId: 1001, fileData: fileContents.formatted ?? fileContents.original, language: lang.name, fid: node.fileId, reGen: false }, { headers: { Authorization: `${authToken}` } });
                 if (result.data) {
-                    let entityNode: Node = {
-                        name: "",
-                        group: 3,
-                        image: "sql.png",
-                        id: `entity-${node.fileId.toString()}`,
-                        originalIndex: opt.index++,
-                        pid: node.pid,
-                        wid: node.wid,
-                        fileId: node.fileId.toString(),
-                        type: NodeLinkType.entity,
-                    } as Node;
-                    node.Entities = result.data.response;
-                    opt.nodes.push(entityNode);
+                    let entityNode: Node = { name: "", group: 3, image: "sql.png", id: `entity-${node.fileId.toString()}`, originalIndex: opt.index++, pid: node.pid, wid: node.wid, fileId: node.fileId.toString(), type: NodeLinkType.entity, } as Node;
+                    node.entities = result.data.response; opt.nodes.push(entityNode);
                     let parentIdx = opt.nodes.findIndex((x) => x.name === node.name);;
                     let targetIdx = opt.nodes.findIndex((x) => x.id === `entity-${node.fileId.toString()}`);;
                     opt.links.push({ source: parentIdx, target: targetIdx, weight: 3, linkText: entityNode.name } as any);
@@ -271,27 +206,14 @@ const _attachEntityNodes = async (opt: { nodes: Array<Node>, links: Array<Link>,
             } catch (err) {
                 console.log(err);
             }
-
         } else {
-            let entityNode: Node = {
-                name: "",
-                group: 3,
-                image: "sql.png",
-                id: `entity-${node.fileId.toString()}`,
-                originalIndex: opt.index++,
-                pid: node.pid,
-                wid: node.wid,
-                fileId: node.fileId.toString(),
-                type: NodeLinkType.entity,
-            } as Node;
-
-            node.Entities = entities;
+            let entityNode: Node = { name: "", group: 3, image: "sql.png", id: `entity-${node.fileId.toString()}`, originalIndex: opt.index++, pid: node.pid, wid: node.wid, fileId: node.fileId.toString(), type: NodeLinkType.entity, } as Node;
+            node.entities = entities;
             opt.nodes.push(entityNode);
             let parentIdx = opt.nodes.findIndex((x) => x.name === node.name);;
             let targetIdx = opt.nodes.findIndex((x) => x.id === `entity-${node.fileId.toString()}`);;
             opt.links.push({ source: parentIdx, target: targetIdx, weight: 3, linkText: entityNode.name } as any);
         }
-
     }
     function extractJson(input: string) {
         const regex = /```json<br>([\s\S]*?)<br>```/;
@@ -303,6 +225,5 @@ const _attachEntityNodes = async (opt: { nodes: Array<Node>, links: Array<Link>,
         }
     };
 }
-
 
 module.exports = dependencyRouter;

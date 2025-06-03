@@ -30,7 +30,7 @@ dashBoardRouter.use("/", (request: Request, response: Response, next: NextFuncti
         { $unwind: { path: "$fileTypeMaster", preserveNullAndEmptyArrays: true } },
         { $project: { fileTypeId: "$_id", totalLineCount: 1, totalCommentedLines: 1, fileCount: 1, color: "$fileTypeMaster.color", fileTypeName: "$fileTypeMaster.fileTypeName" } }
     ];
-    var workflows = await appService.mongooseConnection.collection("actionWorkflows").find({ wid: new ObjectId(wid) }).toArray();
+    var workflows = await appService.mongooseConnection.collection("actionWorkflows").countDocuments({ wid: new ObjectId(wid) });
     appService.mongooseConnection.collection("fileMaster").aggregate(pipeLine).toArray().then((data: any) => {
         response.status(200).json({ data, workflows }).end();
     }).catch((e) => {

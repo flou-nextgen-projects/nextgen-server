@@ -166,6 +166,19 @@
                 "img": "sql.png"
             },
             {
+                "_id": "68389328134d7e1f1cb09b75",
+                "fileTypeName": "Function",
+                "fileTypeExtension": ".fun",
+                "delimiter": "",
+                "color": "#33cccc",
+                "folderNames": [
+                    "functions",
+                    "function"
+                ],
+                "lid": "6752e0ee431a344a3add72b9",
+                "img": "sql.png"
+            },
+            {
                 "_id": "67e28495b815245af4e6def7",
                 "fileTypeName": "ASM File",
                 "fileTypeExtension": ".asm",
@@ -176,6 +189,46 @@
                 ],
                 "lid": "67dd0f47945d9c3c16f8cd16",
                 "img": "cobol.png"
+            },
+            {
+                "_id": "68389328134d7e1f1cb09b6e",
+                "fileTypeName": "JCL",
+                "fileTypeExtension": ".jcl",
+                "delimiter": ".",
+                "color": "#5e7c96",
+                "folderNames": [
+                    "proto",
+                    "jcl",
+                    "JCL"
+                ],
+                "lid": "67dd0f47945d9c3c16f8cd16",
+                "img": "jcl.png"
+            },
+            {
+                "_id": "680c821c6494661343b3674b",
+                "fileTypeName": "PROC",
+                "fileTypeExtension": ".proc",
+                "delimiter": ".",
+                "color": "#ffcc00",
+                "folderNames": [
+                    "proc",
+                    "PROC"
+                ],
+                "lid": "67dd0f47945d9c3c16f8cd16",
+                "img": "proc.png"
+            },
+            {
+                "_id": "68389328134d7e1f1cb09b69",
+                "fileTypeName": "INCLUDE",
+                "fileTypeExtension": ".icd",
+                "delimiter": ".",
+                "color": "#7d5ba6",
+                "folderNames": [
+                    "include",
+                    "includes"
+                ],
+                "lid": "67dd0f47945d9c3c16f8cd16",
+                "img": "include.png"
             },
             {
                 "_id": "67dd184a945d9c3c16f8cd27",

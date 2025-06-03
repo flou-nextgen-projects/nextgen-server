@@ -17,7 +17,7 @@ export class Node {
     public filePath: string;
     public fileType: string; public color?: string;
     public summary?: string;
-    public Entities?: Array<any>;
+    public entities?: Array<any>;
     public inputDataSet?: string;
     public outputDataSet?: string;
 };
@@ -90,22 +90,15 @@ export const prepareLinks = function (inputData: any[], nodes: Array<Node>): Arr
     });
     return links;
 };
-export const reAdjustLinks = function (nodes: Array<any>, links: any[]): Array<Link> {
+export const adjustLinks = function (nodes: Array<any>, links: any[]): Array<Link> {
     const newLinks: Array<Link> = [];
     links.forEach((link) => {
-        const sourceNodeIndex = nodes.findIndex((node) => node.fileId.toString() === link.srcFileId.toString());
-        const targetNodeIndex = nodes.findIndex((node) => node.fileId.toString() === link.tarFileId.toString());
+        const sourceNodeIndex = nodes.findIndex((node) => node.methodId.toString() === link.sourceId.toString());
+        const targetNodeIndex = nodes.findIndex((node) => node.methodId.toString() === link.targetId.toString());
         if (targetNodeIndex === -1 || sourceNodeIndex === -1) return;
         let exists = newLinks.find((link) => link.source === sourceNodeIndex && link.target === targetNodeIndex);
         if (exists) return;
-        newLinks.push({
-            wid: link.wid,
-            pid: link.pid,
-            source: sourceNodeIndex,
-            target: targetNodeIndex,
-            weight: 3, linkText: link.linkText,
-            type: NodeLinkType.link
-        });
+        newLinks.push({ ...link, source: sourceNodeIndex, target: targetNodeIndex });
     });
     return newLinks;
 };

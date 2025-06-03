@@ -48,6 +48,8 @@ checkDbStatusRouter.use("/", (_: Request, __: Response, next: NextFunction) => {
     await appService.mongooseConnection.dropCollection("fileMaster");
     await appService.mongooseConnection.dropCollection("fileContents");
     await appService.mongooseConnection.dropCollection("missingObjects");
+    await appService.mongooseConnection.dropCollection("nodeDetails");
+    await appService.mongooseConnection.dropCollection("linkDetails");
     await appService.mongooseConnection.dropCollection("processingStages");
     await appService.mongooseConnection.dropCollection("projectMaster");
     await appService.mongooseConnection.dropCollection("memberReferences");

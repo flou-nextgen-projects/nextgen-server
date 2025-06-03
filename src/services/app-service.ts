@@ -55,6 +55,8 @@ class AppService {
     public memberReferences = new BaseRepository<any>({ collectionName: "memberReferences", schema: new Mongoose.Schema<any>() });
     public methodDetails = new BaseRepository<any>({ collectionName: "methodDetails", schema: new Mongoose.Schema<any>() });
     public actionWorkflows = new BaseRepository<any>({ collectionName: "actionWorkflows", schema: new Mongoose.Schema<any>() });
+    public nodeDetails = new BaseRepository<any>({ collectionName: "nodeDetails", schema: new Mongoose.Schema<any>() });
+    public linkDetails = new BaseRepository<any>({ collectionName: "linkDetails", schema: new Mongoose.Schema<any>() });
     public organizationMaster = new BaseRepository<OrganizationMaster>({ collectionName: "organizationMaster", schema: OrganizationMasterSchema });
     get = function <T extends EntityBase>(propertyName: string): BaseRepository<T> { return this[propertyName]; };
     dataSets = async (collections: Array<MultipleCollectionsConfig>): Promise<Array<{ collection: string, documents: any[] }>> => {

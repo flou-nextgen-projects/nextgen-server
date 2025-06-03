@@ -46,23 +46,16 @@ bsRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
     response.status(200).json(({ message: `${data.type} Update Successfully`, data })).end();
 }).get("/get-call-externals", async (request: Request, response: Response) => {
     try {
-        let fid = <string>request.query.fid;
-        let member = await appService.memberReferences.getItem({ fid: new ObjectId(fid) });
-        response.status(200).json(member).end();
+        let methodId = <string>request.query.methodId;
+        let methodDetails = await appService.methodDetails.getItem({ _id: new ObjectId(methodId) });
+        response.status(200).json(methodDetails).end();
     } catch (error) {
         response.status(500).send().end();
     }
 }).get("/get-called-by", async (request: Request, response: Response) => {
     try {
-        let fid = <string>request.query.fid;
-        let calledBy: Array<any> = [];
-        let members = await appService.memberReferences.getAllDocuments();
-        for (const element of members) {
-            if (element.callExternals.length == 0) continue;
-            if (element.callExternals.filter((x: any) => x.fid.toString() === fid).length > 0) {
-                calledBy.push(element);
-            }
-        }
+        let methodId = <string>request.query.methodId;
+        let calledBy = await appService.methodDetails.getDocuments({ "callExternals.methodId": new ObjectId(methodId) });
         response.status(200).json(calledBy).end();
     } catch (error) {
         response.status(500).send().end();

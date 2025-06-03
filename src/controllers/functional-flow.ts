@@ -39,7 +39,6 @@ functionalFlowRouter.use("/", (request: Request, response: Response, next: NextF
         var epicNameNode = { id: i++, parent: `${i - 2}`, text: `${name}`, state: { selected: true }, data: { type: "epicNodeName", level: 99 } };
         var featureNode = { id: i++, parent: `${i - 2}`, text: "Features", state: { selected: true }, data: { type: "featureNode", level: 1 } };
         jsonData.push(rootNode); jsonData.push(epicNameNode); jsonData.push(featureNode);
-        for (const project of projects) {
         let pipeLine = [
             { $match: { lid: project.lid } },
             { $lookup: { from: "fileMaster", localField: "_id", foreignField: "fileTypeId", as: "fileMaster" } },

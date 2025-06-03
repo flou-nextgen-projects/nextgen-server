@@ -10,7 +10,7 @@ import { prepareNodes, prepareLinks, prepareDotNetLinks } from "../models";
 import { convertStringToObjectId } from "../helpers";
 import { isEmpty } from "lodash";
 import ProgressBar from "progress";
-import { reAdjustLinks } from "../models/nodes-and-links";
+import { adjustLinks } from "../models/nodes-and-links";
 
 const pmRouter: Router = Express.Router();
 const fileExtensions = new FileExtensions();
@@ -86,11 +86,10 @@ pmRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
         let pid: string = <string>request.params.pid;
         let project = await appService.projectMaster.getItem({ _id: new Mongoose.Types.ObjectId(pid) });
         if (!project) return response.status(404).json({ message: 'Project with provided ID not found' }).end();
-        let nodesAndLinks = await appService.objectConnectivity.getDocuments({ pid: project._id, type: { $in: [1, 2] } }, {}, { _id: 1 });
-        let workflowNodes = await appService.mongooseConnection.collection("workflowNodes").find({ pid: project._id, fileTypeName: { $ne: "csproj" } }, {}).toArray();
-        let adjustedLinks: any = reAdjustLinks(workflowNodes, nodesAndLinks.filter((d => d.type === 2)));
-        let finalNodesAndLinks = adjustedLinks.concat(workflowNodes);
-        response.status(200).json({ data: finalNodesAndLinks, graphLevel: 0 }).end();
+        let linkDetails = await appService.linkDetails.getDocuments({ pid: project._id, type: { $in: [1, 2] } }, {}, { _id: 1 });
+        let nodeDetails = await appService.nodeDetails.getDocuments({ pid: project._id, alternateName: { $ne: "csproj" }, type: { $ne: 3 } }, {});
+        let links: any = adjustLinks(nodeDetails, linkDetails);
+        response.status(200).json({ data: { nodes: nodeDetails, links }, graphLevel: 0 }).end();
     } catch (error) {
         response.status(500).json({ data: [] }).end();
     }
@@ -111,23 +110,23 @@ pmRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
         if (projects.length === 0) return response.status(404).json({ message: 'Project with provided ID not found' }).end();
         if (projects.length === 1) {
             let project = projects.shift();
-            let nodesAndLinks = await appService.objectConnectivity.getDocuments({ pid: project._id }, {}, {}, { _id: 1 });
-            let workflowNodes = await appService.mongooseConnection.collection("workflowNodes").find({ pid: project._id }, {}).toArray();
-            let finalNodesAndLinks = nodesAndLinks.concat(workflowNodes);
-            return response.status(200).json({ data: finalNodesAndLinks, graphLevel: 0 }).end();
+            let nodeDetails = await appService.nodeDetails.getDocuments({ pid: project._id }, {}, {}, { _id: 1 });
+            let linkDetails = await appService.linkDetails.getDocuments({ pid: project._id }, {}, {}, { _id: 1 });
+            let links = adjustLinks(nodeDetails, linkDetails);
+            return response.status(200).json({ data: { nodes: nodeDetails, links }, graphLevel: 0 }).end();
         }
         // since there are multiple projects, we'll prepare nodes and links for all projects
         // let nodes = projects.map(function (p: ProjectMaster) { return { ...p, name: p.name, pid: p._id, wid: p.wid, image: "csharp.png", type: 1 }; });
-        let projectIds = projects.map(function (p: ProjectMaster) { return p._id; });
-        let nodesAndLinks = await appService.objectConnectivity.getDocuments({ pid: { $in: projectIds }, type: 3 }, {}, {}, { _id: 1 });
-        let workflowNodes = await appService.mongooseConnection.collection("workflowNodes").aggregate([
-            { $match: { pid: { $in: projectIds }, fileTypeName: "csproj" } },
-            { $lookup: { from: "workflowNodes", let: { pidVal: "$pid" }, pipeline: [{ $match: { $expr: { $and: [{ $eq: ["$pid", "$$pidVal"] }, { $ne: ["$fileTypeName", "csproj"] }] } } }], as: "nonCsprojDocs" } },
+        // let projectIds = projects.map(function (p: ProjectMaster) { return p._id; });
+        let linkDetails = await appService.linkDetails.getDocuments({ wid: new Mongoose.Types.ObjectId(wid), type: 4 }, {}, {}, { _id: 1 });
+        let nodeDetails = await appService.nodeDetails.aggregate([
+            { $match: { wid: new Mongoose.Types.ObjectId(wid), alternateName: "csproj" } },
+            { $lookup: { from: "nodeDetails", let: { pidVal: "$pid" }, pipeline: [{ $match: { $expr: { $and: [{ $eq: ["$pid", "$$pidVal"] }, { $ne: ["$alternateName", "csproj"] }] } } }], as: "nonCsprojDocs" } },
             { $addFields: { workflowsCount: { $size: "$nonCsprojDocs" }, hasWorkflows: { $gt: [{ $size: "$nonCsprojDocs" }, 0] } } },
             { $project: { nonCsprojDocs: 0 } }
-        ]).toArray();
-        let finalNodesAndLinks = nodesAndLinks.concat(workflowNodes);
-        response.status(200).json({ data: finalNodesAndLinks, graphLevel: 1 }).end();
+        ]);
+        let links = adjustLinks(nodeDetails, linkDetails);
+        response.status(200).json({ data: { nodes: nodeDetails, links }, graphLevel: 1 }).end();
     } catch (error) {
         response.status(500).json({ data: [] }).end();
     }
@@ -250,6 +249,20 @@ pmRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
                 await processActionsAndConnectivities(workspace, actionsJson.data, workConnectJson.data);
             }
 
+            // process for node details
+            response.write(formatData({ message: "Started process for adding node details to the repository." }), "utf-8", checkWrite);
+            let nodeDetailsJson = await readJsonFile(join(extractPath, "node-details", "node-details.json"));
+            if (nodeDetailsJson.code === 200) {
+                await addNodeDetails(workspace, nodeDetailsJson.data);
+            }
+
+            // process for link details
+            response.write(formatData({ message: "Started process for adding link details to the repository." }), "utf-8", checkWrite);
+            let linkDetailsJson = await readJsonFile(join(extractPath, "link-details", "link-details.json"));
+            if (nodeDetailsJson.code === 200) {
+                await addLinkDetails(workspace, linkDetailsJson.data);
+            }
+
             // process for method details
             response.write(formatData({ message: "Started process for adding method details to repository." }), "utf-8", checkWrite);
             let methodDetailsJson: any = await readJsonFile(join(extractPath, "method-details", "method-details.json"));
@@ -297,7 +310,7 @@ pmRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
             response.write(formatData({ message: "Started process for missing objects." }));
             let missingJson = await readJsonFile(join(extractPath, "missing-objects", "missing-objects.json"));
             if (missingJson.code === 200) {
-                await addMissingObjects(missingJson.data);
+                await addMissingObjects(workspace, missingJson.data);
             }
             //process for entities
             response.write(formatData({ message: "Started process for getting  entities." }));
@@ -356,6 +369,20 @@ pmRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
         await addFileDetails(allFiles, languageMaster, fmJson.data);
     }
     response.status(200).json({ message: "File master details processed successfully" }).end();
+}).get("/reprocess-method-details/:wid", async function (request: Request, response: Response) {
+    try {
+        let _id: Mongoose.Types.ObjectId = new Mongoose.Types.ObjectId(<string>request.params.wid);
+        let workspace = await appService.workspaceMaster.aggregateOne([{ $match: { _id } }]);
+        if (!workspace) return response.status(404).end();
+        let extractPath: string = <string>workspace.dirPath;
+        let methodDetailsJson: any = await readJsonFile(join(extractPath, "method-details", "method-details.json"));
+        if (methodDetailsJson.code === 200) {
+            await addMethodDetails(workspace, methodDetailsJson.data);
+        }
+        response.status(200).json().end();
+    } catch (error) {
+        response.status(400).send(error).end();
+    }
 }).get("/reprocess-member-references/:wid", async function (request: Request, response: Response) {
     try {
         let _id: Mongoose.Types.ObjectId = new Mongoose.Types.ObjectId(<string>request.params.wid);
@@ -431,7 +458,7 @@ pmRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
         let extractPath: string = <string>workspace.dirPath;
         let missingJson: any = await readJsonFile(join(extractPath, "missing-objects", "missing-objects.json"));
         if (missingJson.code === 200) {
-            await addMissingObjects(missingJson.data);
+            await addMissingObjects(workspace, missingJson.data);
         }
         response.status(200).json().end();
     } catch (error) {
@@ -450,72 +477,89 @@ pmRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
     } catch (error) {
         response.status(500).send().end();
     }
+}).get("/reprocess-node-details/:wid", async (request: Request, response: Response) => {
+    try {
+        let _id: Mongoose.Types.ObjectId = new Mongoose.Types.ObjectId(<string>request.params.wid);
+        let workspace = await appService.workspaceMaster.aggregateOne([{ $match: { _id } }]);
+        let extractPath: string = <string>workspace.dirPath;
+        let nodesJson: any = await readJsonFile(join(extractPath, "node-details", "node-details.json"));
+        if (nodesJson.code === 200) {
+            await addNodeDetails(workspace, nodesJson.data);
+        }
+        response.status(200).json().end();
+    } catch (error) {
+        response.status(500).send().end();
+    }
+}).get("/reprocess-link-details/:wid", async (request: Request, response: Response) => {
+    try {
+        let _id: Mongoose.Types.ObjectId = new Mongoose.Types.ObjectId(<string>request.params.wid);
+        let workspace = await appService.workspaceMaster.aggregateOne([{ $match: { _id } }]);
+        let extractPath: string = <string>workspace.dirPath;
+        let linksJson: any = await readJsonFile(join(extractPath, "link-details", "link-details.json"));
+        if (linksJson.code === 200) {
+            await addLinkDetails(workspace, linksJson.data);
+        }
+        response.status(200).json().end();
+    } catch (error) {
+        response.status(500).send().end();
+    }
 });
 
-const addEntitiesAndAttributes = async function (entityJson: any[]) {
+const addNodeDetails = async function addNodeDetails(wm: WorkspaceMaster, nodeDetailsJson: any[]) {
+    try {
+        let collection = appService.mongooseConnection.collection("nodeDetails");
+        await collection.deleteMany({ wid: wm._id });
+        let modifiedNodeDetails = convertStringToObjectId(nodeDetailsJson);
+        for (const nodeDetail of modifiedNodeDetails) {
+            await collection.insertOne(nodeDetail);
+        }
+    } catch (error) {
+        console.log(error);
+    }
+};
+const addLinkDetails = async function addLinkDetails(wm: WorkspaceMaster, linkDetailsJson: any[]) {
+    try {
+        let collection = appService.mongooseConnection.collection("linkDetails");
+        await collection.deleteMany({ wid: wm._id });
+        let modifiedLinkDetails = convertStringToObjectId(linkDetailsJson);
+        for (const linkDetail of modifiedLinkDetails) {
+            await collection.insertOne(linkDetail);
+        }
+    } catch (error) {
+        console.log(error);
+    }
+};
+const addEntitiesAndAttributes = async function addEntitiesAndAttributes(entityJson: any[]) {
     try {
         let allowedFields = ["entityName", "attributes"];
         let allowedAttributeFields = ["attributeName", "dataType", "dataLength"];
-        for (const element of entityJson) {
-            let entity: EntityMaster = {
-                entityName: element.entityName,
-                fid: Mongoose.Types.ObjectId.createFromHexString(element.fid),
-                pid: Mongoose.Types.ObjectId.createFromHexString(element.pid),
-                type: element.type
-            } as EntityMaster;
-
+        let modifiedEntityAttributes = convertStringToObjectId(entityJson);
+        for (const element of modifiedEntityAttributes) {
+            let entity: EntityMaster = { entityName: element.entityName, fid: element.fid, pid: element.pid, type: element.type } as EntityMaster;
             let em = await appService.entityMaster.addItem(entity);
             if (element.entityName === "None") {
-                let variableDetails = {
-                    type: "Variable & Data Element",
-                    promptId: 1001,
-                    fid: Mongoose.Types.ObjectId.createFromHexString(element.fid),
-                    data: "None",
-                    formattedData: "None",
-                    genAIGenerated: false
-                } as any;
+                let variableDetails = { type: "Variable & Data Element", promptId: 1001, fid: element.fid, data: "None", formattedData: "None", genAIGenerated: false } as any;
                 await appService.mongooseConnection.collection("businessSummaries").insertOne(variableDetails);
                 continue;
             }
             let attributes = element.attributes || [];
             if (attributes.length === 0) continue;
             for (const attr of attributes) {
-                let attribute: EntityAttributes = {
-                    pid: Mongoose.Types.ObjectId.createFromHexString(attr.pid),
-                    fid: Mongoose.Types.ObjectId.createFromHexString(attr.fid),
-                    eid: em._id,
-                    entityName: element.entityName,
-                    attributeName: attr.attributeName,
-                    dataLength: attr.dataLength,
-                    dataType: attr.dataType,
-                    storeEntitySet: attr.storeEntitySet
-                } as EntityAttributes;
+                let attribute: EntityAttributes = { pid: attr.pid, fid: attr.fid, eid: em._id, entityName: element.entityName, attributeName: attr.attributeName, dataLength: attr.dataLength, dataType: attr.dataType, storeEntitySet: attr.storeEntitySet } as EntityAttributes;
                 await appService.entityAttributes.addItem(attribute);
             }
-            let filteredObj = Object.keys(element)
-                .filter(key => allowedFields.includes(key)) // Keep only allowed fields
-                .reduce((acc: any, key) => {
-                    acc[key] = element[key];
-                    return acc;
-                }, {});
+            let filteredObj = Object.keys(element).filter(key => allowedFields.includes(key)).reduce((acc: any, key) => {
+                acc[key] = element[key];
+                return acc;
+            }, {});
             if (filteredObj.attributes && Array.isArray(filteredObj.attributes)) {
                 filteredObj.attributes = filteredObj.attributes.map((attr: any) =>
-                    Object.keys(attr)
-                        .filter(key => allowedAttributeFields.includes(key))
-                        .reduce((acc: any, key) => {
-                            acc[key] = attr[key];
-                            return acc;
-                        }, {})
-                );
+                    Object.keys(attr).filter(key => allowedAttributeFields.includes(key)).reduce((acc: any, key) => {
+                        acc[key] = attr[key];
+                        return acc;
+                    }, {}));
             }
-            let variableDetails = {
-                type: "Variable & Data Element",
-                promptId: 1001,
-                fid: Mongoose.Types.ObjectId.createFromHexString(element.fid),
-                data: JSON.stringify(filteredObj),
-                formattedData: JSON.stringify(filteredObj),
-                genAIGenerated: false
-            } as any;
+            let variableDetails = { type: "Variable & Data Element", promptId: 1001, fid: Mongoose.Types.ObjectId.createFromHexString(element.fid), data: JSON.stringify(filteredObj), formattedData: JSON.stringify(filteredObj), genAIGenerated: false } as any;
             await appService.mongooseConnection.collection("businessSummaries").insertOne(variableDetails);
         }
     } catch (error) {
@@ -589,29 +633,19 @@ const addMethodDetails = async function addMethodDetails(wm: WorkspaceMaster, me
         console.log(error);
     }
 };
-const addMissingObjects = async (missingJson: any[]) => {
+const addMissingObjects = async function addMissingObjects(wm: WorkspaceMaster, missingJson: any[]) {
     try {
-        let distinctMissingList: Array<any> = [];
-        missingJson.forEach((m) => {
-            if (m.FileName == null) return;
-            if (distinctMissingList.filter((x) => { return x.FileTypeName == m.FileTypeName && x.FileName == m.FileName }).length > 0) return;
-            distinctMissingList.push(m);
-        });
-        for (const m of distinctMissingList) {
-            if (m.FileName == null) continue;
-            let missingObjDetail = {
-                pid: Mongoose.Types.ObjectId.createFromHexString(m.ProjectId),
-                wid: Mongoose.Types.ObjectId.createFromHexString(m.WorkspaceId),
-                fileName: m.FileName,
-                fileTypeName: m.FileType
-            } as any;
-            await appService.mongooseConnection.collection("missingObjects").insertOne(missingObjDetail);
+        let collection = appService.mongooseConnection.collection("missingObjects");
+        await collection.deleteMany({ wid: wm._id });
+        let modifiedMissingObjects = convertStringToObjectId(missingJson);
+        for (const missingObj of modifiedMissingObjects) {
+            await collection.insertOne(missingObj);
         }
     } catch (error) {
         console.log(error);
     }
 };
-const processFileContents = async (wm: WorkspaceMaster) => {
+const processFileContents = async function processFileContents(wm: WorkspaceMaster) {
     let projects = await appService.projectMaster.getDocuments({ wid: wm._id });
     for (const project of projects) {
         let collection = appService.fileContentMaster.getModel();
