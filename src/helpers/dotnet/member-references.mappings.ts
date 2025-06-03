@@ -10,7 +10,9 @@ export enum memberType {
 function convertProperties(obj: any): any {
     for (const key in obj) {
         if (obj.hasOwnProperty(key)) {
-            if (Array.isArray(obj[key])) {
+            if (obj[key] && typeof obj[key] === "object" && '$oid' in obj[key]) {
+                obj[key] = Mongoose.Types.ObjectId.createFromHexString(obj[key]['$oid']);
+            } else if (Array.isArray(obj[key])) {
                 obj[key] = obj[key].map((item: any) => convertProperties(item));
             } else if (typeof obj[key] === 'object' && obj[key] !== null) {
                 obj[key] = convertProperties(obj[key]);

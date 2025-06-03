@@ -39,13 +39,12 @@ functionalFlowRouter.use("/", (request: Request, response: Response, next: NextF
         var epicNameNode = { id: i++, parent: `${i - 2}`, text: `${name}`, state: { selected: true }, data: { type: "epicNodeName", level: 99 } };
         var featureNode = { id: i++, parent: `${i - 2}`, text: "Features", state: { selected: true }, data: { type: "featureNode", level: 1 } };
         jsonData.push(rootNode); jsonData.push(epicNameNode); jsonData.push(featureNode);
-
         let pipeLine = [
             { $match: { lid: project.lid } },
             { $lookup: { from: "fileMaster", localField: "_id", foreignField: "fileTypeId", as: "fileMaster" } },
             { $unwind: { path: "$fileMaster", preserveNullAndEmptyArrays: true } },
             { $group: { _id: "$fileTypeName", fileTypeName: { $first: "$fileTypeName" }, fileTypeId: { $first: "$_id" }, files: { $push: "$fileMaster" } } },
-            { $match: { fileTypeName: { $in: ["COBOL", "JCL", "PROC", "SQL"] } } }
+            { $match: { fileTypeName: { $in: ["COBOL", "JCL", "PROC", "SQL", "Code", "RPG"] } } }
         ];
         let result = await appService.mongooseConnection.collection("fileTypeMaster").aggregate(pipeLine).toArray();
         var parentId: number = jsonData.find((d) => { return d.data.type === "featureNode" }).id;
@@ -57,9 +56,6 @@ functionalFlowRouter.use("/", (request: Request, response: Response, next: NextF
                 id: i++, parent: `${parent}`, text: `${res.fileTypeName}`, state: { selected: true }, data: { pid: project._id, fileTypeId: res.fileTypeId, type: `fileTypeNode-${res.fileTypeName}-${project._id}`, level: 3 }
             };
             jsonData.push(fileTypeNode);
-            //  var functionNodeParent: number = jsonData.find((x) => { return x.data.type === `fileTypeNode-${res.fileTypeName}-${project._id}` }).id;
-            // var functionNode: any = { id: i++, parent: `${functionNodeParent}`, text: "Functions (User Stories)", state: { selected: false }, data: { pid: project._id, fileTypeId: res.fileTypeId, type: `funcNode-${res.fileTypeName}-${project._id}`, level: 4 } };
-            // jsonData.push(functionNode);
         }
         response.status(200).json(jsonData).end();
     } catch (err) {

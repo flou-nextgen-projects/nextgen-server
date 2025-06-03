@@ -8,6 +8,7 @@ export class Node {
     public pid: Mongoose.Types.ObjectId | string;
     public fileId: Mongoose.Types.ObjectId | string;
     public name: string;
+    public originalName?: string;
     public group: number;
     public image: string;
     public id: string;
@@ -16,6 +17,9 @@ export class Node {
     public filePath: string;
     public fileType: string; public color?: string;
     public summary?: string;
+    public entities?: Array<any>;
+    public inputDataSet?: string;
+    public outputDataSet?: string;
 };
 export class Link {
     public wid: Mongoose.Types.ObjectId | string;
@@ -77,8 +81,20 @@ export const resetNodeAndLinkIndex = (nodes: Array<Node | any>, links: Array<Lin
         link.source = sourceNode.originalIndex;
         link.target = targetNode.originalIndex;
     });
-    return { nodes, links };
-}
+    return links;
+};
+export const adjustLinks = function (nodes: Array<any>, links: any[]): Array<Link> {
+    const newLinks: Array<Link> = [];
+    links.forEach((link) => {
+        const sourceNodeIndex = nodes.findIndex((node) => node.methodId.toString() === link.sourceId.toString());
+        const targetNodeIndex = nodes.findIndex((node) => node.methodId.toString() === link.targetId.toString());
+        if (targetNodeIndex === -1 || sourceNodeIndex === -1) return;
+        let exists = newLinks.find((link) => link.source === sourceNodeIndex && link.target === targetNodeIndex);
+        if (exists) return;
+        newLinks.push({ ...link, source: sourceNodeIndex, target: targetNodeIndex });
+    });
+    return newLinks;
+};
 export enum NodeLinkType {
-    node = 1, link = 2, entity = 3
+    node = 1, link = 2, entity = 3, InputOutputInterface = 4
 }

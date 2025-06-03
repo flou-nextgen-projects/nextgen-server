@@ -10,7 +10,7 @@
                     {
                         "id": 1,
                         "type": "prompt",
-                        "value":"Can you list each statement in code below in plain English, use indentation where necessary. Generate output in HTML format, using only <ul> and <li> tags, without any other text. Note: don't give code into it"
+                        "value": "Can you list each statement in code below in plain English, use indentation where necessary. Generate output in HTML format, using only <ul> and <li> tags, without any other text. Note: don't give code into it"
                     }
                 ],
                 "promptId": 1016,
@@ -44,7 +44,7 @@
                 ],
                 "screen": "gen-ws",
                 "contextMenu": "Show Data Elements",
-                "promptId": 1031
+                "promptId": 1034
             },
             {
                 "_id": "67e24582fde4aa97b34ebec7",
@@ -58,6 +58,34 @@
                 ],
                 "screen": "gen-ws",
                 "contextMenu": "Write the output code in Java",
+                "promptId": 1033
+            },
+            {
+                "_id": "680c7bb138d40867977eb8d7",
+                "menu": "Input Datasets",
+                "menuId": "ID",
+                "prompt": [
+                    {
+                        "id": 1,
+                        "value": "List the input files or datasets, with their descriptions, used by the code below? List out only the end result with no commentary or summary at the end. Also no need to specify where they are in the original code."
+                    }
+                ],
+                "screen": "business-view",
+                "contextMenu": "Input Datasets",
+                "promptId": 1031
+            },
+            {
+                "_id": "680c7bff38d40867977eb8ec",
+                "menu": "Output Datasets",
+                "menuId": "OD",
+                "prompt": [
+                    {
+                        "id": 1,
+                        "value": "List the output files or datasets, with their descriptions, used by the code below? List out only the end result with no commentary or summary at the end. Also no need to specify where they are in the original code."
+                    }
+                ],
+                "screen": "business-view",
+                "contextMenu": "Output Datasets",
                 "promptId": 1032
             },
             {
@@ -520,7 +548,7 @@
                 "prompt": [
                     {
                         "id": 1,
-                        "value":"Domain context: This code belongs  to the domain of automobile related financial credit institution. Purpose of output: To understand the business purpose and functionality performed by the code Instructions: 1. List out the main business rules in the code below in proper sequence in plain English for a business analyst to understand with no cryptic variable references. Please specify category as Validation or Control flow (conditional and evaluate or performed or called paragraphs) or Calculations or Business Logic in square parentheses for each rule at the beginning of each rule listed. 2. Represent the rules and all the variables in the output in plain English for a business analyst to understand. Remove references to original variables 3. Also provide “called” paragraphs that are called using PERFORM statement as they occur in parentheses in the format “ParaCalled: insert the paragraph name here” inline 4. Also provide a short title in 4-5 words for this section in the format “Ruleset: title for the code”. 5. Don’t provide summary or list or variable renaming or reference listing at the end 6. Don’t show called paragraphs again 7. If no rulesets are used don’t display any message Code:"
+                        "value": "Domain context: This code belongs  to the domain of automobile related financial credit institution. Purpose of output: To understand the business purpose and functionality performed by the code Instructions: 1. List out the main business rules in the code below in proper sequence in plain English for a business analyst to understand with no cryptic variable references. Please specify category as Validation or Control flow (conditional and evaluate or performed or called paragraphs) or Calculations or Business Logic in square parentheses for each rule at the beginning of each rule listed. 2. Represent the rules and all the variables in the output in plain English for a business analyst to understand. Remove references to original variables 3. Also provide “called” paragraphs that are called using PERFORM statement as they occur in parentheses in the format “ParaCalled: insert the paragraph name here” inline 4. Also provide a short title in 4-5 words for this section in the format “Ruleset: title for the code”. 5. Don’t provide summary or list or variable renaming or reference listing at the end 6. Don’t show called paragraphs again 7. If no rulesets are used don’t display any message Code:"
                     }
                 ],
                 "screen": "N/A",
@@ -554,6 +582,50 @@
                 "screen": "N/A",
                 "contextMenu": "Consolidated Summary",
                 "promptId": 1030
+            },
+            {
+                "_id": "680f33b8b142807fb3f34392",
+                "menu": "Download Diagram",
+                "menuId": "downloadDig",
+                "prompt": [
+                    {
+                        "id": 1,
+                        "value": "none"
+                    }
+                ],
+                "screen": "pseudo",
+                "contextMenu": "Download Diagram",
+                "promptId": 0
+            },
+            {
+                "_id": "681b90932670375db65cfc00",
+                "menu": "Output-C#",
+                "menuId": "outputc#",
+                "prompt": [
+                    {
+                        "id": "1",
+                        "type": "prompt",
+                        "value": "Write Output Code in C#"
+                    }
+                ],
+                "promptId": 1035,
+                "screen": "gen-ws",
+                "contextMenu": "Write Output Code in C#"
+            },
+            {
+                "_id": "681b90f62670375db65cfc02",
+                "menu": "Output-NodeJs",
+                "menuId": "output-nodejs",
+                "prompt": [
+                    {
+                        "id": 1,
+                        "type": "prompt",
+                        "value": "Write Output Code in NodeJs"
+                    }
+                ],
+                "promptId": 1036,
+                "screen": "gen-ws",
+                "contextMenu": "Write Output Code in NodeJs"
             }
         ]
     },

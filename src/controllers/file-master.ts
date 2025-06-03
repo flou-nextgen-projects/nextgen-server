@@ -60,45 +60,19 @@ fmRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
     }).catch((err) => {
         response.status(500).json(err).end();
     });
-}).get("/get-workflows-by-fileId", (request: Request, response: Response) => {
-    var query: any = request.query;
-    var $filter: any = JSON.parse(query.$filter);
-    appService.memberReferences.aggregate([
-        // Get the fid value from the first document
-        {
-            $facet: {
-                targetDoc: [
-                    { $match: { _id: mongoose.Types.ObjectId.createFromHexString($filter._id) } },
-                    { $limit: 1 },
-                    { $project: { fid: 1, _id: 0 } }
-                ]
-            }
-        },
-
-        // Unwind the single document array
-        { $unwind: "$targetDoc" },
-
-        // Use that fid to find all matching documents
-        {
-            $lookup: {
-                from: "memberReferences",  // Use your actual collection name here
-                let: { docFid: "$targetDoc.fid" },
-                pipeline: [
-                    { $match: { $expr: { $eq: ["$fid", "$$docFid"] } } }
-                ],
-                as: "matchingDocuments"
-            }
-        },
-
-        // Output just the matching documents
-        { $project: { matchingDocuments: 1, _id: 0 } },
-        { $unwind: "$matchingDocuments" },
-        { $replaceRoot: { newRoot: "$matchingDocuments" } }
-    ]).then((result: any) => {
-        response.status(200).json(result).end();
-    }).catch((err) => {
-        response.status(500).json(err).end();
-    });
+}).get("/get-workflows/:mid", async (request: Request, response: Response) => {
+    var methodId: any = request.params.mid;
+    let methodDetails = await appService.methodDetails.aggregateOne([
+        { $match: { _id: mongoose.Types.ObjectId.createFromHexString(methodId) } },
+        { $lookup: { from: "projectMaster", localField: "pid", foreignField: "_id", as: "projectMaster" } },
+        { $unwind: { preserveNullAndEmptyArrays: true, path: "$projectMaster" } },
+        { $lookup: { from: "languageMaster", localField: "projectMaster.lid", foreignField: "_id", as: "languageMaster" } },
+        { $unwind: { preserveNullAndEmptyArrays: true, path: "$languageMaster" } },
+    ]);
+    if (!methodDetails) {
+        return response.status(404).json([]).end();
+    }
+    response.status(200).json(methodDetails).end();
 }).get("/get-inventory-data/:pid", async (request: Request, response: Response) => {
     var pid = request.params.pid;
     try {

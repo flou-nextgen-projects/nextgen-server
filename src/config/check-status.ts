@@ -40,6 +40,7 @@ checkDbStatusRouter.use("/", (_: Request, __: Response, next: NextFunction) => {
     await appService.mongooseConnection.dropCollection("actionWorkflows");
     await appService.mongooseConnection.dropCollection("businessRules");
     await appService.mongooseConnection.dropCollection("businessSummaries");
+    await appService.mongooseConnection.dropCollection("businessRules");
     await appService.mongooseConnection.dropCollection("cobolDataSets");
     await appService.mongooseConnection.dropCollection("entityMaster");
     await appService.mongooseConnection.dropCollection("entityAttributes");
@@ -48,6 +49,8 @@ checkDbStatusRouter.use("/", (_: Request, __: Response, next: NextFunction) => {
     await appService.mongooseConnection.dropCollection("fileMaster");
     await appService.mongooseConnection.dropCollection("fileContents");
     await appService.mongooseConnection.dropCollection("missingObjects");
+    await appService.mongooseConnection.dropCollection("nodeDetails");
+    await appService.mongooseConnection.dropCollection("linkDetails");
     await appService.mongooseConnection.dropCollection("processingStages");
     await appService.mongooseConnection.dropCollection("projectMaster");
     await appService.mongooseConnection.dropCollection("memberReferences");
@@ -55,6 +58,7 @@ checkDbStatusRouter.use("/", (_: Request, __: Response, next: NextFunction) => {
     await appService.mongooseConnection.dropCollection("statementMaster");
     await appService.mongooseConnection.dropCollection("objectConnectivity");
     await appService.mongooseConnection.dropCollection("workspaceMaster");
+    await appService.mongooseConnection.dropCollection("workflowNodes");
     await appService.mongooseConnection.dropCollection("userStory");
     response.status(200).end();
 }).post("/generate-token", async function (_: Request, response: Response) {

@@ -46,45 +46,16 @@ bsRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
     response.status(200).json(({ message: `${data.type} Update Successfully`, data })).end();
 }).get("/get-call-externals", async (request: Request, response: Response) => {
     try {
-        let mid = <string>request.query.mid;
-        let member = await appService.memberReferences.getItem({ _id: new ObjectId(mid) });
-        if (!member) {
-            return response.status(404).json({ message: 'There is no existing member generated for this document. Please generate it.' }).end();
-        }
-        // take this member fid and methodNo and go to statementReference collection and get the data for this fid and methodNo
-        let statementReference = await appService.statementMaster.getDocuments({ fid: member.fid, methodNo: member.methodNo, references: { $exists: true } as any });
-        if (!statementReference) {
-            return response.status(404).json({ message: 'There is no existing statement reference generated for this document. Please generate it.' }).end();
-        }
-        // now collect all memberNames from references array
-        let memberNames: any[] = [];
-        for (const element of statementReference) {
-            if (element.references && element.references.length > 0) {
-                for (const ref of element.references) {
-                    memberNames.push({ fileName: ref.memberName });
-                }
-            }
-        }
-        response.status(200).json({ callExternals: memberNames }).end();
+        let methodId = <string>request.query.methodId;
+        let methodDetails = await appService.methodDetails.getItem({ _id: new ObjectId(methodId) });
+        response.status(200).json(methodDetails).end();
     } catch (error) {
         response.status(500).send().end();
     }
 }).get("/get-called-by", async (request: Request, response: Response) => {
     try {
-        let mid = <string>request.query.mid;
-        let member = await appService.memberReferences.getItem({ _id: new ObjectId(mid) });
-        if (!member) {
-            return response.status(404).json({ message: 'There is no existing member generated for this document. Please generate it.' }).end();
-        }
-        let callers = member.callExternals || member.callers || [];
-        if (callers.length === 0) {
-            return response.status(200).json([]).end();
-        }
-        // collect all methodName as fileName into array of this callers
-        let calledBy: any[] = [];
-        for (const element of callers.filter((item: any) => !/.ctor/i.test(item.callingMethod))) {
-            calledBy.push({ fileName: element.callingMethod });
-        }
+        let methodId = <string>request.query.methodId;
+        let calledBy = await appService.methodDetails.getDocuments({ "callExternals.methodId": new ObjectId(methodId) });
         response.status(200).json(calledBy).end();
     } catch (error) {
         response.status(500).send().end();
@@ -216,6 +187,16 @@ bsRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
         }).catch((err) => {
             response.status(500).json(err).end();
         })
+}).get("/get-input-output-dataset/:fid", (request: Request, response: Response) => {
+    const { fid } = request.params;
+    appService.mongooseConnection.collection("businessSummaries").aggregate([
+        { $match: { promptId: { $in: [1031, 1032] } } },
+        { $match: { fid: new ObjectId(fid) } }]).toArray()
+        .then((res) => {
+            response.status(200).json(res).end();
+        }).catch((err) => {
+            response.status(500).json(err).end();
+        });
 });
 
 module.exports = bsRouter;
