@@ -307,12 +307,6 @@
                 "_id": "67a0aa72e5a8381203fb7e3c"
             },
             {
-                "roleName": "userAdmin",
-                "screens": [],
-                "menus": [],
-                "_id": "67a0aa90e5a8381203fb7e3d"
-            },
-            {
                 "roleName": "siteAdmin",
                 "screens": [],
                 "menus": [],
