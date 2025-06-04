@@ -15,8 +15,29 @@ dashBoardRouter.use("/", (request: Request, response: Response, next: NextFuncti
     });
 }).get("/get-workflows", async (request: Request, response: Response) => {
     let $filter: string = <string>request.query.$filter;
+    let { fileTypeId, pid, keyword }: { fileTypeId: string, pid: string, keyword: string } = JSON.parse($filter);
+    if (!fileTypeId) {
+        const query: any = { wid: new ObjectId(pid) };
+        if (keyword && keyword.trim()) {
+            query.fileName = { $regex: keyword, $options: "i" };
+        }
+        appService.fileMaster.getDocuments(query).then((workflows) => {
+            response.status(200).json(workflows).end();
+        }).catch((e) => {
+            response.status(500).json(e).end();
+        });
+    }
+    else {
+        appService.fileMaster.getDocuments({ fileTypeId: new ObjectId(fileTypeId), wid: new ObjectId(pid) }).then((workflows) => {
+            response.status(200).json(workflows).end();
+        }).catch((e) => {
+            response.status(500).json(e).end();
+        });
+    }
+}).get("/get-workflows", async (request: Request, response: Response) => {
+    let $filter: string = <string>request.query.$filter;
     let { fileTypeId, pid }: { fileTypeId: string, pid: string } = JSON.parse($filter);
-    appService.fileMaster.getDocuments({ fileTypeId: new ObjectId(fileTypeId), wid: new ObjectId(pid) }).then((workflows) => {
+    appService.fileMaster.getDocuments({ fileTypeId: new ObjectId(fileTypeId), pid: new ObjectId(pid) }).then((workflows) => {
         response.status(200).json(workflows).end();
     }).catch((e) => {
         response.status(500).json(e).end();

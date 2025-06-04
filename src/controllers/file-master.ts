@@ -77,7 +77,7 @@ fmRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
     var pid = request.params.pid;
     try {
         let pipeline = [
-            { $match: { pid: mongoose.Types.ObjectId.createFromHexString(pid) } },
+            { $match: { wid: mongoose.Types.ObjectId.createFromHexString(pid) } },
             { $lookup: { from: "memberReferences", localField: "_id", foreignField: "fid", as: "memberReferences" } },
             { $unwind: { path: "$memberReferences", preserveNullAndEmptyArrays: true } }
         ];
