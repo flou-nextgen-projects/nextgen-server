@@ -67,13 +67,11 @@ brRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
         let pipeLine: Array<PipelineStage> = [
             { $match: { fid: Mongoose.Types.ObjectId.createFromHexString(fid) } },
             { $lookup: { from: "methodDetails", localField: "fid", foreignField: "_id", as: "methodDetails" } },
-            { $unwind: { preserveNullAndEmptyArrays: true, path: "$methoDetails" } },
+            { $unwind: { preserveNullAndEmptyArrays: true, path: "$methodDetails" } },
             { $lookup: { from: 'fileMaster', localField: 'methodDetails.fid', foreignField: '_id', as: 'fileMaster' } },
             { $unwind: { preserveNullAndEmptyArrays: true, path: "$fileMaster" } }
         ];
-        const businessRules = await appService.mongooseConnection.collection("businessRules").aggregate(pipeLine);
-
-        const results = await businessRules.toArray();
+        const results = await appService.mongooseConnection.collection("businessRules").aggregate(pipeLine).toArray();
 
         if (!results.length) {
             return response.status(404).json({ error: "Data not found" }).end();
@@ -136,7 +134,6 @@ brRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
         return response.status(500).json(error).end();
     }
 });
-
 
 const createIndividualNodes = async (data: any[], lastNode: any): Promise<{ nodes: Node[], links: Link[] }> => {
     const nodes: Node[] = [];
@@ -346,7 +343,6 @@ const createLinks = async (node: any[], links: any[]): Promise<Node[]> => {
         console.log(error);
     }
 };
-
 const removeParaCalled = (node: Node[]): Node[] => {
     var finalNodes: Node[] = [];
     for (const d of node) {

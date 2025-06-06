@@ -15,20 +15,19 @@ dashBoardRouter.use("/", (request: Request, response: Response, next: NextFuncti
     });
 }).get("/get-workflows", async (request: Request, response: Response) => {
     let $filter: string = <string>request.query.$filter;
-    let { fileTypeId, pid, keyword }: { fileTypeId: string, pid: string, keyword: string } = JSON.parse($filter);
+    let { fileTypeId, wid, keyword }: { fileTypeId: string, wid: string, keyword: string } = JSON.parse($filter);
     if (!fileTypeId) {
-        const query: any = { wid: new ObjectId(pid) };
+        const query: any = { wid: new ObjectId(wid) };
         if (keyword && keyword.trim()) {
-            query.fileName = { $regex: keyword, $options: "i" };
+            query.methodName = { $regex: keyword, $options: "i" };
         }
-        appService.fileMaster.getDocuments(query).then((workflows) => {
+        appService.actionWorkflows.getDocuments(query).then((workflows) => {
             response.status(200).json(workflows).end();
         }).catch((e) => {
             response.status(500).json(e).end();
         });
-    }
-    else {
-        appService.fileMaster.getDocuments({ fileTypeId: new ObjectId(fileTypeId), wid: new ObjectId(pid) }).then((workflows) => {
+    } else {
+        appService.fileMaster.getDocuments({ fileTypeId: new ObjectId(fileTypeId), wid: new ObjectId(wid) }).then((workflows) => {
             response.status(200).json(workflows).end();
         }).catch((e) => {
             response.status(500).json(e).end();
