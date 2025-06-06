@@ -67,7 +67,9 @@ brRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
         // const promptid = parseInt(promptId);
         let pipeLine: Array<PipelineStage> = [
             { $match: { fid: Mongoose.Types.ObjectId.createFromHexString(fid) } },
-            { $lookup: { from: 'fileMaster', localField: 'fid', foreignField: '_id', as: 'fileMaster' } },
+            { $lookup: { from: "methodDetails", localField: "fid", foreignField: "_id", as: "methodDetails" } },
+            { $unwind: { preserveNullAndEmptyArrays: true, path: "$methoDetails" } },
+            { $lookup: { from: 'fileMaster', localField: 'methodDetails.fid', foreignField: '_id', as: 'fileMaster' } },
             { $unwind: { preserveNullAndEmptyArrays: true, path: "$fileMaster" } }
         ];
         const businessRules = await appService.mongooseConnection.collection("businessRules").aggregate(pipeLine);
