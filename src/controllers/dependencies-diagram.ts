@@ -37,8 +37,8 @@ dependencyRouter.use("/", (request: Request, response: Response, next: NextFunct
         for (const callExt of member?.callExternals) {
             // at this point we'll call separate function which will get called recursively
             if (["bms", "copybook", "include", "inputlib"].includes(callExt.fileTypeName.toLowerCase())) continue;
-            let needToSkipTypes = ["bms", "copybook", "include", "inputlib"];
-            await _expandCallExternals(callExt, node, { nodes, links, index: 0, needToSkipTypes });
+            let skipTypes = ["bms", "copybook", "include", "inputlib"];
+            await _expandCallExternals(callExt, node, { nodes, links, index: 0, skipTypes });
         }
         await _expandParentCalls({ nodes, links, index: nodes.length + 1 }, node);
         if (populateEntities === "true") {
@@ -48,9 +48,6 @@ dependencyRouter.use("/", (request: Request, response: Response, next: NextFunct
         }
         if (addBusinessSummaries === "true") {
             await _attachedBusinessSummaries({ nodes, links, index: nodes.length + 1 }, request.headers.authorization);
-        }
-        if (member.callers && member.callers.length > 0) {
-            await _expandCallers(node, { nodes, links, index: nodes.length + 1 });
         }
         response.status(200).json({ nodes, links }).end();
     } catch (error) {
@@ -92,7 +89,6 @@ const _attachInputOutputInterface = async (opt: { nodes: Array<Node>, links: Arr
         }
     }
 }
-
 const _attachedBusinessSummaries = async (opt: { nodes: Array<Node>, links: Array<Link>, index: number }, authToken: string) => {
     for (const node of opt.nodes) {
         if (node.group == 3 || node.group == 4) continue; // group 3 is for entity node so no need to add summary for entity node
@@ -120,15 +116,15 @@ const _expandCallExternals = async (callExt: Partial<FileMaster | any>, node: No
         opt.links.push({ source: srcIdx, target: existsIndex, weight: 3, linkText: node.name } as any);
         return;
     }
-    let nd: Node = { ..._createNode(member.fileMaster, ++opt.index), originalName: member.fileMaster.fileName, pid: member.pid, wid: member.wid, fileId: member.fid.toString(), type: NodeLinkType.node };
+    let nd: Node = { ..._createNode(member.fileMaster), originalName: member.fileMaster.fileName, pid: member.pid, wid: member.wid, fileId: member.fid.toString(), type: NodeLinkType.node };
     opt.nodes.push({ ...nd, originalName: nd.name, name: `${nd.name} (${member.memberName})`, color: member.fileMaster.fileTypeMaster.color, image: member.fileMaster.fileTypeMaster.img });
     let targetIdx: number = opt.nodes.findIndex(x => x.originalName === nd.originalName);
     let srcIdx = opt.nodes.findIndex((x) => x.name === node.name);
     opt.links.push({ source: srcIdx, target: targetIdx, weight: 3, linkText: node.name } as any);
     if (member.callExternals.length === 0) return;
     for (const callE of member.callExternals) {
-        if (opt.needToSkipTypes.includes(callE.fileTypeName.toLowerCase())) continue;
-        await _expandCallExternals(callE, nd, { nodes: opt.nodes, links: opt.links, index: opt.index, needToSkipTypes: opt.needToSkipTypes });
+        if (opt.skipTypes.includes(callE.fileTypeName.toLowerCase())) continue;
+        await _expandCallExternals(callE, nd, { nodes: opt.nodes, links: opt.links, index: opt.index, skipTypes: opt.skipTypes });
     }
 };
 const _expandParentCalls = async (opt: { nodes: Array<Node>, links: Array<Link>, index: number }, node: Node) => {

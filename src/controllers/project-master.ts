@@ -8,9 +8,9 @@ import { extractProjectZip, Upload, FileExtensions, formatData, readJsonFile, sl
 import { existsSync } from "fs";
 import { AppError } from "../common/app-error";
 import { convertStringToObjectId } from "../helpers";
-import { isEmpty, isEqual } from "lodash";
+import { filter, isEmpty, isEqual } from "lodash";
 import ProgressBar from "progress";
-import { adjustLinks } from "../models/nodes-and-links";
+import { adjustLinks, filterNodes } from "../models/nodes-and-links";
 
 const pmRouter: Router = Express.Router();
 const fileExtensions = new FileExtensions();
@@ -21,12 +21,12 @@ pmRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
     next();
 }).get("/docs", async (request: Request, response: Response, next: NextFunction) => {
     let pid: string = <string>request.query.pid;
-    let projects = await appService.mongooseConnection.collection("projectMaster").aggregate([
+    let workspaces = await appService.workspaceMaster.aggregate([
         { $match: { _id: new Mongoose.Types.ObjectId(pid) } },
-        { $lookup: { from: "fileMaster", localField: "_id", foreignField: "pid", as: "docs", pipeline: [{ $sort: { fileName: 1 } }] } }
-    ]).toArray();
-    let project = projects.shift(); // need to check
-    response.status(200).json(project).end();
+        { $lookup: { from: "fileMaster", localField: "_id", foreignField: "wid", as: "docs", pipeline: [{ $sort: { fileName: 1 } }] } }
+    ]);
+    let workspace = workspaces.shift();
+    response.status(200).json(workspace).end();
 }).post("/add-project", async function (request: Request, response: Response) {
     var pm = request.body;
     var projectMaster: ProjectMaster = await appService.projectMaster.addItem(pm);
@@ -87,9 +87,10 @@ pmRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
         let project = await appService.projectMaster.getItem({ _id: new Mongoose.Types.ObjectId(pid) });
         if (!project) return response.status(404).json({ message: 'Project with provided ID not found' }).end();
         let linkDetails = await appService.linkDetails.getDocuments({ pid: project._id, type: { $in: [1, 2] } }, {}, { _id: 1 });
-        let nodeDetails = await appService.nodeDetails.getDocuments({ pid: project._id, alternateName: { $ne: "csproj" }, type: { $ne: 3 } }, {});
-        let links: any = adjustLinks(nodeDetails, linkDetails);
-        response.status(200).json({ data: { nodes: nodeDetails, links }, graphLevel: 0 }).end();
+        let nodeDetails = await appService.nodeDetails.getDocuments({ wid: project.wid, alternateName: { $ne: "csproj" }, type: { $ne: 3 } }, {});
+        let nodes = filterNodes(nodeDetails, linkDetails);
+        let links: any = adjustLinks(nodes, linkDetails);
+        response.status(200).json({ data: { nodes, links }, graphLevel: 0 }).end();
     } catch (error) {
         response.status(500).json({ data: [] }).end();
     }
@@ -645,6 +646,7 @@ const addMissingObjects = async function addMissingObjects(wm: WorkspaceMaster, 
 };
 const processFileContents = async function processFileContents(wm: WorkspaceMaster) {
     let projects = await appService.projectMaster.getDocuments({ wid: wm._id });
+    let methodDetails = await appService.methodDetails.getDocuments({ wid: wm._id });
     for (const project of projects) {
         let collection = appService.fileContentMaster.getModel();
         await collection.deleteMany({ pid: project._id });
@@ -652,6 +654,7 @@ const processFileContents = async function processFileContents(wm: WorkspaceMast
         for (let file of allFiles) {
             // in case of COBOL language, we need to store sourceFilePath (original) contents as original 
             // and filePath contents are modified. We'll as this field only in case of COBOL
+            let methodDetail = methodDetails.find((d) => d.fid.toString() === file._id.toString());
             let path = wm.languageMaster.name === "COBOL" || wm.languageMaster.name === "PLSQL" ? file.sourceFilePath : file.filePath;
             let content = fileExtensions.readTextFile(path);
             if (content === "") continue;
@@ -660,7 +663,7 @@ const processFileContents = async function processFileContents(wm: WorkspaceMast
             if (wm.languageMaster.name === "PLSQL") {
                 modified = fileExtensions.readTextFile(file.filePath);
             }
-            let fcm = { fid: file._id, pid: file.pid, original: content, formatted: modified } as FileContentMaster;
+            let fcm = { methodId: methodDetail._id, fid: file._id, pid: file.pid, original: content, formatted: modified } as FileContentMaster;
             if (isEmpty(modified)) delete fcm.formatted;
             await appService.fileContentMaster.addItem(fcm);
         }

@@ -64,7 +64,7 @@ statementRouter.use("/", (request: Request, response: Response, next: NextFuncti
         let originalLine = d.originalLine.replace(/^[\s]+/gi, "");
         return originalLine;
     }).join("\n");
-    // response.status(200).json({ formatted }).end();
+    response.status(200).json(statements).end();
 }).get("/expand-dotnet-workflow/:mid", async (request: Request, response: Response, next: NextFunction) => {
     response.status(200).json({}).end();
 });

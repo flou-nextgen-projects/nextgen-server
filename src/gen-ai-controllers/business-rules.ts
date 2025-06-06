@@ -64,7 +64,6 @@ brRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
 }).get("/business-rule-diagram/:fid/:promptId", async (request: Request, response: Response) => {
     try {
         const { fid, promptId } = request.params;
-        // const promptid = parseInt(promptId);
         let pipeLine: Array<PipelineStage> = [
             { $match: { fid: Mongoose.Types.ObjectId.createFromHexString(fid) } },
             { $lookup: { from: 'fileMaster', localField: 'fid', foreignField: '_id', as: 'fileMaster' } },

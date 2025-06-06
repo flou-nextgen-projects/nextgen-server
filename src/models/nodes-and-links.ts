@@ -9,6 +9,7 @@ export class Node {
     public fileId: Mongoose.Types.ObjectId | string;
     public name: string;
     public originalName?: string;
+    public originalIndex?: number;
     public group: number;
     public image: string;
     public id: string;
@@ -82,6 +83,21 @@ export const resetNodeAndLinkIndex = (nodes: Array<Node | any>, links: Array<Lin
         link.target = targetNode.originalIndex;
     });
     return links;
+};
+export const filterNodes = function (nodes: Array<any>, links: Array<any>): Array<any> {
+    // we need to filter nodes based on links sourceId and targetId
+    let filteredNodes: Array<any> = [];
+    links.forEach((link) => {
+        const sourceNode = nodes.find((node) => node.methodId.toString() === link.sourceId.toString());
+        const targetNode = nodes.find((node) => node.methodId.toString() === link.targetId.toString());
+        if (sourceNode && !filteredNodes.find((node) => node.methodId.toString() === sourceNode.methodId.toString())) {
+            filteredNodes.push(sourceNode);
+        }
+        if (targetNode && !filteredNodes.find((node) => node.methodId.toString() === targetNode.methodId.toString())) {
+            filteredNodes.push(targetNode);
+        }
+    });
+    return filteredNodes;
 };
 export const adjustLinks = function (nodes: Array<any>, links: any[]): Array<Link> {
     const newLinks: Array<Link> = [];
