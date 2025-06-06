@@ -37,6 +37,11 @@ checkDbStatusRouter.use("/", (_: Request, __: Response, next: NextFunction) => {
         response.status(500).json({ error: 'Internal server error' }).end();
     }
 }).get("/restore-database", async function (_: Request, response: Response) {
+    ["actionWorkflows",
+        "businessRules",
+    ].forEach(async (collectionName) => {
+
+    });
     await appService.mongooseConnection.dropCollection("actionWorkflows");
     await appService.mongooseConnection.dropCollection("businessRules");
     await appService.mongooseConnection.dropCollection("businessSummaries");
@@ -55,6 +60,7 @@ checkDbStatusRouter.use("/", (_: Request, __: Response, next: NextFunction) => {
     await appService.mongooseConnection.dropCollection("projectMaster");
     await appService.mongooseConnection.dropCollection("memberReferences");
     await appService.mongooseConnection.dropCollection("methodDetails");
+    await appService.mongooseConnection.dropCollection("methodStatementsMaster");
     await appService.mongooseConnection.dropCollection("statementMaster");
     await appService.mongooseConnection.dropCollection("objectConnectivity");
     await appService.mongooseConnection.dropCollection("workspaceMaster");
@@ -95,7 +101,7 @@ const _initDatabaseConfiguration = (dbStatus: any): Promise<{ message: string }>
         let roleMaster = configJson.find((d) => d.collection === "roleMaster").documents;
         await appService.roleMaster.bulkInsert(roleMaster);
         let userMaster = configJson.find((d) => d.collection === "userMaster").documents;
-        userMaster.forEach((d: UserMaster|any) => d.oid = orgMaster._id);
+        userMaster.forEach((d: UserMaster | any) => d.oid = orgMaster._id);
         await appService.userMaster.bulkInsert(userMaster);
         await appService.mongooseConnection.collection("dbStatus").findOneAndUpdate({ _id: dbStatus?._id }, { $set: { configured: true, enabled: true } }, { upsert: true });
         res({ message: "Database initialization process completed successfully" });

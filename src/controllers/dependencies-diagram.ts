@@ -7,6 +7,7 @@ import configs from "../configurations";
 
 import axios from "axios";
 import { Agent } from 'https';
+import _ from "lodash";
 
 const dependencyRouter: Router = Express.Router();
 const genAiAddress: string = configs.genAIUrl;
@@ -16,35 +17,35 @@ dependencyRouter.use("/", (request: Request, response: Response, next: NextFunct
     next();
 }).get("/", async (request: Request, response: Response) => {
     try {
-        let fid = <string>request.query.fid;
+        let methodId = <string>request.query.methodId;
         let populateEntities = request.query.getEntities;
         let addBusinessSummaries = request.query.business || false;
         let pipeLine: Array<PipelineStage> = [
-            { $match: { _id: mongoose.Types.ObjectId.createFromHexString(fid) } },
+            { $match: { _id: mongoose.Types.ObjectId.createFromHexString(methodId) } },
             { $lookup: { from: 'fileMaster', localField: 'fid', foreignField: '_id', as: 'fileMaster' } },
             { $unwind: { preserveNullAndEmptyArrays: true, path: "$fileMaster" } },
             { $lookup: { from: 'fileTypeMaster', localField: 'fileMaster.fileTypeId', foreignField: '_id', as: 'fileMaster.fileTypeMaster' } },
             { $unwind: { preserveNullAndEmptyArrays: true, path: "$fileMaster.fileTypeMaster" } }
         ];
-        const member = await appService.memberReferences.aggregateOne(pipeLine);
-        if (!member) return response.status(404).json({ message: 'Not found' }).send().end();
+        const methodDetail = await appService.methodDetails.aggregateOne(pipeLine);
+        if (!methodDetail) return response.status(404).json({ message: 'Not found' }).send().end();
         // if member reference is present, then we need to get all call externals and loop through all elements        
         // since, this data is going for d3 network, we'll prepare elements in that way
         // this will be a focal node and all node elements will be of type Node and links will be of type Link
-        let node: any = { ..._createNode(member.fileMaster), callers: member.callers, name: member.memberName, fileId: member.fid.toString(), aid: member._id.toString() };
+        let node: any = { ..._createNode(methodDetail.fileMaster), callers: methodDetail.callers, name: methodDetail.methodName, methodId: methodDetail._id };
         let links: Array<Link> = [];
-        let nodes: Array<Node | any> = [{ ...node, image: 'focal-node.png', color: member.fileMaster.fileTypeMaster.color }];
-        for (const callExt of member?.callExternals) {
+        let nodes: Array<Node | any> = [{ ...node, image: 'focal-node.png', color: methodDetail.fileMaster.fileTypeMaster.color }];
+        for (const callExt of methodDetail?.callExternals) {
             // at this point we'll call separate function which will get called recursively
             if (["bms", "copybook", "include", "inputlib"].includes(callExt.fileTypeName.toLowerCase())) continue;
             let skipTypes = ["bms", "copybook", "include", "inputlib"];
+            if (!callExt.methodId) continue;
             await _expandCallExternals(callExt, node, { nodes, links, index: 0, skipTypes });
         }
         await _expandParentCalls({ nodes, links, index: nodes.length + 1 }, node);
         if (populateEntities === "true") {
             await _attachEntityNodes({ nodes, links, index: nodes.length + 1 }, request.headers.authorization);
             await _attachInputOutputInterface({ nodes, links, index: nodes.length + 1 }, request.headers.authorization);
-
         }
         if (addBusinessSummaries === "true") {
             await _attachedBusinessSummaries({ nodes, links, index: nodes.length + 1 }, request.headers.authorization);
@@ -89,17 +90,17 @@ const _attachInputOutputInterface = async (opt: { nodes: Array<Node>, links: Arr
         }
     }
 }
-const _attachedBusinessSummaries = async (opt: { nodes: Array<Node>, links: Array<Link>, index: number }, authToken: string) => {
+const _attachedBusinessSummaries = async (opt: { nodes: Array<any>, links: Array<Link>, index: number }, authToken: string) => {
     for (const node of opt.nodes) {
-        if (node.group == 3 || node.group == 4) continue; // group 3 is for entity node so no need to add summary for entity node
-        let summary = await appService.mongooseConnection.collection("businessSummaries").findOne({ fid: new ObjectId(node.fileId), promptId: 1022 });
-        if (summary) {
-            node.summary = summary.formattedData;
-        }
+        // group 3 is for entity node so no need to add summary for entity node
+        if (node.group == 3 || node.group == 4) continue;
+        let summary = await appService.mongooseConnection.collection("businessSummaries").findOne({ methodId: new ObjectId(node.methodId), promptId: 1022 });
+        if (!summary) continue;
+        node.summary = summary.formattedData;
     }
 }
-const _expandCallExternals = async (callExt: Partial<FileMaster | any>, node: Node, opt: { nodes: Array<Node>, links: Array<Link>, index: number, skipTypes: Array<string> }) => {
-    let $match: any = callExt.memberId ? { _id: callExt.memberId } : { fid: callExt.fid };
+const _expandCallExternals = async (callExt: Partial<any>, node: Node, opt: { nodes: Array<Node>, links: Array<Link>, index: number, skipTypes: Array<string> }) => {
+    let $match: any = { _id: callExt.methodId };
     let pipeLine: Array<PipelineStage> = [
         { $match },
         { $lookup: { from: 'fileMaster', localField: 'fid', foreignField: '_id', as: 'fileMaster' } },
@@ -107,44 +108,46 @@ const _expandCallExternals = async (callExt: Partial<FileMaster | any>, node: No
         { $lookup: { from: 'fileTypeMaster', localField: 'fileMaster.fileTypeId', foreignField: '_id', as: 'fileMaster.fileTypeMaster' } },
         { $unwind: { preserveNullAndEmptyArrays: true, path: "$fileMaster.fileTypeMaster" } }
     ];
-    const member = await appService.memberReferences.aggregateOne(pipeLine);
+    const methodDetail = await appService.methodDetails.aggregateOne(pipeLine);
     // if member is null, simply means - missing object
-    if (!member) return;
-    if ((opt.nodes.findIndex((x) => x.name == member.memberName) >= 0)) {
-        let existsIndex: number = opt.nodes.findIndex((x) => x.name === member.memberName);
+    if (!methodDetail) return;
+    if ((opt.nodes.findIndex((x) => x.name == methodDetail.methodName) >= 0)) {
+        let existsIndex: number = opt.nodes.findIndex((x) => x.name === methodDetail.methodName);
         let srcIdx = opt.nodes.findIndex((x) => x.name === node.name);
         opt.links.push({ source: srcIdx, target: existsIndex, weight: 3, linkText: node.name } as any);
         return;
     }
-    let nd: Node = { ..._createNode(member.fileMaster), originalName: member.fileMaster.fileName, pid: member.pid, wid: member.wid, fileId: member.fid.toString(), type: NodeLinkType.node };
-    opt.nodes.push({ ...nd, originalName: nd.name, name: `${nd.name} (${member.memberName})`, color: member.fileMaster.fileTypeMaster.color, image: member.fileMaster.fileTypeMaster.img });
+    let nd: any = { ..._createNode(methodDetail.fileMaster), name: methodDetail.methodName, originalName: methodDetail.methodName, pid: methodDetail.pid, wid: methodDetail.wid, methodId: methodDetail._id, type: NodeLinkType.node };
+    opt.nodes.push({ ...nd, originalName: nd.name, color: methodDetail.fileMaster.fileTypeMaster.color, image: methodDetail.fileMaster.fileTypeMaster.img });
     let targetIdx: number = opt.nodes.findIndex(x => x.originalName === nd.originalName);
     let srcIdx = opt.nodes.findIndex((x) => x.name === node.name);
     opt.links.push({ source: srcIdx, target: targetIdx, weight: 3, linkText: node.name } as any);
-    if (member.callExternals.length === 0) return;
-    for (const callE of member.callExternals) {
+    if (methodDetail.callExternals.length === 0) return;
+    for (const callE of methodDetail.callExternals) {
         if (opt.skipTypes.includes(callE.fileTypeName.toLowerCase())) continue;
+        // if methodId is not present, then we cannot expand further
+        if (!callE.methodId) continue;
         await _expandCallExternals(callE, nd, { nodes: opt.nodes, links: opt.links, index: opt.index, skipTypes: opt.skipTypes });
     }
 };
-const _expandParentCalls = async (opt: { nodes: Array<Node>, links: Array<Link>, index: number }, node: Node) => {
+const _expandParentCalls = async (opt: { nodes: Array<Node>, links: Array<Link>, index: number }, node: any) => {
     try {
-        let pipeLine = [{ $match: { callExternals: { $elemMatch: { fid: new ObjectId(node.fileId) } } } },
+        let pipeLine = [{ $match: { callExternals: { $elemMatch: { methodId: new ObjectId(node.methodId) } } } },
         { $lookup: { from: "fileMaster", localField: "fid", foreignField: "_id", as: "fileMaster" } },
         { $unwind: { path: "$fileMaster", preserveNullAndEmptyArrays: true } },
         { $lookup: { from: "fileTypeMaster", localField: "fileMaster.fileTypeId", foreignField: "_id", as: "fileMaster.fileTypeMaster" } },
         { $unwind: { path: "$fileMaster.fileTypeMaster", preserveNullAndEmptyArrays: true } }];
-        let members = await appService.memberReferences.aggregate(pipeLine);
-        for (const member of members) {
-            if (member.callExternals.length == 0) continue;
-            let callExts = member.callExternals.filter((x: any) => { return x.fid.toString() == node.fileId });
+        let methodDetail = await appService.methodDetails.aggregate(pipeLine);
+        for (const md of methodDetail) {
+            if (md.callExternals.length == 0) continue;
+            let callExts = md.callExternals.filter((x: any) => { return x.methodId.toString() == node.methodId.toString() });
             if (callExts.length <= 0) continue;
-            let findMember = opt.nodes.find((y) => y.name === member.memberName);
+            let findMember = opt.nodes.find((y) => y.name === md.methodName);
             if (!findMember) {
-                var parentNode = { ..._createNode(member.fileMaster), callers: member.callers, name: member.memberName, fileId: member.fid.toString(), aid: member._id.toString() };
+                var parentNode = { ..._createNode(md.fileMaster), callers: md.callers, name: md.methodName, methodId: md._id };
                 opt.nodes.push(parentNode);
             }
-            let parentIdx = opt.nodes.findIndex((y) => y.name === member.memberName);
+            let parentIdx = opt.nodes.findIndex((y) => y.name === md.methodName);
             let nodeIdx: number = opt.nodes.findIndex((x) => x.name === node.name);
             opt.links.push({ source: parentIdx, target: nodeIdx, weight: 3, linkText: node.name } as any);
         }

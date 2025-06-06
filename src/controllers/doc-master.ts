@@ -15,21 +15,9 @@ docRouter.use("/", (request: Request, response: Response, next: NextFunction) =>
     ];
     let statements = await appService.mongooseConnection.collection("statementMaster").aggregate(pipeLine).toArray();
     response.status(200).json(statements).end();
-}).get("/source-contents/:did", async (request: Request, response: Response, next: NextFunction) => {
-    let did: string = <string>request.params.did;
-    let pipeLine = [
-        { $match: { fid: new ObjectId(did) } }
-        //  { $match: { $or: [{ fid: new ObjectId(did) }, { _id: new ObjectId(did) }] } },
-        // { $lookup: { from: "fileMaster", localField: "_id", foreignField: "_id", as: "fileMaster" } },
-        // { $unwind: { path: "$fileMaster", preserveNullAndEmptyArrays: true } },
-        // { $lookup: { from: "fileMaster", localField: "fid", foreignField: "_id", as: "fileMaster" } },
-        // { $unwind: { path: "$fileMaster", preserveNullAndEmptyArrays: true } }
-    ];
-    let fileContents = await appService.fileContentMaster.getItem({ fid: new ObjectId(did) });//aggregate(pipeLine);
-
-    // if (fileContents.length === 0) return response.status(404).send().end();
-
-    // let fcm = fileContents.shift();
+}).get("/source-contents/:mid", async (request: Request, response: Response, next: NextFunction) => {
+    let mid: string = <string>request.params.mid;
+    let fileContents = await appService.fileContentMaster.getItem({ methodId: new ObjectId(mid) });
     response.status(200).json(fileContents).end();
 });
 
