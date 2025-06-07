@@ -471,7 +471,7 @@
                     {
                         "id": 1,
                         "type": "prompt",
-                        "value": "Can you generate a test case for the attached <LANG> code below? Please provide the test case in plain English."
+                        "value": "Can you generate test case specifications for the attached file. Use plain English terms in output for a QA person to understand in the given format: ### Test Case 1:  <case name> Input: Expected Output: without and commentary"
                     }
                 ],
                 "promptId": 1002,
