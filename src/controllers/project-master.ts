@@ -88,6 +88,10 @@ pmRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
         if (!project) return response.status(404).json({ message: 'Project with provided ID not found' }).end();
         let linkDetails = await appService.linkDetails.getDocuments({ pid: project._id, type: { $in: [1, 2] } }, {}, { _id: 1 });
         let nodeDetails = await appService.nodeDetails.getDocuments({ wid: project.wid, alternateName: { $ne: "csproj" }, type: { $ne: 3 } }, {});
+        if(linkDetails.length === 0) {
+            let nodes = await appService.nodeDetails.getDocuments({ pid: project._id, alternateName: { $ne: "csproj" }, type: { $ne: 3 } }, {});
+            return response.status(200).json({ data: { nodes, links: [] }, graphLevel: 0 }).end();
+        }
         let nodes = filterNodes(nodeDetails, linkDetails);
         let links: any = adjustLinks(nodes, linkDetails);
         response.status(200).json({ data: { nodes, links }, graphLevel: 0 }).end();
