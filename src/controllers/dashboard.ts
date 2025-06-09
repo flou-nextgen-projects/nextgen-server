@@ -15,7 +15,7 @@ dashBoardRouter.use("/", (request: Request, response: Response, next: NextFuncti
     });
 }).get("/get-workflows", async (request: Request, response: Response) => {
     let $filter: string = <string>request.query.$filter;
-    let { fileTypeId, wid, keyword }: { fileTypeId: string, wid: string, keyword: string } = JSON.parse($filter);
+    let { fileTypeId, wid, keyword, pid }: { fileTypeId: string, wid: string, keyword: string, pid: string } = JSON.parse($filter);
     if (!fileTypeId) {
         const query: any = { wid: new ObjectId(wid) };
         if (keyword && keyword.trim()) {
@@ -27,13 +27,13 @@ dashBoardRouter.use("/", (request: Request, response: Response, next: NextFuncti
             response.status(500).json(e).end();
         });
     } else {
-        appService.fileMaster.getDocuments({ fileTypeId: new ObjectId(fileTypeId), wid: new ObjectId(wid) }).then((workflows) => {
+        appService.fileMaster.getDocuments({ fileTypeId: new ObjectId(fileTypeId), wid: new ObjectId(pid) }).then((workflows) => {
             response.status(200).json(workflows).end();
         }).catch((e) => {
             response.status(500).json(e).end();
         });
     }
-}).get("/get-workflows", async (request: Request, response: Response) => {
+})/*.get("/get-workflows", async (request: Request, response: Response) => {
     let $filter: string = <string>request.query.$filter;
     let { fileTypeId, pid }: { fileTypeId: string, pid: string } = JSON.parse($filter);
     appService.fileMaster.getDocuments({ fileTypeId: new ObjectId(fileTypeId), pid: new ObjectId(pid) }).then((workflows) => {
@@ -41,7 +41,7 @@ dashBoardRouter.use("/", (request: Request, response: Response, next: NextFuncti
     }).catch((e) => {
         response.status(500).json(e).end();
     });
-}).get("/get-dashboard-tickers", async (request: Request, response: Response) => {
+})*/.get("/get-dashboard-tickers", async (request: Request, response: Response) => {
     var wid = <string>request.query.wid;
     const pipeLine = [
         { $match: { wid: new ObjectId(wid) } },

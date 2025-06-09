@@ -2,6 +2,7 @@ import Mongoose from "mongoose";
 import { parse } from "path";
 import { FileMaster } from "./file-master";
 import _ from "lodash";
+import { link } from "fs";
 
 export class Node {
     public wid: Mongoose.Types.ObjectId | string;
@@ -42,7 +43,7 @@ export const _createNode = function (fileData: FileMaster) {
         fileId: fileData._id.toString(),
         info: parse(fileData.filePath),
         fileType: fileData.fileTypeMaster.fileTypeName, type: NodeLinkType.node,
-        filePath: fileData.filePath, color, 
+        filePath: fileData.filePath, color,
         aid: fileData.aid
     };
 };
@@ -87,6 +88,7 @@ export const resetNodeAndLinkIndex = (nodes: Array<Node | any>, links: Array<Lin
 export const filterNodes = function (nodes: Array<any>, links: Array<any>): Array<any> {
     // we need to filter nodes based on links sourceId and targetId
     let filteredNodes: Array<any> = [];
+    if (links.length == 0) return nodes;
     links.forEach((link) => {
         const sourceNode = nodes.find((node) => node.methodId.toString() === link.sourceId.toString());
         const targetNode = nodes.find((node) => node.methodId.toString() === link.targetId.toString());
