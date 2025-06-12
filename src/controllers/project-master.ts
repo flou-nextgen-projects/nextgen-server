@@ -52,6 +52,8 @@ pmRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
     var projectMaster: Array<ProjectMaster> = await appService.projectMaster.aggregate($pipeLine);
     response.status(200).json(projectMaster).end();
 }).get("/get-all", async function (request: Request, response: Response) {
+    var userMaster: any = (await appService.userMaster.aggregate([{ $match: { _id: new Mongoose.Types.ObjectId(request.user._id) } }])).shift();
+    var match: any = { $match: { _id: { $in: userMaster.workspaces } } };
     let collection = appService.mongooseConnection.collection("fileMaster");
     let pipeLine = [{ $group: { _id: "$wid", totalObjects: { $sum: 1 } } },
     { $lookup: { from: "workspaceMaster", localField: "_id", foreignField: "_id", as: "workspace" } },
@@ -59,7 +61,11 @@ pmRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
     { $lookup: { from: "languageMaster", localField: "workspace.lid", foreignField: "_id", as: "languageMaster" } },
     { $unwind: "$languageMaster" },
     { $project: { uploadedOn: "$workspace.uploadedOn", processedOn: "$workspace.processedOn", languageMaster: "$languageMaster", _id: "$workspace._id", workspaceId: "$_id", name: "$workspace.name", workspace: "$workspace", totalObjects: "$totalObjects", processingStatus: { $literal: 2 } } },
-    { $setWindowFields: { sortBy: { _id: 1 }, output: { seqNo: { $documentNumber: {} } } } }];
+    { $setWindowFields: { sortBy: { _id: 1 }, output: { seqNo: { $documentNumber: {} } } } },
+    ];
+    if (userMaster.roleMaster.roleName !== "admin") {
+        pipeLine.push(match);
+    }
     var workspaces = await collection.aggregate(pipeLine).toArray();
     response.status(200).json(workspaces).end();
 }).get("/get-process-stages", async function (request: Request, response: Response) {
