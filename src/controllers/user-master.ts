@@ -67,7 +67,7 @@ userRouter.use("/", (request: Request, response: Response, next: NextFunction) =
     })
 }).post("/update-user", (request: Request, response: Response) => {
     var user = request.body;
-    appService.userMaster.updateDocument({ _id: user._id }, user).then((result) => {
+    appService.userMaster.updateDocument({ _id: Mongoose.Types.ObjectId.createFromHexString(user._id) }, user).then((result) => {
         var res = { code: 200, message: "User updated successfully.", data: result };
         response.status(200).send(res).end();
     }).catch((err) => {
@@ -129,7 +129,7 @@ userRouter.use("/", (request: Request, response: Response, next: NextFunction) =
         if (!user) {
             return response.status(404).json({ code: 404, message: "User not found", data: null });
         }
-        let userDetails=await appService.userMaster.getItem({userName:user.user.userName});
+        let userDetails = await appService.userMaster.getItem({ userName: user.user.userName });
         const isOldPasswordValid = await bcrypt.compare(current, userDetails.password);
         if (!isOldPasswordValid) {
             return response.status(401).json({ code: 401, message: "Old password is incorrect", data: null });

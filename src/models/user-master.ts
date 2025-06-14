@@ -1,4 +1,4 @@
-import Mongoose from "mongoose";
+import Mongoose, { ObjectId } from "mongoose";
 import { EntityBase } from ".";
 import { roleMasterVirtuals } from "../virtuals";
 var Jwt = require('jsonwebtoken');
@@ -21,6 +21,7 @@ class UserMaster extends EntityBase {
     public isActive: boolean;
     public imageId: Mongoose.Schema.Types.ObjectId;
     public oid: Mongoose.Schema.Types.ObjectId;
+    public workspaces: Array<Mongoose.Schema.Types.ObjectId>;
 }
 
 const UserMasterSchema: Mongoose.Schema<UserMaster> = new Mongoose.Schema<UserMaster>({
@@ -36,7 +37,12 @@ const UserMasterSchema: Mongoose.Schema<UserMaster> = new Mongoose.Schema<UserMa
     lastLogin: { type: Date, required: false, default: null },
     isActive: { type: Boolean, required: false, default: true },
     imageId: { type: Mongoose.Types.ObjectId, select: true, required: false },
-    oid: { type: Mongoose.Types.ObjectId, select: true, required: false }
+    oid: { type: Mongoose.Types.ObjectId, select: true, required: false },
+    workspaces: {
+        type: [Mongoose.Types.ObjectId],
+        required: false,
+        set: (arr: string[] | Mongoose.Types.ObjectId[]) => arr?.map((id: any) => new  Mongoose.Types.ObjectId(id)),
+    }
 }, { toJSON: { useProjection: true }, toObject: { useProjection: true } });
 
 UserMasterSchema.statics.useVirtuals = {
