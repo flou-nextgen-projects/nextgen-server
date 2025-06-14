@@ -13,6 +13,7 @@ import { Db, MongoClient } from "mongodb";
 import { readFileSync } from "fs";
 import { UserMaster } from "./models";
 import { convertStringToObjectId } from "./helpers/dotnet/member-references.mappings";
+import config from "./configurations";
 
 const winstonLogger: WinstonLogger = new WinstonLogger(__filename);
 const app = http2Express(express);
@@ -23,7 +24,8 @@ app.use(Cors({
     allowedHeaders: ["x-token", "Authorization"]
 }));
 
-app.post("/backend/api/app-db", async (request: Request, response: Response) => {
+let baseRouter = config.baseRouter;
+app.post(`/${baseRouter}/api/app-db`, async (request: Request, response: Response) => {
     let body = request.body;
     // prepare mongodb connection URL
     // const mongoDbUrl = `mongodb://${body.userName}:${body.mongoPass}@${body.host}:${body.port}/?authSource=admin`;
@@ -130,18 +132,16 @@ export const setAppRoutes = function (app: express.Application) {
     });
 
     let authRouter = require("./middleware/client-auth");
-    app.use("/backend/main/api/*", authRouter);
+    app.use(`/${baseRouter}/main/api/*`, authRouter);
     let superAuthRouter = require("./middleware/super-auth");
-    app.use("/backend/super/admin/*", superAuthRouter);
+    app.use(`/${baseRouter}/super/admin/*`, superAuthRouter);
 
     var combined = morgan("combined");
     app.use(combined);
-
-    app.get("/user/:id(\\d+)", (request: Request, response: Response) => {
-        response.status(200).json({ msg: "OK", data: { id: request.params } }).end();
-    });
     const router = require("./routes/default.routes");
-    app.use(/backend\/main\/api\/defaults\/.*/g, router);
+    // this is for default routes
+    app.use(`/${baseRouter}/main/api/defaults`, router);
+    // app.use(/backend\/main\/api\/defaults\/.*/g, router);
     var homeRouter = require('./controllers/home');
     var userRouter = require("./controllers/user-master");
     var loginRouter = require("./controllers/user-login");
@@ -163,44 +163,45 @@ export const setAppRoutes = function (app: express.Application) {
     var dependencyRouter = require('./controllers/dependencies-diagram');
     var searchRouter = require('./controllers/keyword-search');
     require("./kafka-services/kafka-consumer"); // no need to have routes
-    app.use("/backend/api/home", homeRouter);
-    app.use("/backend/api/user-login", loginRouter);
-    app.use("/backend/main/api/user-master", userRouter);
-    app.use("/backend/main/api/role-master", roleMasterRouter);
-    app.use("/backend/main/api/language-master", langRouter);
-    app.use("/backend/main/api/workspace-master", workspaceRouter);
-    app.use("/backend/main/api/project-master", pmRouter);
-    app.use("/backend/main/api/file-type-master", ftmRouter);
-    app.use("/backend/main/api/base-command-master", bcRouter);
-    app.use("/backend/main/api/base-command-reference", bcRefRouter);
-    app.use("/backend/main/api/topics", topicRouter);
-    app.use("/backend/main/api/solution", solutionRouter);
-    app.use("/backend/main/api/doc-master", docRouter);
-    app.use("/backend/main/api/statement-reference", statementRouter);
-    app.use("/gen-ai/chat", aiRouter);
-    app.use("/backend/main/api/dashboard", dashBoardRouter);
-    app.use("/backend/main/api/file-master", fmRouter);
-    app.use("/backend/main/api/functional-flow", functionalFlowRouter);
-    app.use("/backend/main/api/dependencies", dependencyRouter);
-    app.use("/backend/main/api/keyword-search", searchRouter);
+    app.use(`/${baseRouter}/api/home`, homeRouter);
+    app.use(`/${baseRouter}/api/user-login`, loginRouter);
+    app.use(`/${baseRouter}/main/api/user-master`, userRouter);
+    app.use(`/${baseRouter}/main/api/role-master`, roleMasterRouter);
+    app.use(`/${baseRouter}/main/api/language-master`, langRouter);
+    app.use(`/${baseRouter}/main/api/workspace-master`, workspaceRouter);
+    app.use(`/${baseRouter}/main/api/project-master`, pmRouter);
+    app.use(`/${baseRouter}/main/api/file-type-master`, ftmRouter);
+    app.use(`/${baseRouter}/main/api/base-command-master`, bcRouter);
+    app.use(`/${baseRouter}/main/api/base-command-reference`, bcRefRouter);
+    app.use(`/${baseRouter}/main/api/topics`, topicRouter);
+    app.use(`/${baseRouter}/main/api/solution`, solutionRouter);
+    app.use(`/${baseRouter}/main/api/doc-master`, docRouter);
+    app.use(`/${baseRouter}/main/api/statement-reference`, statementRouter);
+    app.use(`/${baseRouter}/main/api/dashboard`, dashBoardRouter);
+    app.use(`/${baseRouter}/main/api/file-master`, fmRouter);
+    app.use(`/${baseRouter}/main/api/functional-flow`, functionalFlowRouter);
+    app.use(`/${baseRouter}/main/api/dependencies`, dependencyRouter);
+    app.use(`/${baseRouter}/main/api/keyword-search`, searchRouter);
+    app.use(`/${baseRouter}/main/api/gen-ai/chat`, aiRouter);
     // db status router
     var dbStatusRouter = require("./config/check-status");
-    app.use("/backend/super/admin/db", dbStatusRouter);
-    
+    app.use(`/${baseRouter}/super/admin/db`, dbStatusRouter);
+
     // job processing routers
-    /* 
+    /*
     var cobolProcessRouter = require("./jobs/process-cobol-project");
     var startProcessRouter = require("./jobs/start-processing");
-    app.use("/backend/jobs/api/cobol-process", cobolProcessRouter);
-    app.use("/backend/jobs/api/csharp-process", startProcessRouter); 
-    */    
+    app.use(`/${baseRouter}/jobs/api/cobol-process`, cobolProcessRouter);
+    app.use(`/${baseRouter}/jobs/api/csharp-process`, startProcessRouter); 
+    */
     var dataSetsRouter = require("./controllers/data-sets");
-    app.use("/backend/main/api/data-sets", dataSetsRouter);
- 
+    app.use(`/${baseRouter}/main/api/data-sets`, dataSetsRouter);
+    app.use(`/${baseRouter}/api/data-sets`, dataSetsRouter);
+
     // GenAI routes
     // all routes are added into gen-ai.routes file under routes folder
     let genAiRoutes = require("./routes/gen-ai.routes");
-    app.use("/backend/main/api", genAiRoutes);
+    app.use(`/${baseRouter}/main/api`, genAiRoutes);
 
     app.use((err: Error, _: Request, response: Response, next: Function) => {
         if (err instanceof AppError) {
@@ -239,7 +240,7 @@ export const setAppRoutes = function (app: express.Application) {
         apis: [`${swaggerApi}/*.js`]
     };
     const specs = swaggerJsdoc(options);
-    app.use('/backend/api-docs', swaggerUi.serve, swaggerUi.setup(specs, { customCss: ".swagger-ui .opblock {margin: 0 0 4px 0px; !important} .swagger-ui .btn {margin-right: 4px;} .swagger-ui .auth-container input[type=password], .swagger-ui .auth-container input[type=text] {min-width: 100%;} .swagger-ui .scheme-container .schemes .auth-wrapper .authorize {margin-right: 4px;} .swagger-ui .auth-btn-wrapper {justify-content: left;} .topbar {display: none !important} .swagger-ui .info {margin: 10px 0 10px 0} .swagger-ui .info hgroup.main {margin: 0px 0 10px;} .swagger-ui .scheme-container {margin: 0; padding: 15px 0;} .swagger-ui .info .title {text-align: center;}" }));
+    app.use(`/${baseRouter}/api-docs`, swaggerUi.serve, swaggerUi.setup(specs, { customCss: ".swagger-ui .opblock {margin: 0 0 4px 0px; !important} .swagger-ui .btn {margin-right: 4px;} .swagger-ui .auth-container input[type=password], .swagger-ui .auth-container input[type=text] {min-width: 100%;} .swagger-ui .scheme-container .schemes .auth-wrapper .authorize {margin-right: 4px;} .swagger-ui .auth-btn-wrapper {justify-content: left;} .topbar {display: none !important} .swagger-ui .info {margin: 10px 0 10px 0} .swagger-ui .info hgroup.main {margin: 0px 0 10px;} .swagger-ui .scheme-container {margin: 0; padding: 15px 0;} .swagger-ui .info .title {text-align: center;}" }));
 }
 
 const _initDatabaseConfiguration = (dbStatus: any, connection: Db): Promise<{ message: string }> => new Promise(async (res, rej) => {
