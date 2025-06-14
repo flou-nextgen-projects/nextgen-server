@@ -54,6 +54,7 @@ class AppService {
     public objectConnectivity = new BaseRepository<any>({ collectionName: "objectConnectivity", schema: new Mongoose.Schema<any>() });
     public memberReferences = new BaseRepository<any>({ collectionName: "memberReferences", schema: new Mongoose.Schema<any>() });
     public methodDetails = new BaseRepository<any>({ collectionName: "methodDetails", schema: new Mongoose.Schema<any>() });
+    public methodStatementsMaster = new BaseRepository<any>({ collectionName: "methodStatementsMaster", schema: new Mongoose.Schema<any>() });
     public actionWorkflows = new BaseRepository<any>({ collectionName: "actionWorkflows", schema: new Mongoose.Schema<any>() });
     public nodeDetails = new BaseRepository<any>({ collectionName: "nodeDetails", schema: new Mongoose.Schema<any>() });
     public linkDetails = new BaseRepository<any>({ collectionName: "linkDetails", schema: new Mongoose.Schema<any>() });

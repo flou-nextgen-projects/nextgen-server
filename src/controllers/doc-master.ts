@@ -17,7 +17,19 @@ docRouter.use("/", (request: Request, response: Response, next: NextFunction) =>
     response.status(200).json(statements).end();
 }).get("/source-contents/:mid", async (request: Request, response: Response, next: NextFunction) => {
     let mid: string = <string>request.params.mid;
-    let fileContents = await appService.fileContentMaster.getItem({ methodId: new ObjectId(mid) });
+    let fileContents: any = await appService.fileContentMaster.getItem({ methodId: new ObjectId(mid) });
+    let originalLines = "";
+    if (!fileContents) {
+        fileContents = await appService.methodStatementsMaster.getDocuments({ methodId: new ObjectId(mid) })
+        if (Array.isArray(fileContents) && fileContents.length > 0) {
+            originalLines = fileContents
+                .map((item: any) => item.originalLine || item.modifiedLine || "")
+                .join("\n");
+        }
+        fileContents = {
+            original: originalLines
+        };
+    }
     response.status(200).json(fileContents).end();
 });
 
