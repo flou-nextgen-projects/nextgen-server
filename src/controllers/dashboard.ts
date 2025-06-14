@@ -13,10 +13,20 @@ dashBoardRouter.use("/", (request: Request, response: Response, next: NextFuncti
     }).catch((exp) => {
         response.status(500).json(exp).end();
     });
+}).get("/get-objects", async (request: Request, response: Response) => {
+    let $filter: string = <string>request.query.$filter;
+    let { fileTypeId, wid, pid }: { fileTypeId: string, wid: string, pid: string } = JSON.parse($filter);
+
+    appService.fileMaster.getDocuments({ fileTypeId: new ObjectId(fileTypeId), wid: new ObjectId(pid) }).then((workflows) => {
+        response.status(200).json(workflows).end();
+    }).catch((e) => {
+        response.status(500).json(e).end();
+    });
+
 }).get("/get-workflows", async (request: Request, response: Response) => {
     let $filter: string = <string>request.query.$filter;
-    let { fileTypeId, wid, keyword, pid }: { fileTypeId: string, wid: string, keyword: string, pid: string } = JSON.parse($filter);
-    if (!fileTypeId) {
+    let { fid, pid, wid, keyword }: { fid: string, pid: string, wid: string, keyword: string } = JSON.parse($filter);
+    if (!fid) {
         const query: any = { wid: new ObjectId(wid) };
         if (keyword && keyword.trim()) {
             query.methodName = { $regex: keyword, $options: "i" };
@@ -26,22 +36,20 @@ dashBoardRouter.use("/", (request: Request, response: Response, next: NextFuncti
         }).catch((e) => {
             response.status(500).json(e).end();
         });
-    } else {
-        appService.fileMaster.getDocuments({ fileTypeId: new ObjectId(fileTypeId), wid: new ObjectId(pid) }).then((workflows) => {
+    }
+    else {
+        let pipeLine = [
+            { $lookup: { from: "methodDetails", localField: "methodId", foreignField: "_id", as: "methodDetails" } },
+            { $unwind: { path: "$methodDetails", preserveNullAndEmptyArrays: true } },
+            { $match: { "methodDetails.fid": new ObjectId(fid) } }
+        ]
+        appService.actionWorkflows.mongooseConnection.collection("actionWorkflows").aggregate(pipeLine).toArray().then((workflows) => {
             response.status(200).json(workflows).end();
         }).catch((e) => {
             response.status(500).json(e).end();
         });
     }
-})/*.get("/get-workflows", async (request: Request, response: Response) => {
-    let $filter: string = <string>request.query.$filter;
-    let { fileTypeId, pid }: { fileTypeId: string, pid: string } = JSON.parse($filter);
-    appService.fileMaster.getDocuments({ fileTypeId: new ObjectId(fileTypeId), pid: new ObjectId(pid) }).then((workflows) => {
-        response.status(200).json(workflows).end();
-    }).catch((e) => {
-        response.status(500).json(e).end();
-    });
-})*/.get("/get-dashboard-tickers", async (request: Request, response: Response) => {
+}).get("/get-dashboard-tickers", async (request: Request, response: Response) => {
     var wid = <string>request.query.wid;
     const pipeLine = [
         { $match: { wid: new ObjectId(wid) } },
