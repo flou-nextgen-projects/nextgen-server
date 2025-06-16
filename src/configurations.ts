@@ -42,5 +42,7 @@ export default {
         return process.env.GEN_AI_URL;
     }, get crtPath() {
         return process.env.CERT_PATH;
+    }, get baseRouter() {
+        return process.env.BASE_ROUTER;
     }
 }
