@@ -61,7 +61,7 @@ pmRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
     { $lookup: { from: "languageMaster", localField: "workspace.lid", foreignField: "_id", as: "languageMaster" } },
     { $unwind: "$languageMaster" },
     { $project: { uploadedOn: "$workspace.uploadedOn", processedOn: "$workspace.processedOn", languageMaster: "$languageMaster", _id: "$workspace._id", workspaceId: "$_id", name: "$workspace.name", workspace: "$workspace", totalObjects: "$totalObjects", processingStatus: { $literal: 2 } } },
-    { $setWindowFields: { sortBy: { _id: 1 }, output: { seqNo: { $documentNumber: {} } } } },
+    { $setWindowFields: { sortBy: { _id: -1 }, output: { seqNo: { $documentNumber: {} } } } },
     ];
     if (userMaster.roleMaster.roleName !== "admin") {
         pipeLine.push(match);
@@ -94,12 +94,9 @@ pmRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
         if (!project) return response.status(404).json({ message: 'Project with provided ID not found' }).end();
         let linkDetails = await appService.linkDetails.getDocuments({ pid: project._id, type: { $in: [1, 2] } }, {}, { _id: 1 });
         let nodeDetails = await appService.nodeDetails.getDocuments({ wid: project.wid, alternateName: { $ne: "csproj" }, type: { $ne: 3 } }, {});
-        if(linkDetails.length === 0) {
-            let nodes = await appService.nodeDetails.getDocuments({ pid: project._id, alternateName: { $ne: "csproj" }, type: { $ne: 3 } }, {});
-            return response.status(200).json({ data: { nodes, links: [] }, graphLevel: 0 }).end();
-        }
         let nodes = filterNodes(nodeDetails, linkDetails);
         let links: any = adjustLinks(nodes, linkDetails);
+        for (let node of nodeDetails) { node.name = node.methodName; }
         response.status(200).json({ data: { nodes, links }, graphLevel: 0 }).end();
     } catch (error) {
         response.status(500).json({ data: [] }).end();
@@ -136,6 +133,8 @@ pmRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
             { $addFields: { workflowsCount: { $size: "$nonCsprojDocs" }, hasWorkflows: { $gt: [{ $size: "$nonCsprojDocs" }, 0] } } },
             { $project: { nonCsprojDocs: 0 } }
         ]);
+        // let nodeDetails = await appService.nodeDetails.getDocuments({ wid: new Mongoose.Types.ObjectId(wid), group: 3 }, {}, {}, { _id: 1 });
+        for (let node of nodeDetails) { node.name = node.methodName; }
         let links = adjustLinks(nodeDetails, linkDetails);
         response.status(200).json({ data: { nodes: nodeDetails, links }, graphLevel: 1 }).end();
     } catch (error) {
