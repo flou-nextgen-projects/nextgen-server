@@ -46,7 +46,7 @@ functionalFlowRouter.use("/", (request: Request, response: Response, next: NextF
             { $lookup: { from: "fileMaster", localField: "_id", foreignField: "fileTypeId", as: "fileMaster" } },
             { $unwind: { path: "$fileMaster", preserveNullAndEmptyArrays: true } },
             { $group: { _id: "$fileTypeName", fileTypeName: { $first: "$fileTypeName" }, fileTypeId: { $first: "$_id" }, files: { $push: "$fileMaster" } } },
-            { $match: { fileTypeName: { $in: ["COBOL", "JCL", "PROC", "SQL", "Code", "RPG"] } } }
+            { $match: { fileTypeName: { $in: ["COBOL", "JCL", "PROC", "SQL", "Code", "RPG","ASM File"] } } }
         ];
         let result = await appService.mongooseConnection.collection("fileTypeMaster").aggregate(pipeLine).toArray();
         var parentId: number = jsonData.find((d) => { return d.data.type === "featureNode" }).id;
