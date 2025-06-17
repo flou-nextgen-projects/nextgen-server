@@ -113,6 +113,27 @@ export const adjustLinks = function (nodes: Array<any>, links: any[]): Array<Lin
     });
     return newLinks;
 };
+export const findAllParentsAndTheirLinks = function (nodeDetail: Array<any>, linkDetails: Array<any>) {
+    // this is the strategy to find all parents and their links
+    // 1. for each node in nodeDetail, find its parent node via linkDetails where take all links where target is the current node
+    // 2. recursively find all parents of the parent node until we reach the root node
+    // 3. repeat step 1 for each parent node found in step 2
+    // 4. from linkDetails, find all links where source is the current node or any of its parent nodes
+    const parentNodes: Array<any> = [];
+    const parentLinks: Array<any> = [];
+    const findParents = (node: any) => {
+        // find parent node
+        const parentLink = linkDetails.find((link) => link.targetId === node.methodId);
+        if (parentLink) {
+            const parentNode = nodeDetail.find((n) => n.methodId.toString() === parentLink.sourceId.toString());
+            if (parentNode && !parentNodes.find((n) => n.methodId === parentNode.methodId)) {
+                parentNodes.push(parentNode);
+                findParents(parentNode);
+            }
+        }
+    }
+}
+
 export enum NodeLinkType {
     node = 1, link = 2, entity = 3, InputOutputInterface = 4
 }
