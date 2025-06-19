@@ -41,7 +41,7 @@ dashBoardRouter.use("/", (request: Request, response: Response, next: NextFuncti
         let pipeLine = [
             { $lookup: { from: "methodDetails", localField: "methodId", foreignField: "_id", as: "methodDetails" } },
             { $unwind: { path: "$methodDetails", preserveNullAndEmptyArrays: true } },
-            { $match: { "methodDetails.fid": new ObjectId(fid) } }
+            { $match: { "methodDetails.fid": new ObjectId(fid), "methodDetails.isDefault": false } }
         ]
         appService.actionWorkflows.mongooseConnection.collection("actionWorkflows").aggregate(pipeLine).toArray().then((workflows) => {
             response.status(200).json(workflows).end();
@@ -59,7 +59,18 @@ dashBoardRouter.use("/", (request: Request, response: Response, next: NextFuncti
         { $project: { fileTypeId: "$_id", totalLineCount: 1, totalCommentedLines: 1, fileCount: 1, color: "$fileTypeMaster.color", fileTypeName: "$fileTypeMaster.fileTypeName" } },
         { $match: { _id: { $ne: null } as any } }
     ];
-    var workflows = await appService.mongooseConnection.collection("actionWorkflows").countDocuments({ wid: new ObjectId(wid) });
+
+    var pipelineA = [
+        { $match: { wid: new ObjectId(wid) } },
+        { $lookup: { from: "methodDetails", localField: "methodId", foreignField: "_id", as: "methodDetails" } },
+        { $unwind: { path: "$methodDetails", preserveNullAndEmptyArrays: true } },
+        { $match: { "methodDetails.isDefault": false } },
+        { $lookup: { from: "workspaceMaster", localField: "wid", foreignField: "_id", as: "workspaceMaster" } },
+        { $unwind: { path: "$workspaceMaster", preserveNullAndEmptyArrays: true } },
+        { $match: { "workspaceMaster.language": { $in: ["Progress", "C#"] } } }
+    ];
+    var workflows = (await appService.actionWorkflows.aggregate(pipelineA)).length;
+    // var workflows = await appService.mongooseConnection.collection("actionWorkflows").countDocuments({ wid: new ObjectId(wid) });
     appService.mongooseConnection.collection("fileMaster").aggregate(pipeLine).toArray().then((data: any) => {
         response.status(200).json({ data, workflows }).end();
     }).catch((e) => {
