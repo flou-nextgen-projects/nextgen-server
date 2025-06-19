@@ -6,6 +6,7 @@ class EntityMaster extends EntityBase {
     public entityName: string;
     public pid: Mongoose.Types.ObjectId | string;
     public fid: Mongoose.Types.ObjectId | string;
+    public wid: Mongoose.Types.ObjectId | string;
     public type: string;
     public description: string;
     public attributes?: Array<any>;
@@ -14,6 +15,7 @@ const EntityMasterSchema: Mongoose.Schema<EntityMaster> = new Mongoose.Schema({
     entityName: { type: String, required: true },
     pid: { type: Mongoose.Schema.Types.ObjectId, required: true },
     fid: { type: Mongoose.Schema.Types.ObjectId, required: true },
+    wid: { type: Mongoose.Schema.Types.ObjectId, required: true },
     type: { type: String, required: false },
     description: { type: String, required: false },
     attributes: { type: [], required: false }
