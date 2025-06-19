@@ -55,7 +55,7 @@ bsRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
 }).get("/get-called-by", async (request: Request, response: Response) => {
     try {
         let methodId = <string>request.query.methodId;
-        let calledBy = await appService.methodDetails.getDocuments({ "callExternals.methodId": new ObjectId(methodId) });
+        let calledBy = await appService.methodDetails.getDocuments({ "callExternals.methodId": new ObjectId(methodId),isDefault:false });
         response.status(200).json(calledBy).end();
     } catch (error) {
         response.status(500).send().end();
