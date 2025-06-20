@@ -67,7 +67,7 @@ dashBoardRouter.use("/", (request: Request, response: Response, next: NextFuncti
         { $match: { "methodDetails.isDefault": false } },
         { $lookup: { from: "workspaceMaster", localField: "wid", foreignField: "_id", as: "workspaceMaster" } },
         { $unwind: { path: "$workspaceMaster", preserveNullAndEmptyArrays: true } },
-        { $match: { "workspaceMaster.language": { $in: ["Progress", "C#"] } } }
+        // { $match: { "workspaceMaster.language": { $in: ["Progress", "C#"] } } }
     ];
     var workflows = (await appService.actionWorkflows.aggregate(pipelineA)).length;
     // var workflows = await appService.mongooseConnection.collection("actionWorkflows").countDocuments({ wid: new ObjectId(wid) });
@@ -84,7 +84,7 @@ dashBoardRouter.use("/", (request: Request, response: Response, next: NextFuncti
     });
 }).get("/get-missing-objects", (request: Request, response: Response) => {
     let wid = <string>request.query.wid;
-    appService.mongooseConnection.collection("missingObjects").find({ wid: new ObjectId(wid) }).toArray().then((data: any) => {
+    appService.mongooseConnection.collection("missingObjects").find({ wid: new ObjectId(wid), isMissing : true }).toArray().then((data: any) => {
         response.status(200).json(data).end();
     }).catch(() => {
         response.status(500).send().end();

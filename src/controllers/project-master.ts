@@ -1426,8 +1426,7 @@ const processObjectInterConnectivity = async (wid: string) => {
         let projectLinks: any[] = [];
         for (const mo of missingObjects) {
             const fileTypes = mo.fileTypeName === "COBOL" ? ["COBOL", "ASM File"] : [mo.fileTypeName];
-            var missingFile = Array.isArray(methodDetails) ? methodDetails.find(d => d.fileMaster.fileNameWithoutExt === mo.fileName &&
-                (Array.isArray(d.fileTypeMaster) ? d.fileMaster.fileTypeMaster.some((ft: any) => fileTypes.includes(ft.fileTypeName)) : fileTypes.includes(d.fileMaster.fileTypeMaster?.fileTypeName))) : undefined;
+            var missingFile = Array.isArray(methodDetails) ? methodDetails.find(d => d.fileMaster.fileNameWithoutExt === mo.fileName && (Array.isArray(d.fileTypeMaster) ? d.fileMaster.fileTypeMaster.some((ft: any) => fileTypes.includes(ft.fileTypeName)) : fileTypes.includes(d.fileMaster.fileTypeMaster?.fileTypeName))) : undefined;
             if (!missingFile) continue;
             var sourceNode = nodeDetails.find((d) => d?.methodId?.toString() === mo?.methodId?.toString());
             var targetNode = nodeDetails.find((d) => d?.methodId?.toString() === missingFile?._id?.toString());
@@ -1448,10 +1447,7 @@ const processObjectInterConnectivity = async (wid: string) => {
                 }
                 if (updated) {
                     // Update the methodDetails document in the database
-                    await appService.mongooseConnection.collection("methodDetails").updateOne(
-                        { _id: selectedMethodDetails._id },
-                        { $set: { callExternals: callExternals } }
-                    );
+                    await appService.mongooseConnection.collection("methodDetails").updateOne({ _id: selectedMethodDetails._id }, { $set: { callExternals: callExternals, missing: false } });
                 }
             }
             var sPid = sourceNode.pid?.toString();
@@ -1472,7 +1468,6 @@ const processObjectInterConnectivity = async (wid: string) => {
             };
             var existLink = links.find((d) => d.sourceId.toString() === link.sourceId.toString() && d.targetId.toString() === link.targetId.toString() && d.type === 2 && d.linkText === link.linkText);
             if(!existLink) links.push(link);
-
             await appService.mongooseConnection.collection("missingObjects").updateOne({ _id: mo._id }, { $set: { isMissing: false } });
         }
 

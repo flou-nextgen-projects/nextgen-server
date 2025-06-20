@@ -38,17 +38,17 @@ functionalFlowRouter.use("/", (request: Request, response: Response, next: NextF
             var name = project.name;
             var rootNode = { id: i++, parent: "#", text: "Epics", state: { selected: true }, data: { type: "epicNode", level: 0 } };
             var epicNameNode = { id: i++, parent: `${i - 2}`, text: `${name}`, state: { selected: true }, data: { type: "epicNodeName", level: 99 } };
-            var featureNode = { id: i++, parent: `${i - 2}`, text: "Features", state: { selected: true }, data: { type: "featureNode", level: 1 } };
+            var featureNode = { id: i++, parent: `${i - 2}`, text: "Features",  state: { selected: true }, data: { type: "featureNode", level: 1, temp: project._id.toString(), } };
             jsonData.push(rootNode); jsonData.push(epicNameNode); jsonData.push(featureNode);
             let pipeLine = [
                 { $match: { lid: project.lid } },
                 { $lookup: { from: "fileMaster", localField: "_id", foreignField: "fileTypeId", as: "fileMaster" } },
                 { $unwind: { path: "$fileMaster", preserveNullAndEmptyArrays: true } },
                 { $group: { _id: "$fileTypeName", fileTypeName: { $first: "$fileTypeName" }, fileTypeId: { $first: "$_id" }, files: { $push: "$fileMaster" } } },
-                { $match: { fileTypeName: { $in: ["COBOL", "JCL", "PROC", "SQL", "Code", "RPG"] } } }
+                { $match: { fileTypeName: { $in: ["COBOL", "JCL", "PROC", "SQL", "Code", "RPG", "ASM File"] } } }
             ];
             let result = await appService.mongooseConnection.collection("fileTypeMaster").aggregate(pipeLine).toArray();
-            var parentId: number = jsonData.find((d) => { return d.data.type === "featureNode" }).id;
+            var parentId: number = jsonData.find((d) => { return d.data.type === "featureNode" && d.data.temp.toString() === project.id.toString() }).id;
             var projectNode: any = { id: i++, parent: `${parentId}`, text: `${name}`, state: { selected: true }, data: { pid: project._id, type: `pNameNode-${project._id}`, level: 2 } };
             jsonData.push(projectNode);
             for (const res of result) {
