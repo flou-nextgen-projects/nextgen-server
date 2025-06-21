@@ -92,25 +92,29 @@ pmRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
         let pid: string = <string>request.params.pid;
         let project = await appService.projectMaster.getItem({ _id: new Mongoose.Types.ObjectId(pid) });
         if (!project) return response.status(404).json({ message: 'Project with provided ID not found' }).end();
-        let allLinkDetails = await appService.linkDetails.getDocuments({ wid: project.wid, type: { $in: [1, 2] } }, {}, {});
+        // let allLinkDetails = await appService.linkDetails.getDocuments({ wid: project.wid, type: { $in: [1, 2] } }, {}, {});
         let linkDetails = await appService.linkDetails.getDocuments({ pid: project._id, type: { $in: [1, 2] } }, {}, { _id: 1 });
         let nodeDetails = await appService.nodeDetails.getDocuments({ wid: project.wid, alternateName: { $ne: "csproj" }, type: { $ne: 3 } }, {});
-
+        /*
         var allNodes = nodeDetails.filter((d) => d.type === 1 && d.pid.toString() === pid);
         // get all links for nodes in which srcFileId and tarFileId are in allNodes
         var allLinks = allLinkDetails.filter((d) => d.type === 2 && (allNodes.some((n) => n.methodId.toString() === d.sourceId.toString() || n.methodId.toString() === d.targetId.toString())));
         // now get all nodes from objectConnectivity where fileId is either in srcFileId or tarFileId and type is 1
         var finalNodes = nodeDetails.filter((d) => d.type === 1 && (allLinks.some((l) => l.sourceId.toString() === d.methodId.toString() || l.targetId.toString() === d.methodId.toString())));
         // we need to add again all those nodes which are not in finalNodes but in allNodes
+        nodeDetails.forEach((d) => {
+            finalNodes.push(d);
+        })
+
         allNodes.forEach((d) => {
             if (finalNodes.some((n) => n._id.toString() === d._id.toString())) return;
             finalNodes.push(d);
         });
+        */
 
-
-        let nodes = filterNodes(finalNodes, allLinks);
-        let links: any = adjustLinks(nodes, allLinks);
-        for (let node of finalNodes) { node.name = node.methodName; }
+        let nodes = filterNodes(nodeDetails, linkDetails);
+        let links: any = adjustLinks(nodes, linkDetails);
+        for (let node of nodes) { node.name = node.methodName; }
         response.status(200).json({ data: { nodes, links }, graphLevel: 0 }).end();
     } catch (error) {
         response.status(500).json({ data: [] }).end();
@@ -542,15 +546,18 @@ pmRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
             if (missingJson.code === 200) {
                 await addMissingObjectsWorkspace(workspace, missingJson.data);
             }
+
+            await processProjectInterConnectivity(workspace._id.toString());
+
+            await processObjectInterConnectivity(workspace._id.toString());
+             
             //process for entities
             response.write(formatData({ message: "Started process for getting  entities." }));
             let entityJson = await readJsonFile(join(extractPath, "entity-master", "entity-master.json"));
             if (entityJson.code === 200) {
                 await addEntitiesAndAttributesWorkspace(entityJson.data, workspace);
             }
-            await processProjectInterConnectivity(workspace._id.toString());
-
-            await processObjectInterConnectivity(workspace._id.toString());
+           
             response.write(formatData({ message: "You can start loading project now." }), "utf-8", checkWrite);
             response.end();
         }).catch((err: any) => {
@@ -807,7 +814,11 @@ const addEntitiesAndAttributes = async function addEntitiesAndAttributes(entityJ
                         return acc;
                     }, {}));
             }
-            let variableDetails = { type: "Variable & Data Element", promptId: 1001, fid: Mongoose.Types.ObjectId.createFromHexString(element.fid), data: JSON.stringify(filteredObj), formattedData: JSON.stringify(filteredObj), genAIGenerated: false } as any;
+            let fidValue: any = element.fid;
+            if (typeof fidValue === "string" && Mongoose.Types.ObjectId.isValid(fidValue)) {
+                fidValue = Mongoose.Types.ObjectId.createFromHexString(fidValue);
+            }
+            let variableDetails = { type: "Variable & Data Element", promptId: 1001, fid: fidValue, data: JSON.stringify(filteredObj), formattedData: JSON.stringify(filteredObj), genAIGenerated: false } as any;
             await appService.mongooseConnection.collection("businessSummaries").insertOne(variableDetails);
         }
     } catch (error) {

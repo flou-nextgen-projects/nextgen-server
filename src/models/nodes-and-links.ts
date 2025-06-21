@@ -99,6 +99,11 @@ export const filterNodes = function (nodes: Array<any>, links: Array<any>): Arra
             filteredNodes.push(targetNode);
         }
     });
+    nodes.forEach((node) => {
+        if (!filteredNodes.find((n) => n.methodId.toString() === node.methodId.toString() && n.pid.toString() === node.pid.toString())) {
+            filteredNodes.push(node);
+        }
+    });
     return filteredNodes;
 };
 export const adjustLinks = function (nodes: Array<any>, links: any[]): Array<Link> {
