@@ -51,6 +51,7 @@ dashBoardRouter.use("/", (request: Request, response: Response, next: NextFuncti
     }
 }).get("/get-dashboard-tickers", async (request: Request, response: Response) => {
     var wid = <string>request.query.wid;
+    /*
     const pipeLine = [
         { $match: { wid: new ObjectId(wid) } },
         { $group: { _id: "$fileTypeId", totalLineCount: { $sum: "$linesCount" }, totalCommentedLines: { $sum: "$fileStatics.commentedLines" }, fileCount: { $sum: 1 } } },
@@ -59,7 +60,17 @@ dashBoardRouter.use("/", (request: Request, response: Response, next: NextFuncti
         { $project: { fileTypeId: "$_id", totalLineCount: 1, totalCommentedLines: 1, fileCount: 1, color: "$fileTypeMaster.color", fileTypeName: "$fileTypeMaster.fileTypeName" } },
         { $match: { _id: { $ne: null } as any } }
     ];
-
+    */
+  const pipeLine = [
+         { $match: { wid: new ObjectId(wid) } },
+         { $lookup: { from: "fileTypeMaster", localField: "fileTypeId", foreignField: "_id", as: "fileTypeMaster" } },
+         { $unwind: {  path: "$fileTypeMaster", preserveNullAndEmptyArrays: false }},
+         { $group: {_id: "$fileTypeMaster.fileTypeName",   fileTypeName: { $first: "$fileTypeMaster.fileTypeName" },  color: { $first: "$fileTypeMaster.color" }, totalLineCount: { $sum: "$linesCount" }, totalCommentedLines: { $sum: "$fileStatics.commentedLines" }, fileCount: { $sum: 1 }} },
+         { $project: { _id: 0, fileTypeName: 1, color: 1, totalLineCount: 1, totalCommentedLines: 1, fileCount: 1  } },
+         { $match: { fileTypeName: { $nin: ["INCLUDE", "InputLib", "COPYBOOK", "MACROS"] }}},
+         { $sort: { fileTypeName: 1 } }        
+         // { $match: { _id: { $ne: null } as any } }
+    ];
     var pipelineA = [
         { $match: { wid: new ObjectId(wid) } },
         { $lookup: { from: "methodDetails", localField: "methodId", foreignField: "_id", as: "methodDetails" } },
