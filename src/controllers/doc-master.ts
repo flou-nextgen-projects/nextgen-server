@@ -17,7 +17,13 @@ docRouter.use("/", (request: Request, response: Response, next: NextFunction) =>
     response.status(200).json(statements).end();
 }).get("/source-contents/:mid", async (request: Request, response: Response, next: NextFunction) => {
     let mid: string = <string>request.params.mid;
-    let fileContents: any = await appService.fileContentMaster.getItem({ methodId: new ObjectId(mid) });
+    var pipeLine = [
+            { $match: { methodId: new ObjectId(mid)} },
+            { $lookup: { from: "fileMaster", localField: "fid", foreignField: "_id", as: "fileMaster" } },
+            { $unwind: { path: "$fileMaster", preserveNullAndEmptyArrays: true } }
+        ];
+    var fileContentsArr = await appService.mongooseConnection.collection("fileContents").aggregate(pipeLine).toArray();
+    var fileContents = fileContentsArr && fileContentsArr.length > 0 ? fileContentsArr[0] : null;
     let originalLines = "";
     if (!fileContents) {
         fileContents = await appService.methodStatementsMaster.getDocuments({ methodId: new ObjectId(mid) })
@@ -30,7 +36,7 @@ docRouter.use("/", (request: Request, response: Response, next: NextFunction) =>
             original: originalLines
         };
     }
-    response.status(200).json(fileContents).end();
+    response.status(200).json(fileContents).end(); 
 });
 
 module.exports = docRouter;
