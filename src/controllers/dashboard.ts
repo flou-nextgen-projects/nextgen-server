@@ -67,7 +67,7 @@ dashBoardRouter.use("/", (request: Request, response: Response, next: NextFuncti
          { $unwind: {  path: "$fileTypeMaster", preserveNullAndEmptyArrays: false }},
          { $group: {_id: "$fileTypeMaster.fileTypeName",   fileTypeName: { $first: "$fileTypeMaster.fileTypeName" },  color: { $first: "$fileTypeMaster.color" }, totalLineCount: { $sum: "$linesCount" }, totalCommentedLines: { $sum: "$fileStatics.commentedLines" }, fileCount: { $sum: 1 }} },
          { $project: { _id: 0, fileTypeName: 1, color: 1, totalLineCount: 1, totalCommentedLines: 1, fileCount: 1  } },
-         { $match: { fileTypeName: { $nin: ["INCLUDE", "InputLib", "COPYBOOK", "MACROS"] }}},
+         { $match: { fileTypeName: { $nin: ["INCLUDE", "InputLib", "COPYBOOK"] }}},
          { $sort: { fileTypeName: 1 } }        
          // { $match: { _id: { $ne: null } as any } }
     ];
