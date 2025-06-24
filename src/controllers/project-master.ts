@@ -538,7 +538,7 @@ pmRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
             }
             // process for file contents...
             response.write(formatData({ message: "Started processing file contents to repository." }), "utf-8", checkWrite);
-            await processFileContentsWorkspace(workspace);
+            await processFileContents(workspace);
 
             // process for missing objects
             response.write(formatData({ message: "Started process for missing objects." }));
@@ -1384,10 +1384,10 @@ const addWorkspaceIntoJson = async (extractPath: string, workspace: WorkspaceMas
             if ([500, 404].includes(jsonData.code)) {
                 winstonLogger.error(new Error(`${file} JSON not found`), { code: "JSON_NOT_FOUND", name: file });
             }
-            if (file === "statement-master/statement-master.json") {
-                jsonData.data.forEach((d: Record<string, any>) => { d.wid = workspace._id; });
+            if (file === "statement-master/statement-master.json" ||file === "file-master/file-master.json") {
+                jsonData.data.forEach((d: Record<string, any>) => { d.wid = workspace._id; d.WorkspaceId = workspace._id; });
             } else {
-                jsonData.data.forEach((d: Record<string, any>) => { d.wid = workspace._id; });
+                jsonData.data.forEach((d: Record<string, any>) => { d.wid = workspace._id;  });
             }
             writeFileSync(filePath, JSON.stringify(jsonData.data, null, 2), "utf-8");
         } catch (error) {
