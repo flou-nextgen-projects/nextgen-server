@@ -3,6 +3,52 @@
         "collection": "multiPromptConfigs",
         "documents": [
             {
+                "_id": "6858eceddb95c7bb475e2b80",
+                "menu": "Functional Requirement",
+                "menuId": "FR",
+                "prompt": [
+                    {
+                        "id": 1,
+                        "value": "Can you create functional specifications for the code below for an analyst and developers to use the details of core logic and functionality to rewrite it in modern languages. Include following sections in the output: Summary, Business purpose,  Business Requirements Matrix, entities used there attributes, business process with flow sequence details. Use simpler business terms to describe the functionality for a business analyst to understand."
+                    },
+                    {
+                        "id": 2,
+                        "value": "Can you redo above by including actual calculations and computations that are performed? Represent the cryptic variables in plain English wherever possible. also don't give any commentary "
+                    }
+                ],
+                "screen": "N/A",
+                "contextMenu": "Functional Requirement",
+                "promptId": 1037
+            },
+            {
+                "_id": "685a9d7043ad263e3b4d8442",
+                "menu": "record-level and field-level details",
+                "menuId": "FR-RLFL",
+                "prompt": [
+                    {
+                        "id": 1,
+                        "value": "\nExtract and list ALL Field-Level Details and Record-Level Details from the provided code or description. Present the results in two separate, complete tables as follows:\n\n1. Field-Level Details Table with the following columns:\n\nVariable Name\n\nLength\n\nData Type\n\nDescription\n\nType (Specify as Field-Level or Record-Level)\n\n2. Record-Level Details Table with the following columns:\n\nRecord Type (Header, Detail, Trailer)\n\nRecord Name\n\nTotal Length\n\nRecord Use\n\nImportant:\n\nDo not use \"...\" or similar placeholders to indicate continuation.\n\nEnsure all fields and records are listed completely, based on the available information.\n\nMaintain clear, tabular formatting."
+                    }
+                ],
+                "screen": "N/A",
+                "contextMenu": "record-level and field-level details",
+                "promptId": 1038
+            },
+            {
+                "_id": "685a9dbd43ad263e3b4d8456",
+                "menu": "functional - Business Rules",
+                "menuId": "FR-BR",
+                "prompt": [
+                    {
+                        "id": 1,
+                        "value": "From the provided code, extract all Business Rules and low-level Calculations in the sequence they are executed clearly.\n\nRequirements:\n- Present each rule or calculation as a separate, numbered point\n- Use plain language to explain the logic\n- Include the following details for each item:\n- Rule/Calculation ID: A unique reference label (e.g., BR-001, CALC-002)\n- Description: What the rule or calculation does, explained simply\n- When it Applies: The condition or trigger for this rule (e.g., only for specific record types, field values, etc.)\n- Involved Variables: List the fields or variables affected or used in the logic\n- Outcome/Effect: The result of applying the rule or calculation\n- Type: Indicate whether it's a Business Rule, Calculation, Validation, or Transformation\n\nAdditional Notes:\n- Do not give any commentary\n- Do not use tables or complex formatting — structure the output as numbered bullet points or short paragraphs\n- Avoid \"...\" to represent missing information — document all identifiable logic completely\n- Ensure technical accuracy but keep explanations accessible for business and technical readers alike"
+                    }
+                ],
+                "screen": "N/A",
+                "contextMenu": "functional - Business Rules",
+                "promptId": 1039
+            },
+            {
                 "_id": "6799ce14bfda8e1d954e6c3b",
                 "menu": "Pseudo",
                 "menuId": "psu",
@@ -471,7 +517,7 @@
                     {
                         "id": 1,
                         "type": "prompt",
-                        "value": "Can you generate test case specifications for the attached file. Use plain English terms in output for a QA person to understand in the given format: ### Test Case 1:  <case name> Input: Expected Output: without and commentary"
+                        "value": "Can you generate a test case for the attached <LANG> code below? Please provide the test case in plain English."
                     }
                 ],
                 "promptId": 1002,
