@@ -618,12 +618,16 @@ const processFileContents = async (wm: WorkspaceMaster) => {
         for (let file of allFiles) {
             // in case of COBOL language, we need to store sourceFilePath (original) contents as original 
             // and filePath contents are modified. We'll as this field only in case of COBOL
+            if(file.fileTypeMaster.fileTypeName === "MACROS") continue;
             let path = wm.languageMaster.name === "COBOL" || wm.languageMaster.name === "PLSQL" ? file.sourceFilePath : file.filePath;
             let content = fileExtensions.readTextFile(path);
             if (content === "") continue;
             // if COBOL then read filePath's contents and store this as modified
             let modified = wm.languageMaster.name === "COBOL" && file.fileTypeMaster.fileTypeName === "COBOL" ? fileExtensions.readTextFile(file.filePath) : "";
             if (wm.languageMaster.name === "PLSQL") {
+                modified = fileExtensions.readTextFile(file.filePath);
+            }
+            if(wm.languageMaster.name === "Assembler" && file.fileTypeMaster.fileTypeName === "ASM File") {
                 modified = fileExtensions.readTextFile(file.filePath);
             }
             let fcm = { fid: file._id, pid: file.pid, original: content, formatted: modified } as FileContentMaster;
