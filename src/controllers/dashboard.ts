@@ -4,25 +4,27 @@ const dashBoardRouter: Router = Express.Router();
 import { appService } from "../services/app-service";
 dashBoardRouter.use("/", (request: Request, response: Response, next: NextFunction) => {
     next();
-}).get("/get-systems/:pid", async (request: Request, response: Response, next: NextFunction) => {
-    var pid = request.params.pid;
-    let project = await appService.workspaceMaster.getItem({ _id: new ObjectId(pid) });
-    if (!project) return response.status(200).json([]).end();
-    appService.fileTypeMaster.getDocuments({ lid: project.lid }).then((fileTypes) => {
+}).get("/get-systems/:wid", async (request: Request, response: Response, next: NextFunction) => {
+    var wid = request.params.wid;
+    let workspace = await appService.workspaceMaster.getItem({ _id: new ObjectId(wid) });
+    let projects = await appService.projectMaster.getDocuments({ wid: new ObjectId(wid) });
+    if (projects.length == 0) return response.status(200).json([]).end();
+    var lids = projects.map(d => d.lid);
+    appService.fileTypeMaster.aggregate([{ $match: { lid: { $in: lids } } }] as any).then((fileTypes) => {
         response.status(200).json(fileTypes).end();
     }).catch((exp) => {
         response.status(500).json(exp).end();
     });
 }).get("/get-objects", async (request: Request, response: Response) => {
     let $filter: string = <string>request.query.$filter;
-    let { fileTypeId, wid, pid }: { fileTypeId: string, wid: string, pid: string } = JSON.parse($filter);
-
-    appService.fileMaster.getDocuments({ fileTypeId: new ObjectId(fileTypeId), wid: new ObjectId(pid) }).then((workflows) => {
+    let { wid, fileTypeList }: { fileTypeId: string, wid: string, fileTypeList: [] } = JSON.parse($filter);
+    let objectIdList = fileTypeList.map((id: string) => new ObjectId(id));
+    appService.fileMaster.aggregate([{ $match: { fileTypeId: { $in: objectIdList }, wid: new ObjectId(wid) } }]).then((workflows) => {
+        // appService.fileMaster.getDocuments({ fileTypeId: new ObjectId(fileTypeId), wid: new ObjectId(wid) }).then((workflows) => {
         response.status(200).json(workflows).end();
     }).catch((e) => {
         response.status(500).json(e).end();
     });
-
 }).get("/get-workflows", async (request: Request, response: Response) => {
     let $filter: string = <string>request.query.$filter;
     let { fid, pid, wid, keyword }: { fid: string, pid: string, wid: string, keyword: string } = JSON.parse($filter);
@@ -61,15 +63,15 @@ dashBoardRouter.use("/", (request: Request, response: Response, next: NextFuncti
         { $match: { _id: { $ne: null } as any } }
     ];
     */
-  const pipeLine = [
-         { $match: { wid: new ObjectId(wid) } },
-         { $lookup: { from: "fileTypeMaster", localField: "fileTypeId", foreignField: "_id", as: "fileTypeMaster" } },
-         { $unwind: {  path: "$fileTypeMaster", preserveNullAndEmptyArrays: false }},
-         { $group: {_id: "$fileTypeMaster.fileTypeName",   fileTypeName: { $first: "$fileTypeMaster.fileTypeName" },  color: { $first: "$fileTypeMaster.color" }, totalLineCount: { $sum: "$linesCount" }, totalCommentedLines: { $sum: "$fileStatics.commentedLines" }, fileCount: { $sum: 1 }} },
-         { $project: { _id: 0, fileTypeName: 1, color: 1, totalLineCount: 1, totalCommentedLines: 1, fileCount: 1  } },
-         { $match: { fileTypeName: { $nin: ["INCLUDE", "InputLib", "COPYBOOK"] }}},
-         { $sort: { fileTypeName: 1 } }        
-         // { $match: { _id: { $ne: null } as any } }
+    const pipeLine = [
+        { $match: { wid: new ObjectId(wid) } },
+        { $lookup: { from: "fileTypeMaster", localField: "fileTypeId", foreignField: "_id", as: "fileTypeMaster" } },
+        { $unwind: { path: "$fileTypeMaster", preserveNullAndEmptyArrays: false } },
+        { $group: { _id: "$fileTypeMaster.fileTypeName", fileTypeName: { $first: "$fileTypeMaster.fileTypeName" }, color: { $first: "$fileTypeMaster.color" }, totalLineCount: { $sum: "$linesCount" }, totalCommentedLines: { $sum: "$fileStatics.commentedLines" }, fileCount: { $sum: 1 } } },
+        { $project: { _id: 0, fileTypeName: 1, color: 1, totalLineCount: 1, totalCommentedLines: 1, fileCount: 1 } },
+        { $match: { fileTypeName: { $nin: ["INCLUDE", "InputLib", "COPYBOOK"] } } },
+        { $sort: { fileTypeName: 1 } }
+        // { $match: { _id: { $ne: null } as any } }
     ];
     var pipelineA = [
         { $match: { wid: new ObjectId(wid) } },
@@ -95,7 +97,7 @@ dashBoardRouter.use("/", (request: Request, response: Response, next: NextFuncti
     });
 }).get("/get-missing-objects", (request: Request, response: Response) => {
     let wid = <string>request.query.wid;
-    appService.mongooseConnection.collection("missingObjects").find({ wid: new ObjectId(wid), isMissing : true }).toArray().then((data: any) => {
+    appService.mongooseConnection.collection("missingObjects").find({ wid: new ObjectId(wid), isMissing: true }).toArray().then((data: any) => {
         response.status(200).json(data).end();
     }).catch(() => {
         response.status(500).send().end();
