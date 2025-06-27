@@ -118,26 +118,63 @@ export const adjustLinks = function (nodes: Array<any>, links: any[]): Array<Lin
     });
     return newLinks;
 };
-export const findAllParentsAndTheirLinks = function (nodeDetail: Array<any>, linkDetails: Array<any>) {
-    // this is the strategy to find all parents and their links
-    // 1. for each node in nodeDetail, find its parent node via linkDetails where take all links where target is the current node
-    // 2. recursively find all parents of the parent node until we reach the root node
-    // 3. repeat step 1 for each parent node found in step 2
-    // 4. from linkDetails, find all links where source is the current node or any of its parent nodes
-    const parentNodes: Array<any> = [];
-    const parentLinks: Array<any> = [];
-    const findParents = (node: any) => {
-        // find parent node
-        const parentLink = linkDetails.find((link) => link.targetId === node.methodId);
-        if (parentLink) {
-            const parentNode = nodeDetail.find((n) => n.methodId.toString() === parentLink.sourceId.toString());
-            if (parentNode && !parentNodes.find((n) => n.methodId === parentNode.methodId)) {
-                parentNodes.push(parentNode);
-                findParents(parentNode);
+export const removeHangingNodes = function (nodeDetails: Array<any>, linkDetails: Array<any>) {
+    // we need to remove nodes that are not connected to any link
+    let structuredNodes: Array<any> = [];
+    for (const node of nodeDetails) {
+        const hasLink = linkDetails.some((link) => link.sourceId.toString() === node.methodId.toString() || link.targetId.toString() === node.methodId.toString());
+        if (hasLink) {
+            structuredNodes.push(node);
+        }
+    }
+    return structuredNodes;
+};
+export const findAllConnectedNodesAndLinks = function (projectNodes: Array<any>, nodeDetails: Array<any>, linkDetails: Array<any>) {
+    // strategy
+    // 1. for each node, we'll find first link where targetId is current node's methodId
+    // then take that link's sourceId and find the node with that methodId
+    // 2. repeat step 1 until we reach a node that has no parent
+    // 3. return all nodes and links in the path
+    let allNodes: Array<any> = [];
+    let allLinks: Array<any> = [];
+    for (const node of projectNodes) {
+        allNodes.push(node);
+        _findRecursivePatentNodes(node, nodeDetails, linkDetails, allNodes, allLinks);
+    }
+    // similarly, we'll find children nodes for each node
+    for (const node of projectNodes) {
+        const childLinks = linkDetails.filter((link) => link.sourceId.toString() === node.methodId.toString());
+        if (childLinks.length === 0) continue;
+        for (const childLink of childLinks) {
+            const childNode = nodeDetails.find((n) => n.methodId.toString() === childLink.targetId.toString());
+            if (!childNode) continue;
+            if (!allNodes.find((n) => n.methodId.toString() === childNode.methodId.toString())) {
+                allNodes.push(childNode);
+            }
+            if (!allLinks.find((l) => l.sourceId.toString() === childLink.sourceId.toString() && l.targetId.toString() === childLink.targetId.toString())) {
+                allLinks.push(childLink);
             }
         }
     }
+    return { nodes: allNodes, links: allLinks };
 }
+
+const _findRecursivePatentNodes = function (node: any, nodeDetails: Array<any>, linkDetails: Array<any>, allNodes: Array<any>, allLinks: Array<any>) {
+    // find all parent nodes of the current node
+    const parentLinks = linkDetails.filter((link) => link.targetId.toString() === node.methodId.toString());
+    if (parentLinks.length === 0) return;
+    for (const parentLink of parentLinks) {
+        const parentNode = nodeDetails.find((n) => n.methodId.toString() === parentLink.sourceId.toString());
+        if (!parentNode) continue;
+        if (!allNodes.find((n) => n.methodId.toString() === parentNode.methodId.toString())) {
+            allNodes.push(parentNode);
+        }
+        if (!allLinks.find((l) => l.sourceId.toString() === parentLink.sourceId.toString() && l.targetId.toString() === parentLink.targetId.toString())) {
+            allLinks.push(parentLink);
+        }
+        _findRecursivePatentNodes(parentNode, nodeDetails, linkDetails, allNodes, allLinks);
+    }
+};
 
 export enum NodeLinkType {
     node = 1, link = 2, entity = 3, InputOutputInterface = 4
