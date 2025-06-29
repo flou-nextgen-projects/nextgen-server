@@ -312,13 +312,13 @@ export default class CobolAdditionalHelperOne extends CobolAdditionalHelperTwo {
                 if (isEmpty(tName)) continue;
                 const entityExist = await appService.entityMaster.getItem({ entityName: tName, fid: fm._id });
                 if (entityExist) {
-                    const dataDependency = { pid: pm._id, fid: fm._id, entity: entityExist.entityName, attributes: '' } as DataDependency;
-                    const existing = await appService.dataDependency.getDocuments({ fid: fm._id, entity: tName, pid: pm._id });
+                    const dataDependency = { pid: pm._id, methodId: fm._id, entity: entityExist.entityName, attributes: '' } as DataDependency;
+                    const existing = await appService.dataDependency.getDocuments({ methodId: fm._id, entity: tName, pid: pm._id });
                     if (existing.length <= 0) {
                         await appService.dataDependency.addItem(dataDependency);
                     }
                 } else {
-                    const entity = { pid: pm._id, entityName: tName, fid: fm._id } as EntityMaster;
+                    const entity = { pid: pm._id, entityName: tName, methodId: fm._id } as EntityMaster;
                     const entityMaster = await appService.entityMaster.addItem(entity);
                     for (const cName of sortColumnNames) {
                         if (!entityMaster) continue;
@@ -326,8 +326,8 @@ export default class CobolAdditionalHelperOne extends CobolAdditionalHelperTwo {
                         await appService.entityAttributes.addItem(entityAttribute);
                     }
                     if (entityMaster) {
-                        const dataDependencies = { pid: pm._id, fid: fm._id, entity: entityMaster.entityName, attributes: '' } as DataDependency;
-                        const existingOne = await appService.dataDependency.getDocuments({ fid: fm._id, entity: tName, pid: pm._id });
+                        const dataDependencies = { pid: pm._id, methodId: fm._id, entity: entityMaster.entityName, attributes: '' } as DataDependency;
+                        const existingOne = await appService.dataDependency.getDocuments({ methodId: fm._id, entity: tName, pid: pm._id });
                         if (existingOne.length <= 0) {
                             await appService.dataDependency.addItem(dataDependencies);
                         }

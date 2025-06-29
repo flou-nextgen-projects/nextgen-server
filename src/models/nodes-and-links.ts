@@ -19,6 +19,7 @@ export class Node {
     public filePath: string;
     public fileType: string; public color?: string;
     public summary?: string;
+    public methodId?: string;
     public entities?: Array<any>;
     public inputDataSet?: string;
     public outputDataSet?: string;

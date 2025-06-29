@@ -434,8 +434,8 @@ export default class CobolMainProcessUtils extends CobolProcessHelpers {
                 if (!statementReferenceMaster.length) continue;
                 for (const statementReference of statementReferenceMaster) {
                     if (!regex.test(statementReference.originalLine)) continue;
-                    const dataDependency = { pid: project._id, fid: statementReference.fid, entity: entityName, attributes: '' } as DataDependency;
-                    const existing = existingData.some(x => x.fid === statementReference.fid && x.entity === entityName && x.pid === project._id);
+                    const dataDependency = { pid: project._id, methodId: statementReference.fid, entity: entityName, attributes: '' } as DataDependency;
+                    const existing = existingData.some(x => x.methodId === statementReference.fid && x.entity === entityName && x.pid === project._id);
                     if (existing) continue;
                     await appService.dataDependency.addItem(dataDependency);
                 }

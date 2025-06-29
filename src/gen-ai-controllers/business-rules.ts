@@ -36,99 +36,62 @@ brRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
     response.status(200).json((summary)).end();
 }).post("/update-by-id/:id", async function (request: Request, response: Response) {
     var collection = appService.mongooseConnection.collection('businessRules');
-    let data = await collection.findOneAndUpdate(
-        { _id: new ObjectId(request.params.id) },
-        { $set: request.body },
-        { returnDocument: 'after' }
-    );
+    let data = await collection.findOneAndUpdate({ _id: new ObjectId(request.params.id) }, { $set: request.body }, { returnDocument: 'after' });
     if (!data) {
         return response.status(404).json({ message: 'business Summary Update API Error' }).end();
     }
     response.status(200).json(({ message: `${data.type} Update Successfully`, data })).end();
-}).get("/get-business-rule/:fid/:promptId", (request: Request, response: Response) => {
-    const { fid, promptId } = request.params;
-    appService.mongooseConnection.collection("businessRules").findOne({ fid: Mongoose.Types.ObjectId.createFromHexString(fid), promptId: parseInt(promptId) })
-        .then((res) => {
-            response.status(200).json(res).end();
-        }).catch((err) => {
-            response.status(500).json(err).end();
-        })
-}).get("/check-business-rule/:fid", (request: Request, response: Response) => {
-    const { fid } = request.params;
-    appService.mongooseConnection.collection("businessRules").find({ fid: Mongoose.Types.ObjectId.createFromHexString(fid) }).toArray()
-        .then((res) => {
-            response.status(200).json(res).end();
-        }).catch((err) => {
-            response.status(500).json(err).end();
-        });
-}).get("/business-rule-diagram/:fid/:promptId", async (request: Request, response: Response) => {
+}).get("/get-business-rule/:methodId/:promptId", (request: Request, response: Response) => {
+    const { methodId, promptId } = request.params;
+    appService.mongooseConnection.collection("businessRules").findOne({ methodId: Mongoose.Types.ObjectId.createFromHexString(methodId), promptId: parseInt(promptId) }).then((res) => {
+        response.status(200).json(res).end();
+    }).catch((err) => {
+        response.status(500).json(err).end();
+    })
+}).get("/check-business-rule/:methodId", (request: Request, response: Response) => {
+    const { methodId } = request.params;
+    appService.mongooseConnection.collection("businessRules").find({ methodId: Mongoose.Types.ObjectId.createFromHexString(methodId) }).toArray().then((res) => {
+        response.status(200).json(res).end();
+    }).catch((err) => {
+        response.status(500).json(err).end();
+    });
+}).get("/business-rule-diagram/:methodId/:promptId", async (request: Request, response: Response) => {
     try {
-        const { fid, promptId } = request.params;
+        const { methodId, promptId } = request.params;
         let pipeLine: Array<PipelineStage> = [
-            { $match: { fid: Mongoose.Types.ObjectId.createFromHexString(fid) } },
-            { $lookup: { from: "methodDetails", localField: "fid", foreignField: "_id", as: "methodDetails" } },
+            { $match: { methodId: Mongoose.Types.ObjectId.createFromHexString(methodId) } },
+            { $lookup: { from: "methodDetails", localField: "methodId", foreignField: "_id", as: "methodDetails" } },
             { $unwind: { preserveNullAndEmptyArrays: true, path: "$methodDetails" } },
             { $lookup: { from: 'fileMaster', localField: 'methodDetails.fid', foreignField: '_id', as: 'fileMaster' } },
             { $unwind: { preserveNullAndEmptyArrays: true, path: "$fileMaster" } }
         ];
         const results = await appService.mongooseConnection.collection("businessRules").aggregate(pipeLine).toArray();
-
         if (!results.length) {
             return response.status(404).json({ error: "Data not found" }).end();
         }
-        const res = results[0];
-        // const res = await appService.mongooseConnection.collection("businessRules").findOne({ fid: Mongoose.Types.ObjectId.createFromHexString(fid) /*, promptId: promptid*/ });
+        const res = results.shift();
         if (!res) { return response.status(404).json({ error: "Data not found" }).end(); }
         var fileName = res.fileMaster.fileNameWithoutExt;
         const links: Array<Link> = [];
         let nodes: Array<Node> = [];
-        const startNode: Node = {
-            name: "Start",
-            group: 1,
-            image: "RoundRect",
-            id: "0".toString(),
-            originalIndex: 0,
-            pid: res.pid.toString(),
-            wid: res._id,
-            fileId: res.fid.toString(),
-            info: { root: "", dir: "", base: "", ext: "", name: "" },
-            fileType: "roundrectangle",
-            type: 1,
-            filePath: "Start",
-            color: "#ffcc00",
-        };
+        const startNode: Node = { name: "Start", group: 1, image: "RoundRect", id: "0".toString(), originalIndex: 0, pid: res.fileMaster?.pid.toString(), wid: res._id, fileId: res.methodId.toString(), methodId: res.methodId.toString(), info: { root: "", dir: "", base: "", ext: "", name: "" }, fileType: "roundrectangle", type: 1, filePath: "Start", color: "#ffcc00", };
         nodes.push(startNode);
         const finalData = await createIndividualNodes(res.rawData, startNode);
         nodes.push(...finalData.nodes);
         links.push(...finalData.links);
         var link: any = { source: startNode.id, target: finalData.nodes[0].id, weight: 3, linkText: "abc" };
         links.push(link);
-        const allLinks = await createLinks(nodes, links);
+        await createLinks(nodes, links);
         let finalNodes = removeParaCalled(nodes);
         var finalLinks = removeLinks(links, finalNodes);
         const lastNode = finalNodes.length > 0 ? finalNodes[finalNodes.length - 1] : null;
         if (lastNode) {
             let index = lastNode.originalIndex + 1;
-            const endNode: Node = {
-                name: "End",
-                group: lastNode.group + 1,
-                image: "RoundRect",
-                id: index.toString(),
-                originalIndex: index,
-                pid: res.pid.toString(),
-                wid: res._id,
-                fileId: res.fid.toString(),
-                info: { root: "", dir: "", base: "", ext: "", name: "" },
-                fileType: "roundrectangle",
-                type: 1,
-                filePath: "End",
-                color: "#ffcc00",
-            };
+            const endNode: Node = { name: "End", group: lastNode.group + 1, image: "RoundRect", id: index.toString(), originalIndex: index, pid: res.fileMaster.pid.toString(), wid: res._id, fileId: res.methodId.toString(), methodId: res.methodId.toString(), info: { root: "", dir: "", base: "", ext: "", name: "" }, fileType: "roundrectangle", type: 1, filePath: "End", color: "#ffcc00", };
             finalNodes.push(endNode);
             var link: any = { source: lastNode.id, target: endNode.id, weight: 3, linkText: "abc" };
             finalLinks.push(link);
         }
-        // let finalLinks = removeLinks(links, finalNodes);
         response.status(200).json({ nodes: finalNodes, links: finalLinks, fileName: fileName }).end();
     } catch (error) {
         return response.status(500).json(error).end();

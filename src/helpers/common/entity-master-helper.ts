@@ -1,17 +1,15 @@
 import Mongoose from "mongoose";
 import { appService } from "../../services/app-service";
 import { EntityMaster } from "../../models";
-async function extractDataEntities(reqBody: any, pid: string, fid: string) {
+async function extractDataEntities(reqBody: any, pid: string, methodId: string) {
     try {
         const variables = JSON.parse(reqBody);
-        // let isValid = isValidJSON(variables);
-        // if (!isValid) return { success: false, error: "Invalid json", code: 3 };
         const entities = variables.entities;
         if (Array.isArray(entities)) {
             for (const element of entities) {
                 const document = {
                     entityName: element.entityName,
-                    fid: Mongoose.Types.ObjectId.createFromHexString(fid),
+                    methodId: Mongoose.Types.ObjectId.createFromHexString(methodId),
                     pid: Mongoose.Types.ObjectId.createFromHexString(pid),
                     attributes: element.attributes,
                 } as EntityMaster;
@@ -24,7 +22,7 @@ async function extractDataEntities(reqBody: any, pid: string, fid: string) {
                     const entityName = key;
                     const document = {
                         entityName: entityName,
-                        fid: Mongoose.Types.ObjectId.createFromHexString(fid),
+                        methodId: Mongoose.Types.ObjectId.createFromHexString(methodId),
                         pid: Mongoose.Types.ObjectId.createFromHexString(pid),
                         attributes: element.attributes,
                     } as EntityMaster;

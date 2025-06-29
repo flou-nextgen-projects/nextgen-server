@@ -53,7 +53,7 @@ pmRouter.use("/", (request: Request, response: Response, next: NextFunction) => 
     response.status(200).json(projectMaster).end();
 }).get("/get-all", async function (request: Request, response: Response) {
     var userMaster: any = (await appService.userMaster.aggregate([{ $match: { _id: new Mongoose.Types.ObjectId(request.user._id) } }])).shift();
-    var match: any = { $match: { _id: { $in: userMaster.workspaces } } };
+    var match: any = { $match: { _id: { $in: [userMaster.workspaces] } } };
     let collection = appService.mongooseConnection.collection("fileMaster");
     let pipeLine = [{ $group: { _id: "$wid", totalObjects: { $sum: 1 } } },
     { $lookup: { from: "workspaceMaster", localField: "_id", foreignField: "_id", as: "workspace" } },
@@ -777,17 +777,17 @@ const addEntitiesAndAttributes = async function addEntitiesAndAttributes(entityJ
         let allowedAttributeFields = ["attributeName", "dataType", "dataLength"];
         let modifiedEntityAttributes = convertStringToObjectId(entityJson);
         for (const element of modifiedEntityAttributes) {
-            let entity: EntityMaster = { entityName: element.entityName, fid: element.fid, pid: element.pid, type: element.type, wid: wm._id } as EntityMaster;
+            let entity: EntityMaster = { entityName: element.entityName, methodId: element.methodId, pid: element.pid, type: element.type, wid: wm._id } as EntityMaster;
             let em = await appService.entityMaster.addItem(entity);
             if (element.entityName === "None") {
-                let variableDetails = { type: "Variable & Data Element", promptId: 1001, fid: element.fid, data: "None", formattedData: "None", genAIGenerated: false } as any;
+                let variableDetails = { type: "Variable & Data Element", promptId: 1001, methodId: element.methodId, data: "None", formattedData: "None", genAIGenerated: false } as any;
                 await appService.mongooseConnection.collection("businessSummaries").insertOne(variableDetails);
                 continue;
             }
             let attributes = element.attributes || [];
             if (attributes.length === 0) continue;
             for (const attr of attributes) {
-                let attribute: EntityAttributes = { pid: attr.pid, fid: attr.fid, eid: em._id, entityName: element.entityName, attributeName: attr.attributeName, dataLength: attr.dataLength, dataType: attr.dataType, storeEntitySet: attr.storeEntitySet } as EntityAttributes;
+                let attribute: EntityAttributes = { pid: attr.pid, methodId: attr.methodId, eid: em._id, entityName: element.entityName, attributeName: attr.attributeName, dataLength: attr.dataLength, dataType: attr.dataType, storeEntitySet: attr.storeEntitySet } as EntityAttributes;
                 await appService.entityAttributes.addItem(attribute);
             }
             let filteredObj = Object.keys(element).filter(key => allowedFields.includes(key)).reduce((acc: any, key) => {
@@ -799,13 +799,13 @@ const addEntitiesAndAttributes = async function addEntitiesAndAttributes(entityJ
                     Object.keys(attr).filter(key => allowedAttributeFields.includes(key)).reduce((acc: any, key) => {
                         acc[key] = attr[key];
                         return acc;
-                    }, {}));
+                }, {}));
             }
-            let fidValue: any = element.fid;
-            if (typeof fidValue === "string" && Mongoose.Types.ObjectId.isValid(fidValue)) {
-                fidValue = Mongoose.Types.ObjectId.createFromHexString(fidValue);
+            let methodId: any = element.methodId;
+            if (typeof methodId === "string" && Mongoose.Types.ObjectId.isValid(methodId)) {
+                methodId = Mongoose.Types.ObjectId.createFromHexString(methodId);
             }
-            let variableDetails = { type: "Variable & Data Element", promptId: 1001, fid: fidValue, data: JSON.stringify(filteredObj), formattedData: JSON.stringify(filteredObj), genAIGenerated: false } as any;
+            let variableDetails = { type: "Variable & Data Element", promptId: 1001, methodId: methodId, data: JSON.stringify(filteredObj), formattedData: JSON.stringify(filteredObj), genAIGenerated: false } as any;
             await appService.mongooseConnection.collection("businessSummaries").insertOne(variableDetails);
         }
     } catch (error) {
@@ -841,7 +841,6 @@ const addStatementReferences = async function addStatementReferences(wm: Workspa
         console.log(error);
     }
 };
-
 const addMethodStatementReferences = async function addMethodStatementReferences(wm: WorkspaceMaster, methodStatementMastersJson: any[], callback: Function): Promise<any> {
     try {
         let collection = appService.mongooseConnection.collection("methodStatementsMaster");
@@ -914,12 +913,15 @@ const processFileContents = async function processFileContents(wm: WorkspaceMast
             // in case of COBOL language, we need to store sourceFilePath (original) contents as original 
             // and filePath contents are modified. We'll as this field only in case of COBOL
             let methodDetail = methodDetails.find((d) => d.fid.toString() === file._id.toString());
-            let path = wm.languageMaster.name === "COBOL" || wm.languageMaster.name === "PLSQL" ? file.sourceFilePath : file.filePath;
+            let path = wm.languageMaster.name === "COBOL" || wm.languageMaster.name === "PLSQL" || wm.languageMaster.name === "Assembler" ? file.sourceFilePath : file.filePath;
             let content = fileExtensions.readTextFile(path);
             if (content === "") continue;
             // if COBOL then read filePath's contents and store this as modified
             let modified = wm.languageMaster.name === "COBOL" && file.fileTypeMaster.fileTypeName === "COBOL" ? fileExtensions.readTextFile(file.filePath) : "";
             if (wm.languageMaster.name === "PLSQL") {
+                modified = fileExtensions.readTextFile(file.filePath);
+            }
+            if (wm.languageMaster.name === "Assembler" && file.fileTypeMaster.fileTypeName === "ASM File") {
                 modified = fileExtensions.readTextFile(file.filePath);
             }
             let fcm = { methodId: methodDetail._id, fid: file._id, pid: file.pid, original: content, formatted: modified, wid: wm._id } as FileContentMaster;
@@ -1100,7 +1102,6 @@ const addProjectWorkspace = async (totalObjects: number, extractPath: string, up
         }
     }
 };
-
 const addMemberReferenceWorkspace = async (wm: WorkspaceMaster, memberRefJson: any[]) => {
     if (["C#", "COBOL"].includes(wm.languageMaster.name)) return;
 
@@ -1144,7 +1145,6 @@ const addMemberReferenceWorkspace = async (wm: WorkspaceMaster, memberRefJson: a
         console.log("Exception", ex);
     }
 };
-
 const addDotNetMemberReferencesWorkspace = async function addDotNetMemberReferencesWorkspace(wm: WorkspaceMaster, memberReferencesJson: any[]): Promise<any> {
     try {
         if (!(wm.languageMaster.name === "C#" || wm.languageMaster.name === "COBOL" || wm.languageMaster.name === "RPG" || wm.languageMaster.name === "Assembler")) return;
@@ -1158,7 +1158,6 @@ const addDotNetMemberReferencesWorkspace = async function addDotNetMemberReferen
         console.log(error);
     }
 };
-
 const addStatementReferencesWorkspace = async function addStatementReferencesWorkspace(wm: WorkspaceMaster, statementMastersJson: any[], callback: Function): Promise<any> {
     try {
         let collection = appService.mongooseConnection.collection("statementMaster");
@@ -1188,7 +1187,6 @@ const addStatementReferencesWorkspace = async function addStatementReferencesWor
         console.log(error);
     }
 };
-
 const processActionWorkflowsWorkspace = async function processActionWorkflowsWorkspace(wm: WorkspaceMaster, actionsJson: any[]) {
     try {
         let collection = appService.mongooseConnection.collection("actionWorkflows");
@@ -1201,7 +1199,6 @@ const processActionWorkflowsWorkspace = async function processActionWorkflowsWor
         console.log("Exception", ex);
     }
 };
-
 const processActionsAndConnectivitiesWorkspace = async function processActionsAndConnectivitiesWorkspace(wm: WorkspaceMaster, actionsJson: any[], connectivityJson: any[]) {
     // from actionsJson we'll prepare nodes
     let allFiles = await appService.fileMaster.aggregate([{ $match: { wid: wm._id } }]);
@@ -1221,8 +1218,6 @@ const processActionsAndConnectivitiesWorkspace = async function processActionsAn
         await collection.insertOne(link);
     }
 };
-
-
 const addNodeDetailsWorkspace = async function addNodeDetailsWorkspace(wm: WorkspaceMaster, nodeDetailsJson: any[]) {
     try {
         let collection = appService.mongooseConnection.collection("nodeDetails");
@@ -1234,7 +1229,6 @@ const addNodeDetailsWorkspace = async function addNodeDetailsWorkspace(wm: Works
         console.log(error);
     }
 };
-
 const addLinkDetailsWorkspace = async function addLinkDetailsWorkspace(wm: WorkspaceMaster, linkDetailsJson: any[]) {
     try {
         let collection = appService.mongooseConnection.collection("linkDetails");
@@ -1268,7 +1262,6 @@ const addMissingObjectsWorkspace = async function addMissingObjectsWorkspace(wm:
         console.log(error);
     }
 };
-
 const addDotNetFieldAndPropertiesDetailsWorkspace = async function addDotNetFieldAndPropertiesDetailsWorkspace(wm: WorkspaceMaster, fieldAndPropertiesJson: any[]): Promise<any> {
     try {
         if (!(wm.languageMaster.name === "C#")) return;
@@ -1281,24 +1274,23 @@ const addDotNetFieldAndPropertiesDetailsWorkspace = async function addDotNetFiel
         console.log(error);
     }
 };
-
 const addEntitiesAndAttributesWorkspace = async function addEntitiesAndAttributesWorkspace(entityJson: any[], wm: WorkspaceMaster) {
     try {
         let allowedFields = ["entityName", "attributes"];
         let allowedAttributeFields = ["attributeName", "dataType", "dataLength"];
         let modifiedEntityAttributes = convertStringToObjectId(entityJson);
         for (const element of modifiedEntityAttributes) {
-            let entity: EntityMaster = { entityName: element.entityName, fid: element.fid, pid: element.pid, type: element.type, wid: wm._id } as EntityMaster;
+            let entity: EntityMaster = { entityName: element.entityName, methodId: element.methodId, pid: element.pid, type: element.type, wid: wm._id } as EntityMaster;
             let em = await appService.entityMaster.addItem(entity);
             if (element.entityName === "None") {
-                let variableDetails = { type: "Variable & Data Element", promptId: 1001, fid: element.fid, data: "None", formattedData: "None", genAIGenerated: false } as any;
+                let variableDetails = { type: "Variable & Data Element", promptId: 1001, methodId: element.methodId, data: "None", formattedData: "None", genAIGenerated: false } as any;
                 await appService.mongooseConnection.collection("businessSummaries").insertOne(variableDetails);
                 continue;
             }
             let attributes = element.attributes || [];
             if (attributes.length === 0) continue;
             for (const attr of attributes) {
-                let attribute: EntityAttributes = { pid: attr.pid, fid: attr.fid, eid: em._id, entityName: element.entityName, attributeName: attr.attributeName, dataLength: attr.dataLength, dataType: attr.dataType, storeEntitySet: attr.storeEntitySet } as EntityAttributes;
+                let attribute: EntityAttributes = { pid: attr.pid, methodId: attr.methodId, eid: em._id, entityName: element.entityName, attributeName: attr.attributeName, dataLength: attr.dataLength, dataType: attr.dataType, storeEntitySet: attr.storeEntitySet } as EntityAttributes;
                 await appService.entityAttributes.addItem(attribute);
             }
             let filteredObj = Object.keys(element).filter(key => allowedFields.includes(key)).reduce((acc: any, key) => {
@@ -1310,16 +1302,15 @@ const addEntitiesAndAttributesWorkspace = async function addEntitiesAndAttribute
                     Object.keys(attr).filter(key => allowedAttributeFields.includes(key)).reduce((acc: any, key) => {
                         acc[key] = attr[key];
                         return acc;
-                    }, {}));
+                }, {}));
             }
-            let variableDetails = { type: "Variable & Data Element", promptId: 1001, fid: Mongoose.Types.ObjectId.createFromHexString(element.fid), data: JSON.stringify(filteredObj), formattedData: JSON.stringify(filteredObj), genAIGenerated: false } as any;
+            let variableDetails = { type: "Variable & Data Element", promptId: 1001, methodId: Mongoose.Types.ObjectId.createFromHexString(element.methodId), data: JSON.stringify(filteredObj), formattedData: JSON.stringify(filteredObj), genAIGenerated: false } as any;
             await appService.mongooseConnection.collection("businessSummaries").insertOne(variableDetails);
         }
     } catch (error) {
         throw error;
     }
 };
-
 const processFileContentsWorkspace = async function processFileContentsWorkspace(wm: WorkspaceMaster) {
     let projects = await appService.projectMaster.getDocuments({ wid: wm._id });
     let methodDetails = await appService.methodDetails.getDocuments({ wid: wm._id });
@@ -1344,9 +1335,6 @@ const processFileContentsWorkspace = async function processFileContentsWorkspace
         }
     }
 };
-
-
-
 const addWorkspaceIntoJson = async (extractPath: string, workspace: WorkspaceMaster) => {
     const files = [
         "action-workflows/action-workflows.json",
