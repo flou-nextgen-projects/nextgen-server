@@ -7,7 +7,7 @@ const mongoDbServer = () =>
     let eventEmitter = new EventEmitter();
     const mongoClient: MongoClient = new MongoClient(mongoDbUrl, mongoDbOpt as any);
     eventEmitter.on('connect', function () {
-      console.log('Database connection with MongoDb Driver succeeded!!');
+      console.log('Database connection with MongoDB driver succeeded!');
       console.log('=======================================================================');
     });
     eventEmitter.on("error", (err) => {
@@ -17,7 +17,7 @@ const mongoDbServer = () =>
       console.log('=======================================================================');
     });
     mongoClient.on("open", () => {
-      console.log("Database connection with Mongo successfully connected");
+      console.log("Database connection with MongoDB successfully connected!");
       console.log('=======================================================================');
     }).connect().then(client => {
       globalAny.mongoDbClient = mongoClient as MongoClient;

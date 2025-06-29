@@ -1,17 +1,30 @@
 import Express, { Request, Response, Router, NextFunction } from "express";
 import { appService } from "../services/app-service";
-import { FileMaster, Link, Node, NodeLinkType, _createNode } from "../models";
+import { Link, Node, NodeLinkType, _createNode } from "../models";
 import mongoose, { PipelineStage } from "mongoose";
 import { ObjectId } from "mongodb";
 import configs from "../configurations";
-
-import axios from "axios";
+import axios, { AxiosInstance } from "axios";
 import { Agent } from 'https';
-import _ from "lodash";
+import * as https from 'https';
+import { join, resolve } from "path";
+import { readFileSync } from "fs";
 
 const dependencyRouter: Router = Express.Router();
 const genAiAddress: string = configs.genAIUrl;
-const axiosInstance: any = axios.create({ httpsAgent: new Agent({ rejectUnauthorized: false }) });
+export let axiosInstance: AxiosInstance = undefined;
+if (configs.useHttps) {
+    const crtPath = resolve(configs.crtPath);
+    const httpsAgent: https.Agent = new https.Agent({
+        ca: readFileSync(join(crtPath, 'rootCA.pem')),
+        cert: readFileSync(join(crtPath, 'device.crt')),
+        key: readFileSync(join(crtPath, 'device.key')),
+        keepAlive: true, rejectUnauthorized: true
+    });
+    axiosInstance = axios.create({ httpsAgent });
+} else {
+    axiosInstance = axios.create({ httpsAgent: new Agent({ rejectUnauthorized: false }) });
+}
 
 dependencyRouter.use("/", (request: Request, response: Response, next: NextFunction) => {
     next();
@@ -32,7 +45,7 @@ dependencyRouter.use("/", (request: Request, response: Response, next: NextFunct
         // if member reference is present, then we need to get all call externals and loop through all elements        
         // since, this data is going for d3 network, we'll prepare elements in that way
         // this will be a focal node and all node elements will be of type Node and links will be of type Link
-        let node: any = { ..._createNode(methodDetail.fileMaster), callers: methodDetail.callers, name: methodDetail.methodName, methodId: methodDetail._id };
+        let node: any = { ..._createNode(methodDetail.fileMaster), id: methodDetail._id, callers: methodDetail.callers, name: methodDetail.methodName, methodId: methodDetail._id };
         let links: Array<Link> = [];
         let nodes: Array<Node | any> = [{ ...node, image: 'focal-node.png', color: methodDetail.fileMaster.fileTypeMaster.color }];
         for (const callExt of methodDetail?.callExternals) {
@@ -63,29 +76,30 @@ const _attachInputOutputInterface = async (opt: { nodes: Array<Node>, links: Arr
         let lang = await appService.languageMaster.getItem({ _id: project.lid });
         var interfaceRes = await appService.mongooseConnection.collection("businessSummaries").aggregate([
             { $match: { promptId: { $in: [1031, 1032] } } },
-            { $match: { fid: new ObjectId(node.fileId) } }]).toArray();
+            { $match: { methodId: new ObjectId(node.methodId) } }
+        ]).toArray();
         if (interfaceRes.length == 0) {
-            var result = await axiosInstance.post(`${genAiAddress}get-io-data`, { fid: node.fileId, language: lang.name, }, { headers: { Authorization: `${authToken}` } });
+            var result = await axiosInstance.post(`${genAiAddress}/get-io-data`, { methodId: node.methodId, language: lang.name, }, { headers: { Authorization: `${authToken}` } });
             if (result.data) {
-                let interfaceNode: Node = { name: "", group: 4, image: "interface_icon.png", id: `input-output-${node.fileId.toString()}`, originalIndex: opt.index++, pid: node.pid, wid: node.wid, fileId: node.fileId.toString(), type: NodeLinkType.InputOutputInterface, } as Node;
-                opt.nodes.push(interfaceNode);
+                let interfaceNode: Node = { name: "", group: 4, image: "interface_icon.png", id: `input-output-${node.methodId.toString()}`, originalIndex: opt.index++, pid: node.pid, wid: node.wid, methodId: node.methodId.toString(), type: NodeLinkType.InputOutputInterface, } as Node;
                 var response = await appService.mongooseConnection.collection("businessSummaries").aggregate([
                     { $match: { promptId: { $in: [1031, 1032] } } },
-                    { $match: { fid: new ObjectId(node.fileId) } }
+                    { $match: { methodId: new ObjectId(node.methodId) } }
                 ]).toArray();
                 node.inputDataSet = response.find(x => x.promptId == 1031).data;
                 node.outputDataSet = response.find(x => x.promptId == 1032).data;
+                opt.nodes.push(interfaceNode);
                 let parentIdx = opt.nodes.findIndex((x) => x.name === node.name);;
-                let targetIdx = opt.nodes.findIndex((x) => x.id === `input-output-${node.fileId.toString()}`);;
+                let targetIdx = opt.nodes.findIndex((x) => x.id === `input-output-${node.methodId.toString()}`);;
                 opt.links.push({ source: parentIdx, target: targetIdx, weight: 3, linkText: interfaceNode.name } as any);
             }
         } else {
-            let interfaceNode: Node = { name: "", group: 4, image: "interface_icon.png", id: `input-output-${node.fileId.toString()}`, originalIndex: opt.index++, pid: node.pid, wid: node.wid, fileId: node.fileId.toString(), type: NodeLinkType.InputOutputInterface, } as Node;
-            opt.nodes.push(interfaceNode);
+            let interfaceNode: Node = { name: "", group: 4, image: "interface_icon.png", id: `input-output-${node.methodId.toString()}`, originalIndex: opt.index++, pid: node.pid, wid: node.wid, methodId: node.methodId.toString(), type: NodeLinkType.InputOutputInterface, } as Node;
             node.inputDataSet = interfaceRes.find(x => x.promptId == 1031).data;
             node.outputDataSet = interfaceRes.find(x => x.promptId == 1032).data;
+            opt.nodes.push(interfaceNode);
             let parentIdx = opt.nodes.findIndex((x) => x.name === node.name);;
-            let targetIdx = opt.nodes.findIndex((x) => x.id === `input-output-${node.fileId.toString()}`);;
+            let targetIdx = opt.nodes.findIndex((x) => x.id === `input-output-${node.methodId.toString()}`);;
             opt.links.push({ source: parentIdx, target: targetIdx, weight: 3, linkText: interfaceNode.name } as any);
         }
     }
@@ -117,7 +131,7 @@ const _expandCallExternals = async (callExt: Partial<any>, node: Node, opt: { no
         opt.links.push({ source: srcIdx, target: existsIndex, weight: 3, linkText: node.name } as any);
         return;
     }
-    let nd: any = { ..._createNode(methodDetail.fileMaster), name: methodDetail.methodName, originalName: methodDetail.methodName, pid: methodDetail.pid, wid: methodDetail.wid, methodId: methodDetail._id, type: NodeLinkType.node };
+    let nd: any = { ..._createNode(methodDetail.fileMaster), id: methodDetail._id, name: methodDetail.methodName, originalName: methodDetail.methodName, pid: methodDetail.pid, wid: methodDetail.wid, methodId: methodDetail._id, type: NodeLinkType.node };
     opt.nodes.push({ ...nd, originalName: nd.name, color: methodDetail.fileMaster.fileTypeMaster.color, image: methodDetail.fileMaster.fileTypeMaster.img });
     let targetIdx: number = opt.nodes.findIndex(x => x.originalName === nd.originalName);
     let srcIdx = opt.nodes.findIndex((x) => x.name === node.name);
@@ -156,34 +170,35 @@ const _expandParentCalls = async (opt: { nodes: Array<Node>, links: Array<Link>,
     }
 };
 const _attachEntityNodes = async (opt: { nodes: Array<Node>, links: Array<Link>, index: number }, authToken: string) => {
-    for (const node of opt.nodes) {
-        // let entityList: Array<EntityMaster> = []
+    const nodesToProcess = opt.nodes;
+    for (const node of nodesToProcess) {
         if (node.type == NodeLinkType.entity) continue;
-        let entity = await appService.entityMaster.getItem({ fid: mongoose.Types.ObjectId.createFromHexString(node.fileId.toString()) });
+        let entity = await appService.entityMaster.getItem({ methodId: mongoose.Types.ObjectId.createFromHexString(node.methodId.toString()) });
         if (entity && entity.entityName == "None") continue;
-        let entities = await appService.entityMaster.getDocuments({ fid: mongoose.Types.ObjectId.createFromHexString(node.fileId.toString()) });
+        let entities = await appService.entityMaster.getDocuments({ methodId: mongoose.Types.ObjectId.createFromHexString(node.methodId.toString()) });
         if (entities.length == 0) {
-            let fileContents = await appService.fileContentMaster.getItem({ fid: new ObjectId(node.fileId) });
+            let fileContents = await appService.fileContentMaster.getItem({ methodId: new ObjectId(node.methodId) });
             let project = await appService.projectMaster.getItem({ _id: new ObjectId(fileContents.pid) });
             let lang = await appService.languageMaster.getItem({ _id: project.lid });
             try {
-                const result = await axiosInstance.post(`${genAiAddress}multi-model-handler`, { promptId: 1001, fileData: fileContents.formatted ?? fileContents.original, language: lang.name, fid: node.fileId, reGen: false }, { headers: { Authorization: `${authToken}` } });
+                const result = await axiosInstance.post(`${genAiAddress}/multi-model-handler`, { promptId: 1001, fileData: (fileContents.formatted ?? fileContents.original), language: lang.name, methodId: node.methodId, reGen: false }, { headers: { Authorization: `${authToken}` } });
                 if (result.data) {
-                    let entityNode: Node = { name: "", group: 3, image: "sql.png", id: `entity-${node.fileId.toString()}`, originalIndex: opt.index++, pid: node.pid, wid: node.wid, fileId: node.fileId.toString(), type: NodeLinkType.entity, } as Node;
-                    node.entities = result.data.response; opt.nodes.push(entityNode);
-                    let parentIdx = opt.nodes.findIndex((x) => x.name === node.name);;
-                    let targetIdx = opt.nodes.findIndex((x) => x.id === `entity-${node.fileId.toString()}`);;
+                    let entityNode: Node = { name: "", group: 3, image: "sql.png", id: `entity-${node.methodId}`, originalIndex: opt.index++, pid: node.pid, wid: node.wid, methodId: node.methodId.toString(), type: NodeLinkType.entity, } as Node;
+                    node.entities = result.data.response; 
+                    opt.nodes.push(entityNode);
+                    let parentIdx = opt.nodes.findIndex((x) => x.name === node.name);
+                    let targetIdx = opt.nodes.findIndex((x) => x.id === `entity-${node.methodId.toString()}`);
                     opt.links.push({ source: parentIdx, target: targetIdx, weight: 3, linkText: entityNode.name } as any);
                 }
             } catch (err) {
                 console.log(err);
             }
         } else {
-            let entityNode: Node = { name: "", group: 3, image: "sql.png", id: `entity-${node.fileId.toString()}`, originalIndex: opt.index++, pid: node.pid, wid: node.wid, fileId: node.fileId.toString(), type: NodeLinkType.entity, } as Node;
+            let entityNode: Node = { name: "", group: 3, image: "sql.png", id: `entity-${node.methodId.toString()}`, originalIndex: opt.index++, pid: node.pid, wid: node.wid, methodId: node.methodId.toString(), type: NodeLinkType.entity, } as Node;
             node.entities = entities;
             opt.nodes.push(entityNode);
-            let parentIdx = opt.nodes.findIndex((x) => x.name === node.name);;
-            let targetIdx = opt.nodes.findIndex((x) => x.id === `entity-${node.fileId.toString()}`);;
+            let parentIdx = opt.nodes.findIndex((x) => x.name === node.name);
+            let targetIdx = opt.nodes.findIndex((x) => x.id === `entity-${node.methodId.toString()}`);
             opt.links.push({ source: parentIdx, target: targetIdx, weight: 3, linkText: entityNode.name } as any);
         }
     }
